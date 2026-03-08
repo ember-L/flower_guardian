@@ -18,6 +18,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - flower_network
 
   # FastAPI 后端
   backend:
@@ -30,6 +32,8 @@ services:
       SECRET_KEY: ${SECRET_KEY:-your-secret-key-change-in-production}
       ALGORITHM: HS256
       ACCESS_TOKEN_EXPIRE_MINUTES: 30
+      # 前端API地址（用于CORS）
+      FRONTEND_URL: http://frontend:3000
     ports:
       - "8000:8000"
     volumes:
@@ -38,27 +42,35 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    networks:
+      - flower_network
     command: >
       sh -c "
         python -m app.db.seed &&
         uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
       "
 
-  # React Native 前端 (可选，用于Web版本)
-  # frontend:
-  #   build:
-  #     context: ./frontend
-  #     dockerfile: Dockerfile
-  #   container_name: flower_guardian_frontend
-  #   ports:
-  #     - "3000:3000"
-  #   depends_on:
-  #     - backend
+  # React Native Web 前端
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: flower_guardian_frontend
+    environment:
+      # API地址（Docker内部网络）
+      API_URL: http://backend:8000
+      NODE_ENV: production
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - flower_network
 
 volumes:
   postgres_data:
   model_weights:
 
 networks:
-  default:
-    name: flower_guardian_network
+  flower_network:
+    driver: bridge
