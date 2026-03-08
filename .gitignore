@@ -64,7 +64,7 @@ Thumbs.db
 # Backend specific
 backend/__pycache__/
 backend/.env
-backend/yolov8n.pt
+backend/*.pt
 backend/models/runs/
 backend/dataset/data/
 backend/dataset/processed/
