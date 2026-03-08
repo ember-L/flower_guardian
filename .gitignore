@@ -1,0 +1,49 @@
+# Root .gitignore for Flower Guardian Project
+
+# Python backend
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# Environment variables
+.env
+.env.local
+
+# Database
+*.db
+*.sqlite
+
+# Logs
+*.log
+logs/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Backend specific
+backend/__pycache__/
+backend/.env
+backend/yolov8n.pt
+backend/models/runs/
+backend/dataset/data/
+backend/dataset/processed/
+backend/dataset/augmented/
+backend/dataset/split/
