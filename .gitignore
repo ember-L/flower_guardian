@@ -1,6 +1,29 @@
 # Root .gitignore for Flower Guardian Project
 
-# Python backend
+# ===============================
+# Frontend (React Native)
+# ===============================
+frontend/node_modules/
+frontend/.bundle/
+frontend/*.jsbundle
+frontend/coverage/
+frontend/.metro-health-check*
+frontend/yarn-error.log
+
+# iOS
+frontend/ios/build/
+frontend/ios/*.xcuserstate
+frontend/ios/Pods/
+frontend/ios/DerivedData/
+
+# Android
+frontend/android/build/
+frontend/android/.gradle/
+frontend/android/local.properties
+
+# ===============================
+# Backend (Python)
+# ===============================
 __pycache__/
 *.pyc
 *.pyo
