@@ -15,7 +15,8 @@ class RecognitionService:
             if os.path.exists(self.model_path):
                 self.model = YOLO(self.model_path)
             else:
-                self.model = YOLO("yolov8n.pt")
+                # 使用YOLOv11模型
+                self.model = YOLO("yolo11n.pt")
         except Exception as e:
             print(f"Warning: Could not load YOLO model: {e}")
             self.model = None

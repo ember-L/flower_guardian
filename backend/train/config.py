@@ -9,7 +9,7 @@ from pathlib import Path
 class TrainConfig:
     # 数据配置
     data_dir: str = "backend/dataset/processed"
-    model_type: str = "yolov8n"  # yolov8n, yolov8s, yolov8m, yolov8l, yolov8x
+    model_type: str = "yolo11n"  # yolo11n, yolo11s, yolo11m, yolo11l, yolo11x
 
     # 训练参数
     epochs: int = 100
