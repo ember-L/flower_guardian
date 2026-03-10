@@ -67,6 +67,8 @@ backend/.env
 backend/*.pt
 backend/models/runs/
 backend/dataset/data/
+backend/dataset/
 backend/dataset/processed/
 backend/dataset/augmented/
 backend/dataset/split/
+

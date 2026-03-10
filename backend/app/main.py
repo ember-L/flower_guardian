@@ -28,4 +28,45 @@ def root():
 
 @app.get("/health")
 def health_check():
-    return {"status": "healthy"}
+    # 尝试导入服务，如果失败则返回警告
+    try:
+        from app.services.recognition import plant_recognition_service
+        from app.services.pest_recognition import pest_recognition_service
+
+        return {
+            "status": "healthy",
+            "plant_model": plant_recognition_service.model is not None,
+            "pest_model": pest_recognition_service.model is not None
+        }
+    except Exception as e:
+        return {
+            "status": "healthy",
+            "warning": str(e)
+        }
+
+
+@app.get("/models/status")
+def models_status():
+    """获取模型状态"""
+    try:
+        from app.services.recognition import plant_recognition_service
+        from app.services.pest_recognition import pest_recognition_service
+
+        return {
+            "plant": {
+                "loaded": plant_recognition_service.model is not None,
+                "classes_count": len(plant_recognition_service.classes),
+                "model_path": plant_recognition_service.model_path
+            },
+            "pest": {
+                "loaded": pest_recognition_service.model is not None,
+                "classes_count": len(pest_recognition_service.classes),
+                "model_path": pest_recognition_service.model_path
+            }
+        }
+    except Exception as e:
+        return {
+            "error": str(e),
+            "plant": {"loaded": False, "classes_count": 0},
+            "pest": {"loaded": False, "classes_count": 0}
+        }

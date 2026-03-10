@@ -20,6 +20,8 @@ export interface SimilarSpecies {
   name: string;
   imageUrl: string;
   difference: string;
+  careLevel: number;
+  tips: string;
 }
 
 // 拍照识别
@@ -62,13 +64,17 @@ export const recognizePlant = async (imageUri: string): Promise<RecognitionResul
         id: '2',
         name: '吊兰',
         imageUrl: '',
-        difference: '吊兰叶片更细长，呈条状，而绿萝叶片较宽大呈心形'
+        difference: '吊兰叶片更细长，呈条状，而绿萝叶片较宽大呈心形',
+        careLevel: 1,
+        tips: '两者都适合新手，但吊兰需要更多光照，绿萝更耐阴'
       },
       {
         id: '3',
         name: '常春藤',
         imageUrl: '',
-        difference: '常春藤叶片为掌状五裂，绿萝叶片为心形'
+        difference: '常春藤叶片为掌状五裂，绿萝叶片为心形',
+        careLevel: 2,
+        tips: '常春藤喜凉爽环境，夏季需要注意降温'
       }
     ]
   };

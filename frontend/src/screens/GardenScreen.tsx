@@ -1,61 +1,135 @@
-// 花园屏幕 - 我的植物列表
+// 花园屏幕 - 我的植物列表 - UI Kitten 组件
 import React from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Plus, Droplets, Scissors, Flower2 } from 'lucide-react-native';
-import { colors, spacing, borderRadius, fontSize } from '../constants/theme';
+import {
+  List,
+  ListItem,
+  Button,
+  Card,
+  Text,
+  Layout,
+  useTheme,
+} from '@ui-kitten/components';
+import { Icons } from '../components/Icon';
+import { colors, spacing, borderRadius, fontSize, shadows, touchTarget } from '../constants/theme';
 
 // 模拟数据
 const mockPlants = [
-  { id: '1', name: '绿萝', image: '', nextAction: '浇水', daysUntil: 2 },
-  { id: '2', name: '虎皮兰', image: '', nextAction: '施肥', daysUntil: 5 },
+  { id: '1', name: '绿萝', image: '', nextAction: '浇水', daysUntil: 2, health: 'good' },
+  { id: '2', name: '虎皮兰', image: '', nextAction: '施肥', daysUntil: 5, health: 'good' },
+  { id: '3', name: '吊兰', image: '', nextAction: '修剪', daysUntil: 1, health: 'warning' },
 ];
 
 export function GardenScreen() {
+  const theme = useTheme();
+  const getHealthColor = (health: string) => {
+    switch (health) {
+      case 'good': return colors.success;
+      case 'warning': return colors.warning;
+      case 'bad': return colors.error;
+      default: return colors.success;
+    }
+  };
+
+  const getHealthText = (health: string) => {
+    switch (health) {
+      case 'good': return '健康';
+      case 'warning': return '需关注';
+      case 'bad': return '生病';
+      default: return '健康';
+    }
+  };
+
   const renderPlant = ({ item }: { item: typeof mockPlants[0] }) => (
-    <TouchableOpacity style={styles.plantCard}>
-      <View style={styles.plantImage}>
-        <Flower2 size={40} color={colors.secondary} />
-      </View>
-      <View style={styles.plantInfo}>
-        <Text style={styles.plantName}>{item.name}</Text>
-        <View style={styles.plantAction}>
-          <Droplets size={14} color={colors.primary} />
+    <ListItem
+      style={styles.plantCard}
+      accessoryLeft={(props) => (
+        <View {...props} style={[styles.plantAvatar, { backgroundColor: colors.secondary + '15' }]}>
+          <Icons.Flower2 size={28} />
+        </View>
+      )}
+      description={(props: any) => (
+        <View {...props} style={styles.plantAction}>
+          <Icons.Droplets size={12} />
           <Text style={styles.plantActionText}>
             {item.nextAction} · {item.daysUntil}天后
           </Text>
         </View>
+      )}
+      accessoryRight={() => (
+        <Button
+          size="tiny"
+          appearance="ghost"
+          status="primary"
+          accessoryLeft={<Icons.Bell size={16} />}
+        />
+      )}
+    >
+      <View style={styles.plantHeader}>
+        <Text category="s1">{item.name}</Text>
+        <Text
+          category="c1"
+          status={item.health === 'good' ? 'success' : item.health === 'warning' ? 'warning' : 'danger'}
+        >
+          {getHealthText(item.health)}
+        </Text>
       </View>
-      <TouchableOpacity style={styles.actionIcon}>
-        <Scissors size={20} color={colors['text-secondary']} />
-      </TouchableOpacity>
-    </TouchableOpacity>
+    </ListItem>
+  );
+
+  const renderEmpty = () => (
+    <Layout style={styles.empty} level="1">
+      <View style={styles.emptyIcon}>
+        <Icons.Flower2 size={48} />
+      </View>
+      <Text category="h6">还没有植物</Text>
+      <Text appearance="hint">点击下方添加你的第一盆植物</Text>
+      <Button
+        style={styles.emptyButton}
+        appearance="filled"
+        status="primary"
+        accessoryLeft={<Icons.Plus size={18} />}
+      >
+        添加植物
+      </Button>
+    </Layout>
   );
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>我的花园</Text>
-        <Text style={styles.subtitle}>{mockPlants.length} 盆植物</Text>
-      </View>
+      {/* 头部 */}
+      <Layout style={styles.header} level="1">
+        <View style={styles.headerContent}>
+          <Text category="h2">我的花园</Text>
+          <Text appearance="hint">{mockPlants.length} 盆植物</Text>
+        </View>
+        <Button
+          style={styles.headerButton}
+          size="small"
+          appearance="filled"
+          status="basic"
+          accessoryLeft={<Icons.Scissors size={18} />}
+        />
+      </Layout>
 
-      <FlatList
+      {/* 植物列表 */}
+      <List
         data={mockPlants}
         renderItem={renderPlant}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
-        ListEmptyComponent={
-          <View style={styles.empty}>
-            <Flower2 size={64} color={colors['text-light']} />
-            <Text style={styles.emptyText}>还没有植物</Text>
-            <Text style={styles.emptySubtext}>点击下方添加你的第一盆植物</Text>
-          </View>
-        }
+        ListEmptyComponent={renderEmpty()}
       />
 
-      <TouchableOpacity style={styles.addButton}>
-        <Plus size={24} color={colors.white} />
-      </TouchableOpacity>
+      {/* 添加按钮 - 悬浮 */}
+      <Button
+        style={styles.addButton}
+        size="large"
+        appearance="filled"
+        status="primary"
+        accessoryLeft={<Icons.Plus size={26} />}
+      />
     </SafeAreaView>
   );
 }
@@ -66,89 +140,73 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   header: {
-    padding: spacing.lg,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.md,
   },
-  title: {
-    fontSize: fontSize.xl,
-    fontWeight: 'bold',
-    color: colors.text,
+  headerContent: {
+    flex: 1,
   },
-  subtitle: {
-    fontSize: fontSize.sm,
-    color: colors['text-secondary'],
-    marginTop: spacing.xs,
+  headerButton: {
+    width: touchTarget.comfortable,
+    height: touchTarget.comfortable,
+    borderRadius: borderRadius.lg,
   },
   list: {
-    padding: spacing.md,
+    padding: spacing.lg,
+    paddingTop: spacing.sm,
   },
   plantCard: {
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.xl,
+    marginBottom: spacing.md,
+    ...shadows.sm,
+  },
+  plantAvatar: {
+    marginRight: spacing.md,
+  },
+  plantHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.md,
-  },
-  plantImage: {
-    width: 60,
-    height: 60,
-    borderRadius: borderRadius.md,
-    backgroundColor: colors.background,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  plantInfo: {
-    flex: 1,
-    marginLeft: spacing.md,
-  },
-  plantName: {
-    fontSize: fontSize.md,
-    fontWeight: '600',
-    color: colors.text,
+    gap: spacing.sm,
   },
   plantAction: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: spacing.xs,
-    gap: 4,
+    gap: spacing.xs,
   },
   plantActionText: {
-    fontSize: fontSize.xs,
-    color: colors['text-secondary'],
-  },
-  actionIcon: {
-    padding: spacing.sm,
+    fontSize: fontSize.sm,
   },
   addButton: {
     position: 'absolute',
     bottom: spacing.xl,
     right: spacing.lg,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    ...shadows.lg,
   },
   empty: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingTop: 100,
+    paddingTop: 80,
   },
-  emptyText: {
-    fontSize: fontSize.lg,
-    color: colors.text,
-    marginTop: spacing.md,
+  emptyIcon: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: colors.surface,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...shadows.sm,
   },
-  emptySubtext: {
-    fontSize: fontSize.sm,
-    color: colors['text-secondary'],
-    marginTop: spacing.xs,
+  emptyButton: {
+    marginTop: spacing.xl,
+    ...shadows.md,
   },
 });

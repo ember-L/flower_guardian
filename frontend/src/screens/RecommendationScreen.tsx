@@ -1,9 +1,20 @@
-// 新手推荐页面 - 场景问答推荐系统
+// 新手推荐页面 - 场景问答推荐系统 - UI Kitten 组件
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { ArrowLeft, Sun, CloudRain, Home, Plane, Cat, Check, Flower2, Star, Shield } from 'lucide-react-native';
+import {
+  Button,
+  Card,
+  Text,
+  Radio,
+  RadioGroup,
+  ProgressBar,
+  TopNavigation,
+  Layout,
+  useTheme,
+} from '@ui-kitten/components';
+import { Icons } from '../components/Icon';
 import { colors, spacing, borderRadius, fontSize } from '../constants/theme';
 
 // 问答步骤
@@ -13,7 +24,6 @@ interface QuestionStep {
   options: {
     label: string;
     value: string;
-    icon?: React.ReactNode;
   }[];
 }
 
@@ -32,27 +42,27 @@ const questions: QuestionStep[] = [
     id: 1,
     question: '你家的光照条件怎么样？',
     options: [
-      { label: '光线充足', value: 'full-sun', icon: <Sun size={24} color={colors.warning} /> },
-      { label: '一般光线', value: 'partial-sun', icon: <Sun size={24} color={colors.warning} /> },
-      { label: '光线较弱', value: 'low-light', icon: <Sun size={24} color={colors['text-light']} /> },
+      { label: '光线充足', value: 'full-sun' },
+      { label: '一般光线', value: 'partial-sun' },
+      { label: '光线较弱', value: 'low-light' },
     ],
   },
   {
     id: 2,
     question: '你经常出差吗？',
     options: [
-      { label: '经常出差', value: 'often', icon: <Plane size={24} color={colors.primary} /> },
-      { label: '偶尔出差', value: 'sometimes', icon: <Plane size={24} color={colors.warning} /> },
-      { label: '不出差', value: 'never', icon: <Home size={24} color={colors.secondary} /> },
+      { label: '经常出差', value: 'often' },
+      { label: '偶尔出差', value: 'sometimes' },
+      { label: '不出差', value: 'never' },
     ],
   },
   {
     id: 3,
     question: '家里有宠物或小孩吗？',
     options: [
-      { label: '有猫/狗', value: 'pet', icon: <Cat size={24} color={colors.warning} /> },
-      { label: '有小孩', value: 'child', icon: <Cat size={24} color={colors.warning} /> },
-      { label: '都没有', value: 'none', icon: <Shield size={24} color={colors.secondary} /> },
+      { label: '有猫/狗', value: 'pet' },
+      { label: '有小孩', value: 'child' },
+      { label: '都没有', value: 'none' },
     ],
   },
 ];
@@ -86,6 +96,7 @@ const recommendations: PlantRecommendation[] = [
 ];
 
 export function RecommendationScreen() {
+  const theme = useTheme();
   const navigation = useNavigation();
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
@@ -111,70 +122,69 @@ export function RecommendationScreen() {
   const renderQuestions = () => (
     <View style={styles.questionContainer}>
       <View style={styles.progressContainer}>
-        <View style={styles.progressBar}>
-          <View
-            style={[
-              styles.progressFill,
-              { width: `${((currentStep + 1) / questions.length) * 100}%` },
-            ]}
-          />
-        </View>
-        <Text style={styles.progressText}>
+        <ProgressBar
+          progress={((currentStep + 1) / questions.length)}
+          size="medium"
+          status="primary"
+        />
+        <Text appearance="hint" category="c1" style={styles.progressText}>
           {currentStep + 1} / {questions.length}
         </Text>
       </View>
 
-      <Text style={styles.questionText}>
+      <Text category="h6" style={styles.questionText}>
         {questions[currentStep].question}
       </Text>
 
-      <View style={styles.optionsContainer}>
+      <RadioGroup
+        selectedIndex={questions[currentStep].options.findIndex((_, i) => answers[currentStep] === questions[currentStep].options[i].value)}
+        onChange={(index) => handleAnswer(questions[currentStep].options[index].value)}
+      >
         {questions[currentStep].options.map((option, index) => (
-          <TouchableOpacity
+          <Radio
             key={index}
-            style={styles.optionCard}
-            onPress={() => handleAnswer(option.value)}
+            status="basic"
+            style={styles.optionRadio}
           >
-            <View style={styles.optionIcon}>{option.icon}</View>
-            <Text style={styles.optionLabel}>{option.label}</Text>
-          </TouchableOpacity>
+            {option.label}
+          </Radio>
         ))}
-      </View>
+      </RadioGroup>
     </View>
   );
 
   const renderResults = () => (
     <View style={styles.resultsContainer}>
-      <View style={styles.resultsHeader}>
-        <Flower2 size={48} color={colors.secondary} />
-        <Text style={styles.resultsTitle}>推荐结果</Text>
-        <Text style={styles.resultsSubtitle}>基于你的情况，为你推荐以下植物</Text>
-      </View>
+      <Layout style={styles.resultsHeader} level="1">
+        <Icons.Flower2 size={48} />
+        <Text category="h4">推荐结果</Text>
+        <Text appearance="hint">基于你的情况，为你推荐以下植物</Text>
+      </Layout>
 
       {recommendations.map((plant, index) => (
-        <View key={plant.id} style={styles.recommendCard}>
+        <Card key={plant.id} style={styles.recommendCard}>
           <View style={styles.recommendHeader}>
             <View style={styles.recommendRank}>
-              <Text style={styles.rankNumber}>{index + 1}</Text>
+              <Text category="s1" style={styles.rankNumber}>{index + 1}</Text>
             </View>
             <View style={styles.recommendInfo}>
-              <Text style={styles.recommendName}>{plant.name}</Text>
+              <Text category="h6">{plant.name}</Text>
               <View style={styles.survivalRate}>
-                <Star size={14} color={colors.warning} fill={colors.warning} />
-                <Text style={styles.survivalRateText}>
+                <Icons.Star size={14} />
+                <Text status="warning" category="c1">
                   成活率 {plant.survivalRate}%
                 </Text>
               </View>
             </View>
             <View style={styles.careLevel}>
-              <Text style={styles.careLevelText}>难度</Text>
+              <Text appearance="hint" category="c1">难度</Text>
               <View style={styles.careStars}>
                 {Array.from({ length: 5 }, (_, i) => (
                   <Text
                     key={i}
                     style={[
                       styles.careStar,
-                      { color: i < plant.careLevel ? colors.warning : colors['text-light'] },
+                      i < plant.careLevel ? styles.careStarActive : null,
                     ]}
                   >
                     ★
@@ -184,38 +194,52 @@ export function RecommendationScreen() {
             </View>
           </View>
 
-          <Text style={styles.reasonText}>{plant.reason}</Text>
+          <Text>{plant.reason}</Text>
 
           <View style={styles.featuresContainer}>
             {plant.features.map((feature, idx) => (
               <View key={idx} style={styles.featureTag}>
-                <Check size={12} color={colors.secondary} />
-                <Text style={styles.featureText}>{feature}</Text>
+                <Icons.Check size={12} />
+                <Text category="c1">{feature}</Text>
               </View>
             ))}
           </View>
 
-          <TouchableOpacity style={styles.addRecommendButton}>
-            <Text style={styles.addRecommendText}>添加到花园</Text>
-          </TouchableOpacity>
-        </View>
+          <Button
+            style={styles.addRecommendButton}
+            appearance="filled"
+            status="primary"
+          >
+            添加到花园
+          </Button>
+        </Card>
       ))}
 
-      <TouchableOpacity style={styles.restartButton} onPress={handleRestart}>
-        <Text style={styles.restartButtonText}>重新测试</Text>
-      </TouchableOpacity>
+      <Button
+        style={styles.restartButton}
+        appearance="outline"
+        status="primary"
+        onPress={handleRestart}
+      >
+        重新测试
+      </Button>
     </View>
   );
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <ArrowLeft size={24} color={colors.text} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>新手推荐</Text>
-        <View style={{ width: 40 }} />
-      </View>
+      <TopNavigation
+        title="新手推荐"
+        alignment="center"
+        accessoryLeft={() => (
+          <Button
+            appearance="ghost"
+            status="basic"
+            accessoryLeft={(props) => <Icons.ArrowLeft {...props} size={24} />}
+            onPress={() => navigation.goBack()}
+          />
+        )}
+      />
 
       {showResults ? renderResults() : renderQuestions()}
     </SafeAreaView>
@@ -227,22 +251,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    backgroundColor: colors.surface,
-  },
-  backButton: {
-    padding: spacing.xs,
-  },
-  headerTitle: {
-    fontSize: fontSize.lg,
-    fontWeight: '600',
-    color: colors.text,
-  },
   questionContainer: {
     flex: 1,
     padding: spacing.lg,
@@ -250,52 +258,15 @@ const styles = StyleSheet.create({
   progressContainer: {
     marginBottom: spacing.xl,
   },
-  progressBar: {
-    height: 8,
-    backgroundColor: colors.surface,
-    borderRadius: 4,
-    overflow: 'hidden',
-    marginBottom: spacing.sm,
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: colors.primary,
-    borderRadius: 4,
-  },
   progressText: {
-    fontSize: fontSize.sm,
-    color: colors['text-secondary'],
+    marginTop: spacing.sm,
     textAlign: 'right',
   },
   questionText: {
-    fontSize: fontSize.xl,
-    fontWeight: 'bold',
-    color: colors.text,
     marginBottom: spacing.xl,
   },
-  optionsContainer: {
-    gap: spacing.md,
-  },
-  optionCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    padding: spacing.lg,
-    borderRadius: borderRadius.lg,
-    gap: spacing.md,
-  },
-  optionIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: colors.background,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  optionLabel: {
-    fontSize: fontSize.md,
-    fontWeight: '500',
-    color: colors.text,
+  optionRadio: {
+    marginVertical: spacing.md,
   },
   resultsContainer: {
     flex: 1,
@@ -305,21 +276,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: spacing.xl,
   },
-  resultsTitle: {
-    fontSize: fontSize.xl,
-    fontWeight: 'bold',
-    color: colors.text,
-    marginTop: spacing.md,
-  },
-  resultsSubtitle: {
-    fontSize: fontSize.sm,
-    color: colors['text-secondary'],
-    marginTop: spacing.xs,
-  },
   recommendCard: {
-    backgroundColor: colors.surface,
-    padding: spacing.lg,
-    borderRadius: borderRadius.lg,
     marginBottom: spacing.md,
   },
   recommendHeader: {
@@ -335,18 +292,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   rankNumber: {
-    fontSize: fontSize.md,
-    fontWeight: 'bold',
     color: colors.white,
+    fontWeight: 'bold',
   },
   recommendInfo: {
     flex: 1,
     marginLeft: spacing.md,
-  },
-  recommendName: {
-    fontSize: fontSize.lg,
-    fontWeight: '600',
-    color: colors.text,
   },
   survivalRate: {
     flexDirection: 'row',
@@ -354,17 +305,8 @@ const styles = StyleSheet.create({
     gap: 4,
     marginTop: spacing.xs,
   },
-  survivalRateText: {
-    fontSize: fontSize.sm,
-    color: colors.warning,
-    fontWeight: '500',
-  },
   careLevel: {
     alignItems: 'flex-end',
-  },
-  careLevelText: {
-    fontSize: fontSize.xs,
-    color: colors['text-secondary'],
   },
   careStars: {
     flexDirection: 'row',
@@ -372,11 +314,8 @@ const styles = StyleSheet.create({
   careStar: {
     fontSize: 12,
   },
-  reasonText: {
-    fontSize: fontSize.sm,
-    color: colors['text-secondary'],
-    lineHeight: 20,
-    marginTop: spacing.md,
+  careStarActive: {
+    color: colors.warning,
   },
   featuresContainer: {
     flexDirection: 'row',
@@ -393,32 +332,10 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.sm,
     gap: 4,
   },
-  featureText: {
-    fontSize: fontSize.xs,
-    color: colors.secondary,
-  },
   addRecommendButton: {
-    backgroundColor: colors.primary,
-    padding: spacing.md,
-    borderRadius: borderRadius.md,
-    alignItems: 'center',
     marginTop: spacing.md,
-  },
-  addRecommendText: {
-    fontSize: fontSize.sm,
-    fontWeight: '600',
-    color: colors.white,
   },
   restartButton: {
-    backgroundColor: colors.surface,
-    padding: spacing.md,
-    borderRadius: borderRadius.lg,
-    alignItems: 'center',
     marginTop: spacing.md,
-  },
-  restartButtonText: {
-    fontSize: fontSize.md,
-    fontWeight: '500',
-    color: colors.primary,
   },
 });

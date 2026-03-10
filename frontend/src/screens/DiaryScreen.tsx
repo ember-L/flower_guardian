@@ -1,12 +1,22 @@
-// 养花日记页面
+// 养花日记页面 - UI Kitten 组件
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Dimensions } from 'react-native';
+import { View, StyleSheet, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { ArrowLeft, Plus, Calendar, TrendingUp, Image as ImageIcon, Share2, Heart, MessageCircle } from 'lucide-react-native';
+import {
+  Button,
+  Card,
+  Text,
+  TopNavigation,
+  Modal,
+  Toggle,
+  Layout,
+  TabView,
+  Tab,
+  useTheme,
+} from '@ui-kitten/components';
+import { Icons } from '../components/Icon';
 import { colors, spacing, borderRadius, fontSize } from '../constants/theme';
-
-const { width } = Dimensions.get('window');
 
 // 日记记录
 interface DiaryEntry {
@@ -66,27 +76,30 @@ const mockGrowthData: GrowthData[] = [
 ];
 
 export function DiaryScreen() {
+  const theme = useTheme();
   const navigation = useNavigation();
   const [selectedPlant, setSelectedPlant] = useState<string | null>(null);
   const [showGrowthChart, setShowGrowthChart] = useState(false);
+  const [showCompareModal, setShowCompareModal] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(0);
 
   const plants = ['全部', '绿萝', '虎皮兰', '吊兰'];
 
   const renderGrowthChart = () => (
-    <View style={styles.chartContainer}>
+    <Card style={styles.chartContainer}>
       <View style={styles.chartHeader}>
-        <Text style={styles.chartTitle}>生长曲线</Text>
-        <TouchableOpacity onPress={() => setShowGrowthChart(false)}>
-          <Text style={styles.chartClose}>关闭</Text>
-        </TouchableOpacity>
+        <Text category="s1">生长曲线</Text>
+        <Button size="small" appearance="ghost" status="basic" onPress={() => setShowGrowthChart(false)}>
+          关闭
+        </Button>
       </View>
 
       <View style={styles.chart}>
         <View style={styles.chartYAxis}>
-          <Text style={styles.axisLabel}>30cm</Text>
-          <Text style={styles.axisLabel}>20cm</Text>
-          <Text style={styles.axisLabel}>10cm</Text>
-          <Text style={styles.axisLabel}>0cm</Text>
+          <Text appearance="hint" category="c1">30cm</Text>
+          <Text appearance="hint" category="c1">20cm</Text>
+          <Text appearance="hint" category="c1">10cm</Text>
+          <Text appearance="hint" category="c1">0cm</Text>
         </View>
         <View style={styles.chartArea}>
           {mockGrowthData.map((data, index) => (
@@ -99,7 +112,7 @@ export function DiaryScreen() {
               >
                 <Text style={styles.barHeight}>{data.height}cm</Text>
               </View>
-              <Text style={styles.barLabel}>{data.date}</Text>
+              <Text appearance="hint" category="c1" style={styles.barLabel}>{data.date}</Text>
             </View>
           ))}
         </View>
@@ -107,118 +120,131 @@ export function DiaryScreen() {
 
       <View style={styles.growthStats}>
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>+10cm</Text>
-          <Text style={styles.statLabel}>本月增高</Text>
+          <Text status="primary" category="h6">+10cm</Text>
+          <Text appearance="hint" category="c1">本月增高</Text>
         </View>
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>+3片</Text>
-          <Text style={styles.statLabel}>新叶数量</Text>
+          <Text status="success" category="h6">+3片</Text>
+          <Text appearance="hint" category="c1">新叶数量</Text>
         </View>
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>95%</Text>
-          <Text style={styles.statLabel}>健康指数</Text>
+          <Text status="primary" category="h6">95%</Text>
+          <Text appearance="hint" category="c1">健康指数</Text>
         </View>
       </View>
-    </View>
+    </Card>
   );
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <ArrowLeft size={24} color={colors.text} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>养花日记</Text>
-        <TouchableOpacity style={styles.shareButton}>
-          <Share2 size={20} color={colors.text} />
-        </TouchableOpacity>
-      </View>
+      <TopNavigation
+        title="养花日记"
+        alignment="center"
+        accessoryLeft={() => (
+          <Button
+            appearance="ghost"
+            status="basic"
+            accessoryLeft={(props) => <Icons.ArrowLeft {...props} size={24} />}
+            onPress={() => navigation.goBack()}
+          />
+        )}
+        accessoryRight={() => (
+          <Button
+            appearance="ghost"
+            status="basic"
+            accessoryLeft={(props) => <Icons.Share2 {...props} size={20} />}
+          />
+        )}
+      />
 
-      {/* 植物筛选 */}
-      <View style={styles.filterContainer}>
+      {/* 植物筛选 - UI Kitten Chips */}
+      <Layout style={styles.filterContainer} level="1">
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           {plants.map((plant) => (
-            <TouchableOpacity
+            <Button
               key={plant}
-              style={[
-                styles.filterChip,
-                (selectedPlant === plant || (plant === '全部' && !selectedPlant)) &&
-                  styles.filterChipActive,
-              ]}
+              size="small"
+              appearance={selectedPlant === plant || (plant === '全部' && !selectedPlant) ? 'filled' : 'outline'}
+              status={selectedPlant === plant || (plant === '全部' && !selectedPlant) ? 'primary' : 'basic'}
+              style={styles.filterChip}
               onPress={() => setSelectedPlant(plant === '全部' ? null : plant)}
             >
-              <Text
-                style={[
-                  styles.filterChipText,
-                  (selectedPlant === plant || (plant === '全部' && !selectedPlant)) &&
-                    styles.filterChipTextActive,
-                ]}
-              >
-                {plant}
-              </Text>
-            </TouchableOpacity>
+              {plant}
+            </Button>
           ))}
         </ScrollView>
-      </View>
+      </Layout>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* 功能按钮 */}
+        {/* 功能按钮 - UI Kitten Button */}
         <View style={styles.actionButtons}>
-          <TouchableOpacity
+          <Button
             style={styles.actionButton}
+            appearance={showGrowthChart ? 'filled' : 'outline'}
+            status={showGrowthChart ? 'primary' : 'basic'}
+            accessoryLeft={<Icons.Activity size={20} />}
             onPress={() => setShowGrowthChart(!showGrowthChart)}
           >
-            <TrendingUp size={20} color={colors.primary} />
-            <Text style={styles.actionButtonText}>生长曲线</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.actionButton}>
-            <ImageIcon size={20} color={colors.primary} />
-            <Text style={styles.actionButtonText}>对比图</Text>
-          </TouchableOpacity>
+            生长曲线
+          </Button>
+          <Button
+            style={styles.actionButton}
+            appearance={showCompareModal ? 'filled' : 'outline'}
+            status={showCompareModal ? 'primary' : 'basic'}
+            accessoryLeft={<Icons.Layers size={20} />}
+            onPress={() => setShowCompareModal(true)}
+          >
+            对比图
+          </Button>
         </View>
 
         {/* 生长曲线 */}
         {showGrowthChart && renderGrowthChart()}
 
-        {/* 日记列表 */}
+        {/* 日记列表 - UI Kitten Card */}
         <View style={styles.diaryList}>
           {mockDiaries.map((diary) => (
-            <View key={diary.id} style={styles.diaryCard}>
+            <Card key={diary.id} style={styles.diaryCard}>
               <View style={styles.diaryHeader}>
                 <View style={styles.diaryInfo}>
-                  <Text style={styles.diaryPlant}>{diary.plantName}</Text>
+                  <Text category="s1">{diary.plantName}</Text>
                   <View style={styles.diaryDate}>
-                    <Calendar size={12} color={colors['text-light']} />
-                    <Text style={styles.diaryDateText}>{diary.date}</Text>
+                    <Icons.Calendar size={12} />
+                    <Text appearance="hint" category="c1">{diary.date}</Text>
                   </View>
                 </View>
                 {diary.compareWithPrevious && (
-                  <View style={styles.compareBadge}>
-                    <ImageIcon size={12} color={colors.secondary} />
-                    <Text style={styles.compareText}>有对比</Text>
-                  </View>
+                  <Text status="success" category="c1">有对比</Text>
                 )}
               </View>
 
-              <Text style={styles.diaryContent}>{diary.content}</Text>
+              <Text>{diary.content}</Text>
 
               {/* 模拟图片区域 */}
               <View style={styles.imagePlaceholder}>
-                <ImageIcon size={32} color={colors['text-light']} />
-                <Text style={styles.imagePlaceholderText}>点击添加图片</Text>
+                <Icons.Image size={32} />
+                <Text appearance="hint">点击添加图片</Text>
               </View>
 
               <View style={styles.diaryFooter}>
-                <TouchableOpacity style={styles.actionItem}>
-                  <Heart size={16} color={colors.primary} />
-                  <Text style={styles.actionCount}>{diary.likes}</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.actionItem}>
-                  <MessageCircle size={16} color={colors['text-secondary']} />
-                  <Text style={styles.actionCount}>{diary.comments}</Text>
-                </TouchableOpacity>
+                <Button
+                  size="tiny"
+                  appearance="ghost"
+                  status="primary"
+                  accessoryLeft={<Icons.Heart size={16} />}
+                >
+                  {diary.likes}
+                </Button>
+                <Button
+                  size="tiny"
+                  appearance="ghost"
+                  status="basic"
+                  accessoryLeft={<Icons.MessageCircle size={16} />}
+                >
+                  {diary.comments}
+                </Button>
               </View>
-            </View>
+            </Card>
           ))}
         </View>
 
@@ -226,9 +252,91 @@ export function DiaryScreen() {
       </ScrollView>
 
       {/* 添加日记按钮 */}
-      <TouchableOpacity style={styles.addButton}>
-        <Plus size={24} color={colors.white} />
-      </TouchableOpacity>
+      <Button
+        style={styles.addButton}
+        size="large"
+        appearance="filled"
+        status="primary"
+        accessoryLeft={<Icons.Plus size={24} />}
+      />
+
+      {/* 对比图弹窗 - UI Kitten Modal */}
+      <Modal
+        visible={showCompareModal}
+        backdropStyle={styles.compareBackdrop}
+        onBackdropPress={() => setShowCompareModal(false)}
+      >
+        <Card style={styles.compareModal} header={
+          <View style={styles.compareModalHeader}>
+            <Text category="h6">照片对比</Text>
+            <Button
+              size="tiny"
+              appearance="ghost"
+              status="basic"
+              accessoryLeft={<Icons.X size={24} />}
+              onPress={() => setShowCompareModal(false)}
+            />
+          </View>
+        }>
+          {/* 对比模式选择 */}
+          <View style={styles.compareModeSelector}>
+            <Button
+              style={styles.compareModeButton}
+              size="small"
+              appearance={selectedIndex === 0 ? 'filled' : 'outline'}
+              status={selectedIndex === 0 ? 'primary' : 'basic'}
+              onPress={() => setSelectedIndex(0)}
+            >
+              并排对比
+            </Button>
+            <Button
+              style={styles.compareModeButton}
+              size="small"
+              appearance={selectedIndex === 1 ? 'filled' : 'outline'}
+              status={selectedIndex === 1 ? 'primary' : 'basic'}
+              onPress={() => setSelectedIndex(1)}
+            >
+              叠加对比
+            </Button>
+          </View>
+
+          {/* 对比说明 */}
+          <Layout style={styles.compareInfo} level="2">
+            <Text category="s1">
+              {selectedIndex === 0 ? '📸 并排对比' : '🎞️ 叠加对比'}
+            </Text>
+            <Text appearance="hint">
+              {selectedIndex === 0
+                ? '选择两张同一位置、同一角度的照片并排展示，直观对比生长变化'
+                : '将两张照片叠加在一起，用滑块控制透明度，查看细微变化'
+              }
+            </Text>
+          </Layout>
+
+          {/* 模拟对比区域 */}
+          <View style={styles.comparePreview}>
+            <View style={styles.compareImage}>
+              <Text appearance="hint">📷 1月1日</Text>
+            </View>
+            <Icons.ArrowRight size={20} />
+            <View style={styles.compareImage}>
+              <Text appearance="hint">📷 1月20日</Text>
+            </View>
+          </View>
+
+          <Button
+            style={styles.selectPhotosButton}
+            appearance="filled"
+            status="primary"
+            onPress={() => {
+              Alert.alert('提示', '请在添加日记时选择多张照片进行对比');
+              setShowCompareModal(false);
+            }}
+          >
+            选择照片开始对比
+          </Button>
+        </Card>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -238,46 +346,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    backgroundColor: colors.surface,
-  },
-  backButton: {
-    padding: spacing.xs,
-  },
-  shareButton: {
-    padding: spacing.xs,
-  },
-  headerTitle: {
-    fontSize: fontSize.lg,
-    fontWeight: '600',
-    color: colors.text,
-  },
   filterContainer: {
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.lg,
   },
   filterChip: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.full,
-    backgroundColor: colors.surface,
     marginRight: spacing.sm,
-  },
-  filterChipActive: {
-    backgroundColor: colors.primary,
-  },
-  filterChipText: {
-    fontSize: fontSize.sm,
-    color: colors['text-secondary'],
-  },
-  filterChipTextActive: {
-    color: colors.white,
-    fontWeight: '500',
   },
   content: {
     flex: 1,
@@ -290,23 +364,8 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.surface,
-    padding: spacing.md,
-    borderRadius: borderRadius.lg,
-    gap: spacing.sm,
-  },
-  actionButtonText: {
-    fontSize: fontSize.sm,
-    fontWeight: '500',
-    color: colors.primary,
   },
   chartContainer: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
     marginBottom: spacing.lg,
   },
   chartHeader: {
@@ -314,15 +373,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: spacing.md,
-  },
-  chartTitle: {
-    fontSize: fontSize.md,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  chartClose: {
-    fontSize: fontSize.sm,
-    color: colors.primary,
   },
   chart: {
     flexDirection: 'row',
@@ -333,10 +383,6 @@ const styles = StyleSheet.create({
     width: 40,
     justifyContent: 'space-between',
     paddingRight: spacing.sm,
-  },
-  axisLabel: {
-    fontSize: 10,
-    color: colors['text-light'],
   },
   chartArea: {
     flex: 1,
@@ -365,8 +411,6 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   barLabel: {
-    fontSize: 10,
-    color: colors['text-secondary'],
     marginTop: spacing.xs,
   },
   growthStats: {
@@ -379,24 +423,10 @@ const styles = StyleSheet.create({
   statItem: {
     alignItems: 'center',
   },
-  statValue: {
-    fontSize: fontSize.lg,
-    fontWeight: 'bold',
-    color: colors.primary,
-  },
-  statLabel: {
-    fontSize: fontSize.xs,
-    color: colors['text-secondary'],
-    marginTop: 2,
-  },
   diaryList: {
     gap: spacing.md,
   },
-  diaryCard: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-  },
+  diaryCard: {},
   diaryHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -406,38 +436,11 @@ const styles = StyleSheet.create({
   diaryInfo: {
     flex: 1,
   },
-  diaryPlant: {
-    fontSize: fontSize.md,
-    fontWeight: '600',
-    color: colors.text,
-  },
   diaryDate: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
     marginTop: 2,
-  },
-  diaryDateText: {
-    fontSize: fontSize.xs,
-    color: colors['text-light'],
-  },
-  compareBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.secondary + '15',
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.sm,
-    gap: 4,
-  },
-  compareText: {
-    fontSize: 10,
-    color: colors.secondary,
-  },
-  diaryContent: {
-    fontSize: fontSize.sm,
-    color: colors.text,
-    lineHeight: 22,
   },
   imagePlaceholder: {
     height: 120,
@@ -448,10 +451,6 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     gap: spacing.sm,
   },
-  imagePlaceholderText: {
-    fontSize: fontSize.sm,
-    color: colors['text-light'],
-  },
   diaryFooter: {
     flexDirection: 'row',
     gap: spacing.lg,
@@ -460,15 +459,6 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: colors.background,
   },
-  actionItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  actionCount: {
-    fontSize: fontSize.sm,
-    color: colors['text-secondary'],
-  },
   addButton: {
     position: 'absolute',
     bottom: spacing.xl,
@@ -476,13 +466,56 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: colors.primary,
+  },
+  compareBackdrop: {
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  compareModal: {
+    borderTopLeftRadius: borderRadius.xl,
+    borderTopRightRadius: borderRadius.xl,
+    paddingBottom: spacing.xl + 20,
+  },
+  compareModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.lg,
+  },
+  compareModeSelector: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    marginBottom: spacing.lg,
+  },
+  compareModeButton: {
+    flex: 1,
+  },
+  compareInfo: {
+    padding: spacing.md,
+    borderRadius: borderRadius.lg,
+    marginBottom: spacing.lg,
+  },
+  comparePreview: {
+    height: 120,
+    backgroundColor: colors.background,
+    borderRadius: borderRadius.lg,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
+    marginBottom: spacing.lg,
+    flexDirection: 'row',
+    gap: spacing.md,
+  },
+  compareImage: {
+    width: 100,
+    height: 100,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: colors.primary + '30',
+    borderStyle: 'dashed',
+  },
+  selectPhotosButton: {
+    marginTop: spacing.lg,
   },
 });

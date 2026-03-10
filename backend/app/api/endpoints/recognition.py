@@ -1,44 +1,81 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.security import get_current_user
 from app.models.user import User
-from app.services.recognition import recognition_service
+from app.services.recognition import plant_recognition_service
+from app.services.pest_recognition import pest_recognition_service
 from app.schemas.recognition import RecognitionResponse, SimilarSpecies
 import tempfile
 import os
+from typing import Optional
 
 router = APIRouter(prefix="/api/recognition", tags=["recognition"])
 
 
-@router.post("", response_model=RecognitionResponse)
+@router.post("/plant", response_model=RecognitionResponse)
 async def recognize_plant(
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    """植物识别API"""
     with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp:
         content = await file.read()
         tmp.write(content)
         tmp_path = tmp.name
 
     try:
-        result = recognition_service.recognize(tmp_path)
+        result = plant_recognition_service.recognize(tmp_path)
         return RecognitionResponse(
             id=result.get("id", "1"),
             name=result.get("name", "绿萝"),
-            scientific_name="Epipremnum aureum",
+            scientific_name="",
             confidence=result.get("confidence", 0.95),
-            description="绿萝是天南星科麒麟叶属植物，原产于印度尼西亚所罗门群岛的热带雨林。绿萝生命力顽强，易于养护，是最常见的室内观叶植物之一。",
+            description="",
             care_level=1,
-            light_requirement="耐阴",
+            light_requirement="喜散射光",
             water_requirement="见干见湿",
-            similar_species=[
-                SimilarSpecies(id="2", name="吊兰", difference="吊兰叶片更细长"),
-                SimilarSpecies(id="3", name="常春藤", difference="常春藤叶片为掌状五裂")
-            ]
+            similar_species=[]
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Recognition failed: {str(e)}")
     finally:
         os.unlink(tmp_path)
+
+
+@router.post("/full")
+async def recognize_full(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """完整识别API（同时识别植物和病虫害）"""
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp:
+        content = await file.read()
+        tmp.write(content)
+        tmp_path = tmp.name
+
+    try:
+        plant_result = plant_recognition_service.recognize(tmp_path)
+        pest_result = pest_recognition_service.recognize(tmp_path)
+
+        return {
+            "plant": plant_result,
+            "pest": pest_result if pest_result.get("id", "-1") != "-1" else None
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Recognition failed: {str(e)}")
+    finally:
+        os.unlink(tmp_path)
+
+
+# 保留旧接口以兼容
+@router.post("", response_model=RecognitionResponse)
+async def recognize_plant_legacy(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """植物识别API（兼容旧接口）"""
+    return await recognize_plant(file, db, current_user)

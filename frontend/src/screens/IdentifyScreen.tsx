@@ -1,13 +1,15 @@
-// 识别（首页）屏幕 - 核心入口
+// 识别（首页）屏幕 - 核心入口 - UI Kitten 组件
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { View, StyleSheet, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Camera, Image, Loader2 } from 'lucide-react-native';
-import { colors, spacing, borderRadius, fontSize } from '../constants/theme';
+import { Button, Card, Text, Spinner, Layout, useTheme } from '@ui-kitten/components';
+import { Icons } from '../components/Icon';
+import { colors, spacing, borderRadius, fontSize, shadows, touchTarget } from '../constants/theme';
 import { takePhoto, selectFromGallery, recognizePlant, RecognitionResult } from '../services/recognitionService';
 import { PlantCard } from '../components/PlantCard';
 
 export function IdentifyScreen() {
+  const theme = useTheme();
   const [isLoading, setIsLoading] = useState(false);
   const [showPlantCard, setShowPlantCard] = useState(false);
   const [recognitionResult, setRecognitionResult] = useState<RecognitionResult | null>(null);
@@ -52,48 +54,70 @@ export function IdentifyScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* 品牌头部 */}
       <View style={styles.header}>
-        <Text style={styles.title}>护花使者</Text>
-        <Text style={styles.subtitle}>你的掌上植物管家</Text>
+        <View style={styles.brandBadge}>
+          <Icons.Sparkles size={14} color={colors.primary} />
+        </View>
+        <Text category="h1" style={styles.title}>护花使者</Text>
+        <Text appearance="hint" style={styles.subtitle}>你的掌上植物管家，让养花不再凭感觉</Text>
       </View>
 
-      <View style={styles.mainButtonContainer}>
+      {/* 主识别区域 */}
+      <Layout style={styles.mainButtonContainer} level="1">
         {isLoading ? (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={colors.primary} />
-            <Text style={styles.loadingText}>正在识别中...</Text>
-            <Text style={styles.loadingSubtext}>请稍候，AI正在分析植物特征</Text>
+            <View style={styles.loadingCircle}>
+              <Spinner size="large" status="primary" />
+            </View>
+            <Text category="h6" status="primary" style={styles.loadingText}>AI 正在识别中...</Text>
+            <Text appearance="hint" style={styles.loadingSubtext}>请稍候，正在分析植物特征</Text>
           </View>
         ) : (
-          <TouchableOpacity
+          <Button
             style={styles.identifyButton}
+            appearance="filled"
+            status="primary"
+            size="giant"
+            accessoryLeft={<Icons.Camera size={32} />}
             onPress={() => handleIdentify('camera')}
-            activeOpacity={0.8}
           >
-            <Camera size={64} color={colors.white} />
-            <Text style={styles.identifyText}>拍照识别</Text>
-          </TouchableOpacity>
+            拍照识别
+          </Button>
         )}
-      </View>
+      </Layout>
 
-      <View style={styles.quickActions}>
-        <TouchableOpacity
+      {/* 快捷操作 */}
+      <Layout style={styles.quickActions} level="1">
+        <Button
           style={styles.actionButton}
+          appearance="outline"
+          status="basic"
+          accessoryLeft={<Icons.Image size={20} />}
           onPress={() => handleIdentify('gallery')}
           disabled={isLoading}
         >
-          <Image size={24} color={colors.primary} />
-          <Text style={styles.actionText}>相册导入</Text>
-        </TouchableOpacity>
-      </View>
+          相册导入
+        </Button>
+      </Layout>
 
-      <View style={styles.tips}>
-        <Text style={styles.tipsTitle}>新手推荐</Text>
-        <Text style={styles.tipsText}>不确定养什么？试试场景问答推荐</Text>
-        <TouchableOpacity style={styles.tipsButton}>
-          <Text style={styles.tipsButtonText}>开始推荐</Text>
-        </TouchableOpacity>
-      </View>
+      {/* 新手推荐卡片 - 使用 UI Kitten Card */}
+      <Card
+        style={styles.tips}
+        header={(props) => (
+          <View {...props} style={styles.tipsHeader}>
+            <Text status="success" category="c1" style={styles.tipsBadge}>新手必备</Text>
+            <Text category="s1">不确定养什么？</Text>
+          </View>
+        )}
+        footer={
+          <Button size="small" appearance="filled" status="success">
+            开始推荐
+          </Button>
+        }
+      >
+        <Text appearance="hint">试试场景问答推荐，适合你的植物</Text>
+      </Card>
 
       {/* 植物档案卡弹窗 */}
       <PlantCard
@@ -115,18 +139,28 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   header: {
-    padding: spacing.lg,
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.md,
     alignItems: 'center',
   },
+  brandBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.primary + '15',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.sm,
+  },
   title: {
-    fontSize: fontSize.xxl,
-    fontWeight: 'bold',
     color: colors.primary,
+    fontWeight: '700',
+    letterSpacing: 1,
   },
   subtitle: {
-    fontSize: fontSize.md,
-    color: colors['text-secondary'],
     marginTop: spacing.xs,
+    textAlign: 'center',
   },
   mainButtonContainer: {
     flex: 1,
@@ -134,85 +168,51 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   identifyButton: {
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    backgroundColor: colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
-    elevation: 8,
-  },
-  identifyText: {
-    color: colors.white,
-    fontSize: fontSize.lg,
-    fontWeight: '600',
-    marginTop: spacing.sm,
+    width: 180,
+    height: 180,
+    borderRadius: 90,
   },
   loadingContainer: {
     alignItems: 'center',
   },
+  loadingCircle: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: colors.surface,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...shadows.md,
+  },
   loadingText: {
-    fontSize: fontSize.lg,
-    color: colors.primary,
-    fontWeight: '600',
-    marginTop: spacing.lg,
+    marginTop: spacing.xl,
   },
   loadingSubtext: {
-    fontSize: fontSize.sm,
-    color: colors['text-secondary'],
     marginTop: spacing.xs,
   },
   quickActions: {
     flexDirection: 'row',
     justifyContent: 'center',
-    padding: spacing.lg,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.lg,
   },
   actionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.xl,
     paddingVertical: spacing.md,
-    borderRadius: borderRadius.lg,
-    gap: spacing.sm,
-  },
-  actionText: {
-    fontSize: fontSize.md,
-    color: colors.primary,
-    fontWeight: '500',
   },
   tips: {
-    margin: spacing.lg,
-    marginTop: 0,
-    padding: spacing.lg,
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.lg,
+    ...shadows.md,
   },
-  tipsTitle: {
-    fontSize: fontSize.md,
-    fontWeight: '600',
-    color: colors.text,
+  tipsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
   },
-  tipsText: {
-    fontSize: fontSize.sm,
-    color: colors['text-secondary'],
-    marginTop: spacing.xs,
-  },
-  tipsButton: {
-    backgroundColor: colors.secondary + '20',
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    borderRadius: borderRadius.md,
-    alignSelf: 'flex-start',
-    marginTop: spacing.md,
-  },
-  tipsButtonText: {
-    fontSize: fontSize.sm,
-    color: colors.secondary,
-    fontWeight: '500',
+  tipsBadge: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: borderRadius.full,
   },
 });

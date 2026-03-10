@@ -1,26 +1,36 @@
-// 我的屏幕 - 个人中心
+// 我的屏幕 - 个人中心 - UI Kitten 组件
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { User, BookOpen, Settings, HelpCircle, Star, Clock, Camera, Bell } from 'lucide-react-native';
-import { colors, spacing, borderRadius, fontSize } from '../constants/theme';
+import {
+  List,
+  ListItem,
+  Divider,
+  Text,
+  Button,
+  TopNavigation,
+  Layout,
+  useTheme,
+} from '@ui-kitten/components';
+import { Icons } from '../components/Icon';
+import { colors, spacing, borderRadius, fontSize, shadows, touchTarget } from '../constants/theme';
 
 const menuItems = [
-  { id: '1', icon: BookOpen, title: '养花日记', subtitle: '记录植物成长', screen: 'Diary' },
-  { id: '2', icon: Camera, title: '病症诊断', subtitle: 'AI诊断病虫害', screen: 'Diagnosis' },
-  { id: '3', icon: Star, title: '新手推荐', subtitle: '场景问答选植物', screen: 'Recommendation' },
-  { id: '4', icon: Bell, title: '提醒管理', subtitle: '智能提醒设置', screen: 'Reminder' },
-  { id: '5', icon: Settings, title: '设置', subtitle: '偏好设置', screen: 'Settings' },
-  { id: '6', icon: HelpCircle, title: '帮助反馈', subtitle: '联系我们', screen: 'Help' },
+  { id: '1', icon: Icons.BookOpen, title: '养花日记', subtitle: '记录植物成长', screen: 'Diary', color: colors.secondary },
+  { id: '2', icon: Icons.Camera, title: '病症诊断', subtitle: 'AI诊断病虫害', screen: 'Diagnosis', color: colors.error },
+  { id: '3', icon: Icons.Star, title: '新手推荐', subtitle: '场景问答选植物', screen: 'Recommendation', color: colors.warning },
+  { id: '4', icon: Icons.Bell, title: '提醒管理', subtitle: '智能提醒设置', screen: 'Reminder', color: colors.primary },
+  { id: '5', icon: Icons.Settings, title: '设置', subtitle: '偏好设置', screen: 'Settings', color: colors['text-secondary'] },
+  { id: '6', icon: Icons.HelpCircle, title: '帮助反馈', subtitle: '联系我们', screen: 'Help', color: colors['text-secondary'] },
 ];
 
 export function ProfileScreen() {
+  const theme = useTheme();
   const navigation = useNavigation<any>();
 
   const handleMenuPress = (screen: string) => {
     if (screen === 'Settings' || screen === 'Help') {
-      // TODO: 实现设置和帮助页面
       return;
     }
     navigation.navigate(screen);
@@ -28,53 +38,84 @@ export function ProfileScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* 用户信息 */}
-        <View style={styles.profileHeader}>
-          <View style={styles.avatar}>
-            <User size={40} color={colors.white} />
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+        {/* 用户信息 - UI Kitten Layout */}
+        <Layout style={styles.profileHeader} level="1">
+          <View style={styles.avatarContainer}>
+            <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
+              <Icons.User size={36} />
+            </View>
+            <View style={styles.avatarBadge}>
+              <Icons.Sparkles size={12} />
+            </View>
           </View>
           <View style={styles.profileInfo}>
-            <Text style={styles.username}>养花小白</Text>
-            <Text style={styles.userDesc}>已养护 2 盆植物</Text>
-          </View>
-        </View>
-
-        {/* 快捷入口 */}
-        <View style={styles.quickStats}>
-          <View style={styles.statItem}>
-            <Text style={styles.statNumber}>5</Text>
-            <Text style={styles.statLabel}>本周浇水</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statItem}>
-            <Text style={styles.statNumber}>2</Text>
-            <Text style={styles.statLabel}>识别次数</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statItem}>
-            <Text style={styles.statNumber}>1</Text>
-            <Text style={styles.statLabel}>连续打卡</Text>
-          </View>
-        </View>
-
-        {/* 菜单列表 */}
-        <View style={styles.menuSection}>
-          {menuItems.map((item) => (
-            <TouchableOpacity
-              key={item.id}
-              style={styles.menuItem}
-              onPress={() => handleMenuPress(item.screen)}
+            <Text category="h1">养花小白</Text>
+            <Button
+              size="tiny"
+              appearance="filled"
+              status="warning"
             >
-              <View style={styles.menuIcon}>
-                <item.icon size={24} color={colors.primary} />
-              </View>
-              <View style={styles.menuContent}>
-                <Text style={styles.menuTitle}>{item.title}</Text>
-                <Text style={styles.menuSubtitle}>{item.subtitle}</Text>
-              </View>
-            </TouchableOpacity>
-          ))}
+              Lv.3 园丁
+            </Button>
+            <Text appearance="hint">已养护 2 盆植物</Text>
+          </View>
+        </Layout>
+
+        {/* 快捷统计 - UI Kitten Layout */}
+        <Layout style={styles.quickStats} level="1">
+          <View style={styles.statItem}>
+            <View style={[styles.statIcon, { backgroundColor: colors.primary + '15' }]}>
+              <Icons.Clock size={18} />
+            </View>
+            <Text category="h5">5</Text>
+            <Text appearance="hint" category="c1">本周浇水</Text>
+          </View>
+          <Divider style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <View style={[styles.statIcon, { backgroundColor: colors.secondary + '15' }]}>
+              <Icons.Camera size={18} />
+            </View>
+            <Text category="h5">2</Text>
+            <Text appearance="hint" category="c1">识别次数</Text>
+          </View>
+          <Divider style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <View style={[styles.statIcon, { backgroundColor: colors.warning + '15' }]}>
+              <Icons.Star size={18} />
+            </View>
+            <Text category="h5">1</Text>
+            <Text appearance="hint" category="c1">连续打卡</Text>
+          </View>
+        </Layout>
+
+        {/* 菜单列表 - UI Kitten List */}
+        <Layout style={styles.menuSection} level="1">
+          <Text category="c1" status="warning" style={styles.menuSectionTitle}>功能入口</Text>
+          <List
+            data={menuItems}
+            ItemSeparatorComponent={Divider}
+            renderItem={({ item }) => (
+              <ListItem
+                style={styles.menuItem}
+                accessoryLeft={(props) => (
+                  <View {...props} style={[styles.menuIconAvatar, { backgroundColor: item.color + '15' }]}>
+                    <item.icon size={20} />
+                  </View>
+                )}
+                title={(props: any) => <Text {...props} category="s1">{item.title}</Text>}
+                description={(props: any) => <Text {...props} appearance="hint">{item.subtitle}</Text>}
+                accessoryRight={(props) => <Icons.ChevronRight {...props} size={18} />}
+                onPress={() => handleMenuPress(item.screen)}
+              />
+            )}
+          />
+        </Layout>
+
+        {/* 版本信息 */}
+        <View style={styles.footer}>
+          <Text appearance="hint" category="c1">护花使者 v1.0.0</Text>
+          <Text appearance="hint" category="c1">让养花不再凭感觉</Text>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -86,93 +127,92 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
+  scrollContent: {
+    paddingBottom: spacing.xxl,
+  },
   profileHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: spacing.lg,
-    backgroundColor: colors.surface,
+    padding: spacing.xl,
+    paddingTop: spacing.lg,
+  },
+  avatarContainer: {
+    position: 'relative',
   },
   avatar: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: colors.primary,
+    width: 72,
+    height: 72,
+    borderRadius: 36,
     justifyContent: 'center',
     alignItems: 'center',
+    ...shadows.md,
+  },
+  avatarBadge: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: colors.surface,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: colors.surface,
   },
   profileInfo: {
-    marginLeft: spacing.md,
-  },
-  username: {
-    fontSize: fontSize.lg,
-    fontWeight: 'bold',
-    color: colors.text,
-  },
-  userDesc: {
-    fontSize: fontSize.sm,
-    color: colors['text-secondary'],
-    marginTop: spacing.xs,
+    marginLeft: spacing.lg,
+    flex: 1,
+    gap: spacing.xs,
   },
   quickStats: {
     flexDirection: 'row',
-    backgroundColor: colors.surface,
     marginHorizontal: spacing.lg,
-    marginTop: spacing.md,
     padding: spacing.lg,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.xl,
+    ...shadows.sm,
   },
   statItem: {
     flex: 1,
     alignItems: 'center',
   },
-  statNumber: {
-    fontSize: fontSize.xl,
-    fontWeight: 'bold',
-    color: colors.primary,
-  },
-  statLabel: {
-    fontSize: fontSize.xs,
-    color: colors['text-secondary'],
-    marginTop: spacing.xs,
+  statIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: spacing.sm,
   },
   statDivider: {
     width: 1,
-    backgroundColor: colors.background,
   },
   menuSection: {
-    marginTop: spacing.lg,
-    backgroundColor: colors.surface,
+    marginTop: spacing.xl,
     marginHorizontal: spacing.lg,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.xl,
     overflow: 'hidden',
+    ...shadows.sm,
+  },
+  menuSectionTitle: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.sm,
   },
   menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.background,
+    minHeight: touchTarget.comfortable,
   },
-  menuIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.background,
+  menuIconAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: borderRadius.md,
     justifyContent: 'center',
     alignItems: 'center',
+    marginRight: spacing.md,
   },
-  menuContent: {
-    flex: 1,
-    marginLeft: spacing.md,
-  },
-  menuTitle: {
-    fontSize: fontSize.md,
-    fontWeight: '500',
-    color: colors.text,
-  },
-  menuSubtitle: {
-    fontSize: fontSize.xs,
-    color: colors['text-secondary'],
-    marginTop: 2,
+  footer: {
+    alignItems: 'center',
+    paddingTop: spacing.xxl,
+    paddingBottom: spacing.lg,
   },
 });

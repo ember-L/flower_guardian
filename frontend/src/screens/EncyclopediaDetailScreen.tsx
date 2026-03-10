@@ -1,9 +1,20 @@
-// 养护百科详情页
+// 养护百科详情页 - UI Kitten 组件
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { ArrowLeft, Sun, CloudRain, Snowflake, Droplets, AlertTriangle } from 'lucide-react-native';
+import {
+  TopNavigation,
+  Text,
+  Card,
+  Layout,
+  List,
+  ListItem,
+  Button,
+  Icon,
+  useTheme,
+} from '@ui-kitten/components';
+import { Icons } from '../components/Icon';
 import { colors, spacing, borderRadius, fontSize } from '../constants/theme';
 
 // 模拟植物详情数据
@@ -40,6 +51,7 @@ const mockPlantDetail = {
 };
 
 export function EncyclopediaDetailScreen() {
+  const theme = useTheme();
   const navigation = useNavigation();
   // const route = useRoute<RouteProp<RootStackParamList, 'EncyclopediaDetail'>>();
 
@@ -61,14 +73,19 @@ export function EncyclopediaDetailScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* 头部 */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <ArrowLeft size={24} color={colors.text} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>{plant.name}</Text>
-        <View style={{ width: 40 }} />
-      </View>
+      {/* 头部 - UI Kitten TopNavigation */}
+      <TopNavigation
+        title={plant.name}
+        alignment="center"
+        accessoryLeft={() => (
+          <Button
+            appearance="ghost"
+            status="basic"
+            accessoryLeft={(props) => <Icons.ArrowLeft {...props} size={24} />}
+            onPress={() => navigation.goBack()}
+          />
+        )}
+      />
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* 植物图片占位 */}
@@ -76,110 +93,110 @@ export function EncyclopediaDetailScreen() {
           <Text style={styles.plantEmoji}>🌿</Text>
         </View>
 
-        {/* 基本信息 */}
-        <View style={styles.section}>
-          <Text style={styles.plantName}>{plant.name}</Text>
-          <Text style={styles.scientificName}>{plant.scientificName}</Text>
-          <View style={styles.categoryBadge}>
-            <Text style={styles.categoryText}>{plant.category}</Text>
-          </View>
-        </View>
+        {/* 基本信息 - UI Kitten Layout */}
+        <Layout style={styles.section} level="1">
+          <Text category="h2">{plant.name}</Text>
+          <Text appearance="hint" category="s1" style={styles.scientificName}>{plant.scientificName}</Text>
+          <Text status="success" category="c1" style={styles.categoryBadge}>{plant.category}</Text>
+        </Layout>
 
-        {/* 养护难度 */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>养护难度</Text>
-          <View style={styles.difficultyCard}>
+        {/* 养护难度 - UI Kitten Card */}
+        <Layout style={styles.section} level="1">
+          <Text category="s1" style={styles.sectionTitle}>养护难度</Text>
+          <Card style={styles.difficultyCard}>
             <View style={styles.starsContainer}>
               {renderStars(plant.careLevel)}
             </View>
-            <Text style={styles.difficultyText}>
+            <Text category="p1">
               {plant.careLevel === 1 ? '入门级' :
                plant.careLevel === 2 ? '初级' :
                plant.careLevel === 3 ? '中级' :
                plant.careLevel === 4 ? '高级' : '专家级'}
             </Text>
-          </View>
-        </View>
+          </Card>
+        </Layout>
 
-        {/* 生长环境指标 */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>生长环境</Text>
+        {/* 生长环境指标 - UI Kitten Cards */}
+        <Layout style={styles.section} level="1">
+          <Text category="s1" style={styles.sectionTitle}>生长环境</Text>
           <View style={styles.metricsGrid}>
-            <View style={styles.metricCard}>
-              <Sun size={28} color={colors.warning} />
-              <Text style={styles.metricLabel}>光照</Text>
-              <Text style={styles.metricValue}>{plant.lightRequirement}</Text>
-            </View>
-            <View style={styles.metricCard}>
-              <CloudRain size={28} color={colors.primary} />
-              <Text style={styles.metricLabel}>水分</Text>
-              <Text style={styles.metricValue}>{plant.waterRequirement}</Text>
-            </View>
-            <View style={styles.metricCard}>
-              <Snowflake size={28} color={colors['text-light']} />
-              <Text style={styles.metricLabel}>温度</Text>
-              <Text style={styles.metricValue}>{plant.temperature}</Text>
-            </View>
-            <View style={styles.metricCard}>
-              <Droplets size={28} color={colors.secondary} />
-              <Text style={styles.metricLabel}>湿度</Text>
-              <Text style={styles.metricValue}>{plant.humidity}</Text>
-            </View>
+            <Card style={styles.metricCard}>
+              <Icons.Sun size={28} />
+              <Text appearance="hint" category="c1">光照</Text>
+              <Text>{plant.lightRequirement}</Text>
+            </Card>
+            <Card style={styles.metricCard}>
+              <Icons.CloudRain size={28} />
+              <Text appearance="hint" category="c1">水分</Text>
+              <Text>{plant.waterRequirement}</Text>
+            </Card>
+            <Card style={styles.metricCard}>
+              <Icons.Snowflake size={28} />
+              <Text appearance="hint" category="c1">温度</Text>
+              <Text>{plant.temperature}</Text>
+            </Card>
+            <Card style={styles.metricCard}>
+              <Icons.Droplets size={28} />
+              <Text appearance="hint" category="c1">湿度</Text>
+              <Text>{plant.humidity}</Text>
+            </Card>
           </View>
-        </View>
+        </Layout>
 
-        {/* 养护说明 */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>养护说明</Text>
-          <View style={styles.infoCard}>
-            <Text style={styles.infoText}>{plant.description}</Text>
-          </View>
+        {/* 养护说明 - UI Kitten Card */}
+        <Layout style={styles.section} level="1">
+          <Text category="s1" style={styles.sectionTitle}>养护说明</Text>
+          <Card style={styles.infoCard}>
+            <Text>{plant.description}</Text>
+          </Card>
 
           <View style={styles.infoItem}>
-            <Text style={styles.infoLabel}>施肥</Text>
-            <Text style={styles.infoValue}>{plant.fertilization}</Text>
+            <Text appearance="hint" category="c1">施肥</Text>
+            <Text category="s1">{plant.fertilization}</Text>
           </View>
           <View style={styles.infoItem}>
-            <Text style={styles.infoLabel}>换盆</Text>
-            <Text style={styles.infoValue}>{plant.repotting}</Text>
+            <Text appearance="hint" category="c1">换盆</Text>
+            <Text category="s1">{plant.repotting}</Text>
           </View>
-        </View>
+        </Layout>
 
-        {/* 常见问题 */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>常见问题</Text>
+        {/* 常见问题 - UI Kitten Cards */}
+        <Layout style={styles.section} level="1">
+          <Text category="s1" style={styles.sectionTitle}>常见问题</Text>
           {plant.difficulties.map((item) => (
-            <View key={item.id} style={styles.problemCard}>
-              <Text style={styles.problemTitle}>{item.title}</Text>
-              <Text style={styles.problemSolution}>{item.solution}</Text>
-            </View>
+            <Card key={item.id} style={styles.problemCard}>
+              <Text category="s1">{item.title}</Text>
+              <Text appearance="hint">{item.solution}</Text>
+            </Card>
           ))}
-        </View>
+        </Layout>
 
-        {/* 避坑指南 */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>避坑指南</Text>
-          <View style={styles.warningCard}>
-            <AlertTriangle size={24} color={colors.error} />
-            <Text style={styles.warningTitle}>新手常见错误</Text>
-          </View>
+        {/* 避坑指南 - UI Kitten Card */}
+        <Layout style={styles.section} level="1">
+          <Text category="s1" status="danger" style={styles.sectionTitle}>避坑指南</Text>
+          <Card style={styles.warningCard} status="danger">
+            <View style={styles.warningHeader}>
+              <Icons.AlertTriangle size={24} />
+              <Text category="s1">新手常见错误</Text>
+            </View>
+          </Card>
           {plant.commonMistakes.map((mistake, index) => (
             <View key={index} style={styles.mistakeItem}>
-              <Text style={styles.mistakeText}>× {mistake}</Text>
+              <Text appearance="hint">× {mistake}</Text>
             </View>
           ))}
-        </View>
+        </Layout>
 
-        {/* 养护小贴士 */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>养护小贴士</Text>
+        {/* 养护小贴士 - UI Kitten Layout */}
+        <Layout style={styles.section} level="1">
+          <Text category="s1" style={styles.sectionTitle}>养护小贴士</Text>
           {plant.tips.map((tip, index) => (
             <View key={index} style={styles.tipItem}>
               <View style={styles.tipBullet} />
-              <Text style={styles.tipText}>{tip}</Text>
+              <Text>{tip}</Text>
             </View>
           ))}
-        </View>
+        </Layout>
 
         <View style={{ height: 40 }} />
       </ScrollView>
@@ -344,6 +361,11 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.lg,
     gap: spacing.sm,
     marginBottom: spacing.md,
+  },
+  warningHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
   },
   warningTitle: {
     fontSize: fontSize.md,

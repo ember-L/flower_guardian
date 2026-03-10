@@ -3,7 +3,7 @@ from typing import Optional
 
 
 class Settings(BaseSettings):
-    DATABASE_URL: str = "postgresql://user:password@localhost:5432/flower_guardian"
+    DATABASE_URL: str = "postgresql://user:password@localhost:5555/flower_guardian"
     SECRET_KEY: str = "secret-key-change-in-production"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30

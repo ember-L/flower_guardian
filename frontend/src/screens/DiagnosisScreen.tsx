@@ -1,10 +1,19 @@
-// 病症诊断页面
+// 病症诊断页面 - UI Kitten 组件
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
+import { View, StyleSheet, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Camera, Image, Loader2, MessageCircle, ChevronRight } from 'lucide-react-native';
+import {
+  Button,
+  Card,
+  Text,
+  Spinner,
+  TopNavigation,
+  Layout,
+  useTheme,
+} from '@ui-kitten/components';
+import { Icons } from '../components/Icon';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
-import { colors, spacing, borderRadius, fontSize } from '../constants/theme';
+import { colors, spacing, borderRadius, fontSize, shadows, touchTarget } from '../constants/theme';
 
 // 诊断结果类型
 interface DiagnosisResult {
@@ -27,6 +36,7 @@ const mockDiagnosis: DiagnosisResult = {
 };
 
 export function DiagnosisScreen() {
+  const theme = useTheme();
   const [isLoading, setIsLoading] = useState(false);
   const [diagnosisResult, setDiagnosisResult] = useState<DiagnosisResult | null>(null);
 
@@ -45,7 +55,7 @@ export function DiagnosisScreen() {
       }
 
       // 模拟API调用
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise<void>(resolve => setTimeout(resolve, 2000));
       setDiagnosisResult(mockDiagnosis);
     } catch (error) {
       Alert.alert('诊断失败', '请重试');
@@ -74,97 +84,116 @@ export function DiagnosisScreen() {
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* 头部 */}
-        <View style={styles.header}>
-          <Text style={styles.title}>病症诊断</Text>
-          <Text style={styles.subtitle}>AI智能预诊，告别植物杀手</Text>
-        </View>
+        <Layout style={styles.headerIcon} level="1">
+          <Icons.AlertCircle size={24} />
+          <Text category="h2">病症诊断</Text>
+          <Text appearance="hint">AI智能预诊，告别植物杀手</Text>
+        </Layout>
 
         {/* 诊断区域 */}
         {!diagnosisResult && !isLoading && (
-          <View style={styles.diagnoseSection}>
+          <Layout style={styles.diagnoseSection} level="1">
             <View style={styles.diagnoseButtons}>
-              <TouchableOpacity
+              <Button
                 style={styles.diagnoseButton}
+                appearance="filled"
+                status="primary"
+                size="large"
+                accessoryLeft={<Icons.Camera size={24} />}
                 onPress={() => handleDiagnose('camera')}
               >
-                <Camera size={32} color={colors.white} />
-                <Text style={styles.diagnoseButtonText}>拍照诊断</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.diagnoseButton, styles.galleryButton]}
+                拍照诊断
+              </Button>
+              <Button
+                style={styles.diagnoseButton}
+                appearance="outline"
+                status="primary"
+                size="large"
+                accessoryLeft={<Icons.Image size={24} />}
                 onPress={() => handleDiagnose('gallery')}
               >
-                <Image size={32} color={colors.primary} />
-                <Text style={[styles.diagnoseButtonText, styles.galleryButtonText]}>相册选择</Text>
-              </TouchableOpacity>
+                相册选择
+              </Button>
             </View>
 
-            <View style={styles.tips}>
-              <Text style={styles.tipsTitle}>拍摄建议</Text>
-              <Text style={styles.tipsText}>• 拍摄清晰的照片</Text>
-              <Text style={styles.tipsText}>• 包含整体植株和病害部位</Text>
-              <Text style={styles.tipsText}>• 最好在自然光下拍摄</Text>
-            </View>
-          </View>
+            <Card style={styles.tipsCard}>
+              <Text category="s1">拍摄建议</Text>
+              <View style={styles.tipsList}>
+                <Text appearance="hint">• 拍摄清晰的照片</Text>
+                <Text appearance="hint">• 包含整体植株和病害部位</Text>
+                <Text appearance="hint">• 最好在自然光下拍摄</Text>
+              </View>
+            </Card>
+          </Layout>
         )}
 
         {/* 加载中 */}
         {isLoading && (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={colors.primary} />
-            <Text style={styles.loadingText}>AI正在分析中...</Text>
-            <Text style={styles.loadingSubtext}>请稍候，正在识别病虫害特征</Text>
+            <View style={styles.loadingCircle}>
+              <Spinner size="large" status="primary" />
+            </View>
+            <Text category="h6" status="primary">AI正在分析中...</Text>
+            <Text appearance="hint">请稍候，正在识别病虫害特征</Text>
           </View>
         )}
 
         {/* 诊断结果 */}
         {diagnosisResult && (
-          <View style={styles.resultSection}>
+          <Layout style={styles.resultSection} level="1">
             <View style={styles.resultHeader}>
-              <Text style={styles.resultTitle}>诊断结果</Text>
-              <View style={[styles.severityBadge, { backgroundColor: getSeverityColor(diagnosisResult.severity) + '20' }]}>
-                <Text style={[styles.severityText, { color: getSeverityColor(diagnosisResult.severity) }]}>
-                  {getSeverityText(diagnosisResult.severity)}
-                </Text>
-              </View>
+              <Text category="h3">诊断结果</Text>
+              <Text
+                category="c1"
+                status={diagnosisResult.severity === 'high' ? 'danger' : diagnosisResult.severity === 'medium' ? 'warning' : 'success'}
+              >
+                {getSeverityText(diagnosisResult.severity)}
+              </Text>
             </View>
 
-            <View style={styles.resultCard}>
-              <Text style={styles.symptomLabel}>症状</Text>
-              <Text style={styles.symptomText}>{diagnosisResult.symptom}</Text>
+            <Card style={styles.resultCard}>
+              <Text appearance="hint" category="c1">症状</Text>
+              <Text category="h5">{diagnosisResult.symptom}</Text>
 
-              <Text style={styles.causeLabel}>可能原因</Text>
+              <Text appearance="hint" category="c1" style={styles.labelMargin}>可能原因</Text>
               <View style={styles.causesList}>
                 {diagnosisResult.possibleCauses.map((cause, index) => (
                   <View key={index} style={styles.causeItem}>
-                    <Text style={styles.causeText}>• {cause}</Text>
+                    <View style={styles.causeDot} />
+                    <Text>{cause}</Text>
                   </View>
                 ))}
               </View>
 
-              <Text style={styles.treatmentLabel}>治疗建议</Text>
-              <Text style={styles.treatmentText}>{diagnosisResult.treatment}</Text>
+              <Text appearance="hint" category="c1" style={styles.labelMargin}>治疗建议</Text>
+              <Text>{diagnosisResult.treatment}</Text>
 
-              <Text style={styles.preventionLabel}>预防措施</Text>
-              <Text style={styles.preventionText}>{diagnosisResult.prevention}</Text>
-            </View>
+              <Text appearance="hint" category="c1" style={styles.labelMargin}>预防措施</Text>
+              <Text>{diagnosisResult.prevention}</Text>
+            </Card>
 
             {/* 再次诊断 */}
-            <TouchableOpacity
+            <Button
               style={styles.retryButton}
+              appearance="outline"
+              status="primary"
+              accessoryLeft={<Icons.Camera size={18} />}
               onPress={() => setDiagnosisResult(null)}
             >
-              <Camera size={20} color={colors.primary} />
-              <Text style={styles.retryButtonText}>再次诊断</Text>
-            </TouchableOpacity>
+              再次诊断
+            </Button>
 
             {/* 社区求助 */}
-            <TouchableOpacity style={styles.communityButton}>
-              <MessageCircle size={20} color={colors.white} />
-              <Text style={styles.communityButtonText}>发布到社区急诊室</Text>
-              <ChevronRight size={20} color={colors.white} />
-            </TouchableOpacity>
-          </View>
+            <Button
+              style={styles.communityButton}
+              appearance="filled"
+              status="success"
+              accessoryLeft={<Icons.MessageCircle size={18} />}
+              accessoryRight={<Icons.ChevronRight size={18} />}
+            >
+              发布到社区急诊室
+            </Button>
+          </Layout>
         )}
       </ScrollView>
     </SafeAreaView>
@@ -179,19 +208,9 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
   },
-  header: {
-    padding: spacing.lg,
+  headerIcon: {
+    padding: spacing.xl,
     alignItems: 'center',
-  },
-  title: {
-    fontSize: fontSize.xl,
-    fontWeight: 'bold',
-    color: colors.text,
-  },
-  subtitle: {
-    fontSize: fontSize.sm,
-    color: colors['text-secondary'],
-    marginTop: spacing.xs,
   },
   diagnoseSection: {
     padding: spacing.lg,
@@ -202,56 +221,26 @@ const styles = StyleSheet.create({
   },
   diagnoseButton: {
     flex: 1,
-    backgroundColor: colors.primary,
-    padding: spacing.lg,
-    borderRadius: borderRadius.lg,
-    alignItems: 'center',
-    gap: spacing.sm,
   },
-  galleryButton: {
-    backgroundColor: colors.surface,
-    borderWidth: 2,
-    borderColor: colors.primary,
-  },
-  diagnoseButtonText: {
-    fontSize: fontSize.md,
-    fontWeight: '600',
-    color: colors.white,
-  },
-  galleryButtonText: {
-    color: colors.primary,
-  },
-  tips: {
-    backgroundColor: colors.surface,
-    padding: spacing.lg,
-    borderRadius: borderRadius.lg,
+  tipsCard: {
     marginTop: spacing.lg,
+    ...shadows.sm,
   },
-  tipsTitle: {
-    fontSize: fontSize.md,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: spacing.sm,
-  },
-  tipsText: {
-    fontSize: fontSize.sm,
-    color: colors['text-secondary'],
-    lineHeight: 22,
+  tipsList: {
+    gap: spacing.sm,
   },
   loadingContainer: {
     alignItems: 'center',
-    padding: spacing.xl * 2,
+    paddingVertical: spacing.xxxl,
   },
-  loadingText: {
-    fontSize: fontSize.lg,
-    fontWeight: '600',
-    color: colors.primary,
-    marginTop: spacing.lg,
-  },
-  loadingSubtext: {
-    fontSize: fontSize.sm,
-    color: colors['text-secondary'],
-    marginTop: spacing.xs,
+  loadingCircle: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: colors.surface,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...shadows.md,
   },
   resultSection: {
     padding: spacing.lg,
@@ -262,106 +251,31 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: spacing.md,
   },
-  resultTitle: {
-    fontSize: fontSize.lg,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  severityBadge: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.full,
-  },
-  severityText: {
-    fontSize: fontSize.xs,
-    fontWeight: '600',
-  },
   resultCard: {
-    backgroundColor: colors.surface,
-    padding: spacing.lg,
-    borderRadius: borderRadius.lg,
+    ...shadows.sm,
   },
-  symptomLabel: {
-    fontSize: fontSize.sm,
-    fontWeight: '600',
-    color: colors['text-secondary'],
-  },
-  symptomText: {
-    fontSize: fontSize.lg,
-    fontWeight: 'bold',
-    color: colors.text,
-    marginTop: spacing.xs,
-    marginBottom: spacing.md,
-  },
-  causeLabel: {
-    fontSize: fontSize.sm,
-    fontWeight: '600',
-    color: colors['text-secondary'],
-    marginBottom: spacing.xs,
+  labelMargin: {
+    marginTop: spacing.lg,
   },
   causesList: {
-    marginBottom: spacing.md,
+    marginBottom: spacing.lg,
+    gap: spacing.sm,
   },
   causeItem: {
-    marginBottom: spacing.xs,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
   },
-  causeText: {
-    fontSize: fontSize.sm,
-    color: colors.text,
-  },
-  treatmentLabel: {
-    fontSize: fontSize.sm,
-    fontWeight: '600',
-    color: colors['text-secondary'],
-    marginBottom: spacing.xs,
-  },
-  treatmentText: {
-    fontSize: fontSize.sm,
-    color: colors.text,
-    lineHeight: 22,
-    marginBottom: spacing.md,
-  },
-  preventionLabel: {
-    fontSize: fontSize.sm,
-    fontWeight: '600',
-    color: colors['text-secondary'],
-    marginBottom: spacing.xs,
-  },
-  preventionText: {
-    fontSize: fontSize.sm,
-    color: colors.text,
-    lineHeight: 22,
+  causeDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: colors.warning,
   },
   retryButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.surface,
-    padding: spacing.md,
-    borderRadius: borderRadius.lg,
     marginTop: spacing.lg,
-    gap: spacing.sm,
-  },
-  retryButtonText: {
-    fontSize: fontSize.md,
-    fontWeight: '500',
-    color: colors.primary,
   },
   communityButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.secondary,
-    padding: spacing.md,
-    borderRadius: borderRadius.lg,
     marginTop: spacing.md,
-    gap: spacing.sm,
-  },
-  communityButtonText: {
-    flex: 1,
-    fontSize: fontSize.md,
-    fontWeight: '600',
-    color: colors.white,
-    textAlign: 'center',
   },
 });
