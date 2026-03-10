@@ -1,21 +1,20 @@
-// 植物档案卡弹窗组件 - UI Kitten 组件
+// 植物档案卡弹窗组件 - 使用 Tailwind/NativeWind
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, TouchableWithoutFeedback } from 'react-native';
 import {
-  Modal,
-  Button,
+  View,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
   Text,
-  Card,
-  Layout,
-  useTheme,
-} from '@ui-kitten/components';
+  Modal,
+  TextInput,
+} from 'react-native';
 import { Icons } from './Icon';
-import { colors, spacing, borderRadius, fontSize } from '../constants/theme';
-import { RecognitionResult } from '../services/recognitionService';
+import { colors, spacing, borderRadius } from '../constants/theme';
 
 interface PlantCardProps {
   visible: boolean;
-  plant: RecognitionResult | null;
+  plant: any;
   onClose: () => void;
   onAddToGarden: () => void;
 }
@@ -23,17 +22,14 @@ interface PlantCardProps {
 export function PlantCard({ visible, plant, onClose, onAddToGarden }: PlantCardProps) {
   const [showComparison, setShowComparison] = useState(false);
   const [comparisonIndex, setComparisonIndex] = useState(0);
-  const theme = useTheme();
 
   if (!plant) return null;
 
   const renderStars = (level: number) => {
     return Array.from({ length: 5 }, (_, i) => (
-      <Icons.Star
-        key={i}
-        size={14}
-        color={i < level ? colors.warning : colors['text-light']}
-      />
+      <Text key={i} style={{ color: i < level ? colors.warning : colors['text-light'], fontSize: 12 }}>
+        ★
+      </Text>
     ));
   };
 
@@ -42,244 +38,113 @@ export function PlantCard({ visible, plant, onClose, onAddToGarden }: PlantCardP
     return texts[level] || '未知';
   };
 
-  const getLightIcon = (requirement: string) => {
-    if (requirement.includes('耐阴') || requirement.includes('弱光')) {
-      return { icon: '☁️', color: colors['text-light'] };
-    }
-    if (requirement.includes('散光') || requirement.includes('半阴')) {
-      return { icon: '⛅', color: colors.warning };
-    }
-    return { icon: '☀️', color: colors.warning };
-  };
-
-  const getWaterIcon = (requirement: string) => {
-    if (requirement.includes('耐旱') || requirement.includes('少')) {
-      return { icon: '💧', color: colors.primary };
-    }
-    if (requirement.includes('喜湿') || requirement.includes('多')) {
-      return { icon: '💦', color: colors.primary };
-    }
-    return { icon: '💧', color: colors.primary };
-  };
-
   const handlePrevComparison = () => {
     setComparisonIndex(prev => Math.max(0, prev - 1));
   };
 
   const handleNextComparison = () => {
     if (plant.similarSpecies) {
-      setComparisonIndex(prev => Math.min(plant.similarSpecies!.length - 1, prev + 1));
+      setComparisonIndex(prev => Math.min(plant.similarSpecies.length - 1, prev + 1));
     }
   };
-
-  // 渲染相似种对比视图
-  const renderComparisonView = () => {
-    if (!plant.similarSpecies || plant.similarSpecies.length === 0) return null;
-
-    const similar = plant.similarSpecies[comparisonIndex];
-    const isFirst = comparisonIndex === 0;
-    const isLast = comparisonIndex === plant.similarSpecies.length - 1;
-
-    return (
-      <Card style={styles.comparisonContainer}>
-        <View style={styles.comparisonHeader}>
-          <Button
-            size="tiny"
-            appearance="ghost"
-            status={isFirst ? 'basic' : 'primary'}
-            accessoryLeft={<Icons.ArrowLeft size={20} />}
-            onPress={handlePrevComparison}
-            disabled={isFirst}
-          />
-          <Text category="s1" style={styles.comparisonTitle}>
-            相似种对比 ({comparisonIndex + 1}/{plant.similarSpecies.length})
-          </Text>
-          <Button
-            size="tiny"
-            appearance="ghost"
-            status={isLast ? 'basic' : 'primary'}
-            accessoryLeft={<Icons.ArrowRight size={20} />}
-            onPress={handleNextComparison}
-            disabled={isLast}
-          />
-        </View>
-
-        <View style={styles.comparisonContent}>
-          {/* 当前识别结果 */}
-          <Layout style={styles.comparisonCard} level="2">
-            <Text appearance="hint" category="c1">识别结果</Text>
-            <Text style={styles.plantEmoji}>🌿</Text>
-            <Text category="s1" style={styles.comparisonName}>{plant.name}</Text>
-            <View style={styles.comparisonMetrics}>
-              <View style={styles.comparisonMetric}>
-                <Text appearance="hint" category="c1">难度</Text>
-                <View style={styles.stars}>{renderStars(plant.careLevel)}</View>
-              </View>
-            </View>
-          </Layout>
-
-          {/* 分隔线 */}
-          <View style={styles.comparisonDivider}>
-            <Text status="primary" category="c1">VS</Text>
-          </View>
-
-          {/* 相似种 */}
-          <Layout style={styles.comparisonCard} level="2">
-            <Text appearance="hint" category="c1">相似植物</Text>
-            <Text style={styles.plantEmoji}>🌱</Text>
-            <Text category="s1" style={styles.comparisonName}>{similar.name}</Text>
-            <View style={styles.comparisonMetrics}>
-              <View style={styles.comparisonMetric}>
-                <Text appearance="hint" category="c1">难度</Text>
-                <View style={styles.stars}>{renderStars(similar.careLevel)}</View>
-              </View>
-            </View>
-            <Text appearance="hint" category="c1">{similar.difference}</Text>
-          </Layout>
-        </View>
-
-        <View style={styles.comparisonTips}>
-          <Icons.Info size={14} color={colors.secondary} />
-          <Text appearance="hint" category="c1" style={styles.comparisonTipsText}>
-            {similar.tips}
-          </Text>
-        </View>
-
-        <Button
-          style={styles.backButton}
-          appearance="ghost"
-          status="primary"
-          accessoryLeft={<Icons.ArrowLeft size={16} />}
-          onPress={() => setShowComparison(false)}
-        >
-          返回档案卡
-        </Button>
-      </Card>
-    );
-  };
-
-  // 渲染档案卡视图
-  const renderCardView = () => (
-    <Card style={styles.card}>
-      {/* 关闭按钮 */}
-      <View style={styles.closeButton}>
-        <Button
-          size="tiny"
-          appearance="ghost"
-          status="basic"
-          accessoryLeft={<Icons.X size={20} />}
-          onPress={onClose}
-        />
-      </View>
-
-      {/* 植物图片占位 */}
-      <View style={styles.imageContainer}>
-        <Text style={styles.plantEmoji}>🌿</Text>
-      </View>
-
-      {/* 植物名称 */}
-      <Text category="h5">{plant.name}</Text>
-      <Text appearance="hint" category="s1" style={styles.scientificName}>{plant.scientificName}</Text>
-
-      {/* 置信度 */}
-      <View style={styles.confidenceBadge}>
-        <Text status="primary" category="c1">
-          置信度 {Math.round(plant.confidence * 100)}%
-        </Text>
-      </View>
-
-      {/* 养护指标 */}
-      <View style={styles.metricsContainer}>
-        <View style={styles.metricItem}>
-          <Text appearance="hint" category="c1">养护难度</Text>
-          <View style={styles.stars}>{renderStars(plant.careLevel)}</View>
-          <Text category="c1">{getDifficultyText(plant.careLevel)}</Text>
-        </View>
-
-        <View style={styles.metricItem}>
-          <Text appearance="hint" category="c1">光照需求</Text>
-          <View style={styles.iconBox}>
-            <Text style={styles.metricEmoji}>{getLightIcon(plant.lightRequirement).icon}</Text>
-          </View>
-          <Text category="c1">{plant.lightRequirement}</Text>
-        </View>
-
-        <View style={styles.metricItem}>
-          <Text appearance="hint" category="c1">水分需求</Text>
-          <View style={styles.iconBox}>
-            <Text style={styles.metricEmoji}>{getWaterIcon(plant.waterRequirement).icon}</Text>
-          </View>
-          <Text category="c1">{plant.waterRequirement}</Text>
-        </View>
-      </View>
-
-      {/* 描述 */}
-      <Text appearance="hint" numberOfLines={3} style={styles.description}>
-        {plant.description}
-      </Text>
-
-      {/* 相似种对比提示 */}
-      {plant.similarSpecies && plant.similarSpecies.length > 0 && (
-        <Button
-          style={styles.similarHint}
-          appearance="filled"
-          status="basic"
-          accessoryRight={<Icons.ArrowRight size={16} />}
-          onPress={() => setShowComparison(true)}
-        >
-          有 {plant.similarSpecies.length} 种相似植物，点击查看对比
-        </Button>
-      )}
-
-      {/* 添加按钮 */}
-      <Button
-        style={styles.addButton}
-        appearance="filled"
-        status="primary"
-        accessoryLeft={<Icons.Check size={20} />}
-        onPress={onAddToGarden}
-      >
-        加入我的花园
-      </Button>
-    </Card>
-  );
 
   return (
     <Modal
       visible={visible}
-      backdropStyle={styles.overlay}
-      onBackdropPress={onClose}
+      transparent={true}
+      animationType="fade"
+      onRequestClose={onClose}
     >
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {showComparison ? renderComparisonView() : renderCardView()}
-      </ScrollView>
+      <View style={styles.overlay}>
+        <View style={styles.content}>
+          <ScrollView showsVerticalScrollIndicator={false}>
+            {/* 关闭按钮 */}
+            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+              <Icons.X size={20} color={colors['text-tertiary']} />
+            </TouchableOpacity>
+
+            {/* 植物图片 */}
+            <View style={styles.imageContainer}>
+              <Text style={styles.plantEmoji}>🌿</Text>
+            </View>
+
+            {/* 植物名称 */}
+            <Text style={styles.plantName}>{plant.name}</Text>
+            <Text style={styles.scientificName}>{plant.scientificName}</Text>
+
+            {/* 置信度 */}
+            <View style={styles.confidenceBadge}>
+              <Text style={styles.confidenceText}>
+                置信度 {Math.round(plant.confidence * 100)}%
+              </Text>
+            </View>
+
+            {/* 养护指标 */}
+            <View style={styles.metricsContainer}>
+              <View style={styles.metricItem}>
+                <Text style={styles.metricLabel}>养护难度</Text>
+                <View style={styles.stars}>{renderStars(plant.careLevel || 1)}</View>
+                <Text style={styles.metricValue}>{getDifficultyText(plant.careLevel || 1)}</Text>
+              </View>
+
+              <View style={styles.metricItem}>
+                <Text style={styles.metricLabel}>光照需求</Text>
+                <Text style={styles.metricEmoji}>☁️</Text>
+                <Text style={styles.metricValue}>{plant.lightRequirement || '耐阴'}</Text>
+              </View>
+
+              <View style={styles.metricItem}>
+                <Text style={styles.metricLabel}>水分需求</Text>
+                <Text style={styles.metricEmoji}>💧</Text>
+                <Text style={styles.metricValue}>{plant.waterRequirement || '见干见湿'}</Text>
+              </View>
+            </View>
+
+            {/* 描述 */}
+            <Text style={styles.description} numberOfLines={3}>
+              {plant.description || '这是一种美丽的植物，适合室内养护。'}
+            </Text>
+
+            {/* 添加按钮 */}
+            <TouchableOpacity
+              onPress={onAddToGarden}
+              style={styles.addButton}
+              activeOpacity={0.7}
+            >
+              <View style={styles.addButtonContent}>
+                <Icons.Check size={20} color="#fff" />
+                <Text style={styles.addButtonText}>加入我的花园</Text>
+              </View>
+            </TouchableOpacity>
+          </ScrollView>
+        </View>
+      </View>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
   overlay: {
+    flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  scrollContent: {
-    flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: spacing.lg,
   },
-  card: {
+  content: {
     width: '100%',
     maxWidth: 340,
-    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.xxl,
+    padding: spacing.lg,
+    maxHeight: '80%',
   },
   closeButton: {
     position: 'absolute',
     top: spacing.md,
     right: spacing.md,
     zIndex: 10,
+    padding: spacing.xs,
   },
   imageContainer: {
     width: 120,
@@ -289,12 +154,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: spacing.md,
+    alignSelf: 'center',
   },
   plantEmoji: {
     fontSize: 60,
   },
+  plantName: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: colors.text,
+    textAlign: 'center',
+  },
   scientificName: {
     fontStyle: 'italic',
+    color: colors['text-tertiary'],
+    textAlign: 'center',
     marginTop: spacing.xs,
   },
   confidenceBadge: {
@@ -303,6 +177,12 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs,
     borderRadius: borderRadius.full,
     marginTop: spacing.md,
+    alignSelf: 'center',
+  },
+  confidenceText: {
+    color: colors.secondary,
+    fontSize: 12,
+    fontWeight: '500',
   },
   metricsContainer: {
     flexDirection: 'row',
@@ -316,89 +196,44 @@ const styles = StyleSheet.create({
   metricItem: {
     alignItems: 'center',
   },
+  metricLabel: {
+    color: colors['text-tertiary'],
+    fontSize: 12,
+  },
   stars: {
     flexDirection: 'row',
-    gap: 2,
-  },
-  iconBox: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.background,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: spacing.xs,
-  },
-  metricValue: {
-    marginTop: spacing.xs,
-  },
-  description: {
-    textAlign: 'center',
-    marginTop: spacing.md,
-    lineHeight: 20,
-  },
-  similarHint: {
-    marginTop: spacing.md,
-  },
-  addButton: {
-    marginTop: spacing.lg,
-    width: '100%',
-  },
-  // 相似种对比样式
-  comparisonContainer: {
-    width: '100%',
-    maxWidth: 360,
-  },
-  comparisonHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: spacing.lg,
-  },
-  comparisonTitle: {
-    flex: 1,
-    textAlign: 'center',
-  },
-  comparisonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  comparisonCard: {
-    flex: 1,
-    alignItems: 'center',
-    padding: spacing.md,
-    borderRadius: borderRadius.lg,
-  },
-  comparisonName: {
-    marginTop: spacing.sm,
-  },
-  comparisonMetrics: {
-    marginTop: spacing.sm,
-  },
-  comparisonMetric: {
-    alignItems: 'center',
-  },
-  comparisonDivider: {
-    paddingHorizontal: spacing.sm,
-  },
-  comparisonTips: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: colors.secondary + '15',
-    padding: spacing.md,
-    borderRadius: borderRadius.md,
-    marginTop: spacing.lg,
-    gap: spacing.sm,
-  },
-  comparisonTipsText: {
-    flex: 1,
-    lineHeight: 18,
-  },
-  backButton: {
-    marginTop: spacing.lg,
+    marginVertical: spacing.xs,
   },
   metricEmoji: {
     fontSize: 18,
+    marginVertical: spacing.xs,
+  },
+  metricValue: {
+    color: colors.text,
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  description: {
+    textAlign: 'center',
+    color: colors['text-secondary'],
+    marginTop: spacing.md,
+    lineHeight: 20,
+  },
+  addButton: {
+    marginTop: spacing.lg,
+    backgroundColor: colors.primary,
+    borderRadius: borderRadius.lg,
+    paddingVertical: spacing.md,
+  },
+  addButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+  },
+  addButtonText: {
+    color: colors.white,
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

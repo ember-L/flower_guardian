@@ -1,212 +1,267 @@
-// 花园屏幕 - 我的植物列表 - UI Kitten 组件
-import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+// 花园屏幕 - 使用纯 StyleSheet
+import React, { useState } from 'react';
 import {
-  List,
-  ListItem,
-  Button,
-  Card,
+  View,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
   Text,
-  Layout,
-  useTheme,
-} from '@ui-kitten/components';
+  TextInput,
+  Modal,
+  Alert,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Icons } from '../components/Icon';
-import { colors, spacing, borderRadius, fontSize, shadows, touchTarget } from '../constants/theme';
+import { colors, spacing } from '../constants/theme';
 
-// 模拟数据
-const mockPlants = [
-  { id: '1', name: '绿萝', image: '', nextAction: '浇水', daysUntil: 2, health: 'good' },
-  { id: '2', name: '虎皮兰', image: '', nextAction: '施肥', daysUntil: 5, health: 'good' },
-  { id: '3', name: '吊兰', image: '', nextAction: '修剪', daysUntil: 1, health: 'warning' },
+const quotes = [
+  "每一朵花，都是大自然的微笑",
+  "用心浇灌，静待花开",
+  "生命因绿色而美好",
 ];
 
+const mockPlants = [
+  { id: '1', name: '绿萝', nickname: '小绿', image: '', nextAction: '浇水', daysUntil: 2, health: 'good', environment: 'other', quote: '用心浇灌，静待花开' },
+  { id: '2', name: '虎皮兰', nickname: '小兰', image: '', nextAction: '施肥', daysUntil: 5, health: 'good', environment: 'south-balcony', quote: '' },
+  { id: '3', name: '吊兰', nickname: '吊吊', image: '', nextAction: '修剪', daysUntil: 1, health: 'warning', environment: 'office', quote: '' },
+];
+
+const environmentLabels: Record<string, string> = {
+  'south-balcony': '南阳台',
+  'north-bedroom': '北卧室',
+  'office': '办公室',
+  'other': '其他位置',
+};
+
 export function GardenScreen() {
-  const theme = useTheme();
-  const getHealthColor = (health: string) => {
+  const [plants, setPlants] = useState(mockPlants);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newPlantName, setNewPlantName] = useState('');
+  const [newPlantNickname, setNewPlantNickname] = useState('');
+
+  const handleWaterPlant = (plantId: string) => {
+    setPlants(plants.map(plant => {
+      if (plant.id === plantId) {
+        return { ...plant, daysUntil: 7, nextAction: '浇水' };
+      }
+      return plant;
+    }));
+    Alert.alert('浇水成功', '已记录浇水时间');
+  };
+
+  const handleDeletePlant = (plantId: string) => {
+    Alert.alert('删除植物', '确定要删除这株植物吗？', [
+      { text: '取消', style: 'cancel' },
+      { text: '删除', style: 'destructive', onPress: () => setPlants(plants.filter(p => p.id !== plantId)) },
+    ]);
+  };
+
+  const handleAddPlant = () => {
+    if (!newPlantName.trim()) {
+      Alert.alert('请输入植物名称');
+      return;
+    }
+    const newPlant = {
+      id: Date.now().toString(),
+      name: newPlantName,
+      nickname: newPlantNickname || newPlantName,
+      image: '',
+      nextAction: '浇水',
+      daysUntil: 7,
+      health: 'good',
+      environment: 'other',
+      quote: quotes[Math.floor(Math.random() * quotes.length)],
+    };
+    setPlants([...plants, newPlant]);
+    setShowAddModal(false);
+    setNewPlantName('');
+    setNewPlantNickname('');
+  };
+
+  const getHealthConfig = (health: string) => {
     switch (health) {
-      case 'good': return colors.success;
-      case 'warning': return colors.warning;
-      case 'bad': return colors.error;
-      default: return colors.success;
+      case 'good': return { label: '健康', color: colors.success };
+      case 'warning': return { label: '需关注', color: colors.warning };
+      case 'bad': return { label: '生病', color: colors.error };
+      default: return { label: '健康', color: colors.success };
     }
   };
 
-  const getHealthText = (health: string) => {
-    switch (health) {
-      case 'good': return '健康';
-      case 'warning': return '需关注';
-      case 'bad': return '生病';
-      default: return '健康';
-    }
+  const getWaterConfig = (daysUntil: number) => {
+    if (daysUntil <= 0) return { label: '今天', color: colors.error };
+    if (daysUntil <= 1) return { label: '明天', color: colors.warning };
+    return { label: `${daysUntil}天`, color: colors.info };
   };
-
-  const renderPlant = ({ item }: { item: typeof mockPlants[0] }) => (
-    <ListItem
-      style={styles.plantCard}
-      accessoryLeft={(props) => (
-        <View {...props} style={[styles.plantAvatar, { backgroundColor: colors.secondary + '15' }]}>
-          <Icons.Flower2 size={28} />
-        </View>
-      )}
-      description={(props: any) => (
-        <View {...props} style={styles.plantAction}>
-          <Icons.Droplets size={12} />
-          <Text style={styles.plantActionText}>
-            {item.nextAction} · {item.daysUntil}天后
-          </Text>
-        </View>
-      )}
-      accessoryRight={() => (
-        <Button
-          size="tiny"
-          appearance="ghost"
-          status="primary"
-          accessoryLeft={<Icons.Bell size={16} />}
-        />
-      )}
-    >
-      <View style={styles.plantHeader}>
-        <Text category="s1">{item.name}</Text>
-        <Text
-          category="c1"
-          status={item.health === 'good' ? 'success' : item.health === 'warning' ? 'warning' : 'danger'}
-        >
-          {getHealthText(item.health)}
-        </Text>
-      </View>
-    </ListItem>
-  );
-
-  const renderEmpty = () => (
-    <Layout style={styles.empty} level="1">
-      <View style={styles.emptyIcon}>
-        <Icons.Flower2 size={48} />
-      </View>
-      <Text category="h6">还没有植物</Text>
-      <Text appearance="hint">点击下方添加你的第一盆植物</Text>
-      <Button
-        style={styles.emptyButton}
-        appearance="filled"
-        status="primary"
-        accessoryLeft={<Icons.Plus size={18} />}
-      >
-        添加植物
-      </Button>
-    </Layout>
-  );
 
   return (
     <SafeAreaView style={styles.container}>
       {/* 头部 */}
-      <Layout style={styles.header} level="1">
-        <View style={styles.headerContent}>
-          <Text category="h2">我的花园</Text>
-          <Text appearance="hint">{mockPlants.length} 盆植物</Text>
+      <View style={styles.header}>
+        <View style={styles.headerTop}>
+          <View style={styles.headerTitle}>
+            <Icons.Flower2 size={24} color={colors.primary} />
+            <Text style={styles.headerTitleText}>我的花园</Text>
+          </View>
+          <TouchableOpacity onPress={() => setShowAddModal(true)} style={styles.addButton}>
+            <Icons.Plus size={16} color="#fff" />
+            <Text style={styles.addButtonText}>添加植物</Text>
+          </TouchableOpacity>
         </View>
-        <Button
-          style={styles.headerButton}
-          size="small"
-          appearance="filled"
-          status="basic"
-          accessoryLeft={<Icons.Scissors size={18} />}
-        />
-      </Layout>
+        <Text style={styles.headerSubtitle}>
+          {plants.length > 0 ? `已养护 ${plants.length} 株植物` : '快来添加你的第一株植物吧'}
+        </Text>
+      </View>
 
       {/* 植物列表 */}
-      <List
-        data={mockPlants}
-        renderItem={renderPlant}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.list}
-        ListEmptyComponent={renderEmpty()}
-      />
+      <ScrollView style={styles.list} showsVerticalScrollIndicator={false}>
+        {plants.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <View style={styles.emptyIcon}>
+              <Icons.Flower2 size={40} color={colors['text-tertiary']} />
+            </View>
+            <Text style={styles.emptyTitle}>花园空空如也</Text>
+            <Text style={styles.emptySubtitle}>添加你的第一株植物，开始养护之旅</Text>
+            <TouchableOpacity onPress={() => setShowAddModal(true)} style={styles.emptyAddButton}>
+              <Icons.Plus size={18} color="#fff" />
+              <Text style={styles.emptyAddButtonText}>添加植物</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          plants.map((plant) => {
+            const healthConfig = getHealthConfig(plant.health);
+            const waterConfig = getWaterConfig(plant.daysUntil);
+            return (
+              <View key={plant.id} style={styles.plantCard}>
+                <View style={styles.plantImage}>
+                  <Icons.Flower2 size={50} color="rgba(255,255,255,0.3)" />
+                  <TouchableOpacity onPress={() => handleDeletePlant(plant.id)} style={styles.deleteButton}>
+                    <Icons.X size={16} color="#fff" />
+                  </TouchableOpacity>
+                  <View style={styles.plantImageOverlay}>
+                    <Text style={styles.plantNickname}>{plant.nickname}</Text>
+                    <Text style={styles.plantName}>{plant.name}</Text>
+                    <View style={styles.plantEnvBadge}>
+                      <Text style={styles.plantEnvText}>{environmentLabels[plant.environment]}</Text>
+                    </View>
+                  </View>
+                </View>
+                <View style={styles.plantInfo}>
+                  <View style={styles.plantStats}>
+                    <View style={styles.statItem}>
+                      <Icons.Clock size={20} color={colors.primary} />
+                      <Text style={styles.statValue}>30天</Text>
+                      <Text style={styles.statLabel}>花龄</Text>
+                    </View>
+                    <TouchableOpacity onPress={() => handleWaterPlant(plant.id)} style={styles.statItem}>
+                      <Icons.Droplets size={20} color={waterConfig.color} />
+                      <Text style={[styles.statValue, { color: waterConfig.color }]}>{waterConfig.label}</Text>
+                      <Text style={styles.statLabel}>下次浇水</Text>
+                    </TouchableOpacity>
+                    <View style={styles.statItem}>
+                      <Icons.Heart size={20} color={healthConfig.color} />
+                      <Text style={[styles.statValue, { color: healthConfig.color }]}>{healthConfig.label}</Text>
+                      <Text style={styles.statLabel}>状态</Text>
+                    </View>
+                  </View>
+                  {plant.quote && (
+                    <View style={styles.quoteContainer}>
+                      <Icons.Quote size={16} color={colors.primary} />
+                      <Text style={styles.quoteText}>{plant.quote}</Text>
+                    </View>
+                  )}
+                  <View style={styles.plantActions}>
+                    <TouchableOpacity onPress={() => handleWaterPlant(plant.id)} style={styles.actionButton} activeOpacity={0.7}>
+                      <Icons.Droplets size={16} color={colors.info} />
+                      <Text style={styles.actionButtonText}>已浇水</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.actionButton} activeOpacity={0.7}>
+                      <Icons.Edit2 size={16} color={colors.success} />
+                      <Text style={[styles.actionButtonText, { color: colors.success }]}>编辑</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+            );
+          })
+        )}
+      </ScrollView>
 
-      {/* 添加按钮 - 悬浮 */}
-      <Button
-        style={styles.addButton}
-        size="large"
-        appearance="filled"
-        status="primary"
-        accessoryLeft={<Icons.Plus size={26} />}
-      />
+      {/* 添加植物弹窗 */}
+      <Modal visible={showAddModal} animationType="slide" transparent onRequestClose={() => setShowAddModal(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>添加新植物</Text>
+              <TouchableOpacity onPress={() => setShowAddModal(false)}>
+                <Icons.X size={24} color={colors['text-tertiary']} />
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.inputLabel}>植物名称</Text>
+            <TextInput
+              value={newPlantName}
+              onChangeText={setNewPlantName}
+              placeholder="例如：绿萝、吊兰"
+              style={styles.input}
+              placeholderTextColor={colors['text-tertiary']}
+            />
+            <Text style={styles.inputLabel}>昵称（选填）</Text>
+            <TextInput
+              value={newPlantNickname}
+              onChangeText={setNewPlantNickname}
+              placeholder="例如：小绿、花花"
+              style={styles.input}
+              placeholderTextColor={colors['text-tertiary']}
+            />
+            <TouchableOpacity onPress={handleAddPlant} style={styles.submitButton}>
+              <Text style={styles.submitButtonText}>添加到花园</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.md,
-  },
-  headerContent: {
-    flex: 1,
-  },
-  headerButton: {
-    width: touchTarget.comfortable,
-    height: touchTarget.comfortable,
-    borderRadius: borderRadius.lg,
-  },
-  list: {
-    padding: spacing.lg,
-    paddingTop: spacing.sm,
-  },
-  plantCard: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.xl,
-    marginBottom: spacing.md,
-    ...shadows.sm,
-  },
-  plantAvatar: {
-    marginRight: spacing.md,
-  },
-  plantHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  plantAction: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
-  plantActionText: {
-    fontSize: fontSize.sm,
-  },
-  addButton: {
-    position: 'absolute',
-    bottom: spacing.xl,
-    right: spacing.lg,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    ...shadows.lg,
-  },
-  empty: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingTop: 80,
-  },
-  emptyIcon: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: colors.surface,
-    justifyContent: 'center',
-    alignItems: 'center',
-    ...shadows.sm,
-  },
-  emptyButton: {
-    marginTop: spacing.xl,
-    ...shadows.md,
-  },
+  container: { flex: 1, backgroundColor: colors.background },
+  header: { backgroundColor: colors.surface, paddingHorizontal: spacing.lg, paddingTop: spacing.xl * 1.5, paddingBottom: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.border },
+  headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  headerTitle: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  headerTitleText: { fontSize: 20, fontWeight: 'bold', color: colors.text },
+  addButton: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, backgroundColor: colors.primary, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderRadius: 12 },
+  addButtonText: { color: '#fff', fontSize: 14, fontWeight: '500' },
+  headerSubtitle: { fontSize: 14, color: colors['text-secondary'], marginTop: spacing.xs },
+  list: { flex: 1, padding: spacing.lg },
+  emptyContainer: { alignItems: 'center', paddingVertical: spacing.xxl * 2 },
+  emptyIcon: { width: 80, height: 80, borderRadius: 40, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.md },
+  emptyTitle: { fontSize: 18, fontWeight: '600', color: colors.text, marginBottom: spacing.xs },
+  emptySubtitle: { fontSize: 14, color: colors['text-secondary'], marginBottom: spacing.lg },
+  emptyAddButton: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, backgroundColor: colors.primary, paddingHorizontal: spacing.lg, paddingVertical: spacing.md, borderRadius: 12 },
+  emptyAddButtonText: { color: '#fff', fontSize: 15, fontWeight: '500' },
+  plantCard: { backgroundColor: colors.surface, borderRadius: 16, overflow: 'hidden', marginBottom: spacing.md, shadowColor: colors.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 20, elevation: 6 },
+  plantImage: { height: 160, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center', position: 'relative' },
+  deleteButton: { position: 'absolute', top: spacing.sm, right: spacing.sm, width: 32, height: 32, borderRadius: 16, backgroundColor: 'rgba(0,0,0,0.3)', alignItems: 'center', justifyContent: 'center' },
+  plantImageOverlay: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: spacing.md, backgroundColor: 'rgba(0,0,0,0.5)' },
+  plantNickname: { fontSize: 20, fontWeight: 'bold', color: '#fff' },
+  plantName: { fontSize: 14, color: 'rgba(255,255,255,0.8)' },
+  plantEnvBadge: { position: 'absolute', right: spacing.md, bottom: spacing.md, backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: spacing.sm, paddingVertical: spacing.xs, borderRadius: 8 },
+  plantEnvText: { color: '#fff', fontSize: 12 },
+  plantInfo: { padding: spacing.md },
+  plantStats: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: spacing.md },
+  statItem: { alignItems: 'center', padding: spacing.sm, backgroundColor: colors.background, borderRadius: 12, flex: 1, marginHorizontal: spacing.xs },
+  statValue: { fontSize: 18, fontWeight: 'bold', color: colors.text, marginTop: spacing.xs },
+  statLabel: { fontSize: 12, color: colors['text-tertiary'], marginTop: 2 },
+  quoteContainer: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm, padding: spacing.sm, backgroundColor: '#fff0f3', borderRadius: 12, marginBottom: spacing.sm },
+  quoteText: { flex: 1, fontSize: 14, color: colors['text-secondary'], fontStyle: 'italic' },
+  plantActions: { flexDirection: 'row', gap: spacing.sm },
+  actionButton: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.xs, paddingVertical: spacing.sm, borderRadius: 12, borderWidth: 1, borderColor: colors.info },
+  actionButtonText: { fontSize: 14, fontWeight: '500', color: colors.info },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  modalContent: { backgroundColor: colors.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: spacing.lg },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.lg },
+  modalTitle: { fontSize: 18, fontWeight: 'bold', color: colors.text },
+  inputLabel: { fontSize: 14, color: colors['text-secondary'], marginBottom: spacing.xs },
+  input: { backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, borderRadius: 12, paddingHorizontal: spacing.md, paddingVertical: spacing.md, color: colors.text, marginBottom: spacing.md },
+  submitButton: { backgroundColor: colors.primary, paddingVertical: spacing.md, borderRadius: 12, alignItems: 'center', marginTop: spacing.sm },
+  submitButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
 });

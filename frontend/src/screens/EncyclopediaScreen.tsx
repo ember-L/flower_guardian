@@ -1,20 +1,10 @@
-// 百科/发现屏幕 - 养护百科内容 - UI Kitten 组件
+// 百科/发现屏幕 - 使用纯 StyleSheet
 import React from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity, Text, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
-import {
-  Input,
-  Card,
-  Text,
-  Button,
-  Layout,
-  useTheme,
-} from '@ui-kitten/components';
 import { Icons } from '../components/Icon';
-import { colors, spacing, borderRadius, fontSize, shadows, touchTarget } from '../constants/theme';
+import { colors, spacing } from '../constants/theme';
 
-// 模拟数据
 const categories = [
   { id: '1', name: '观叶植物', icon: '🌿', count: 120 },
   { id: '2', name: '多肉植物', icon: '🪴', count: 85 },
@@ -23,21 +13,19 @@ const categories = [
 ];
 
 const difficultyLevels = [
-  { id: '1', name: '入门级', level: 1, desc: '新手也能养', color: colors.secondary },
-  { id: '2', name: '初级', level: 2, desc: '需要少量养护', color: '#8bc34a' },
-  { id: '3', name: '中级', level: 3, desc: '需要一定经验', color: colors.warning },
-  { id: '4', name: '高级', level: 4, desc: '需要专业养护', color: '#ff9800' },
-  { id: '5', name: '专家级', level: 5, desc: '挑战你的技术', color: colors.error },
+  { id: '1', name: '入门级', color: colors.success },
+  { id: '2', name: '初级', color: '#8bc34a' },
+  { id: '3', name: '中级', color: colors.warning },
+  { id: '4', name: '高级', color: '#ff9800' },
+  { id: '5', name: '专家级', color: colors.error },
 ];
 
-// 避坑指南数据
 const pitfallsData = [
   { id: '1', title: '浇水过多', desc: '80%的植物死于浇水过多' },
   { id: '2', title: '光照不当', desc: '喜阳植物放室内会徒长' },
   { id: '3', title: '施肥过度', desc: '薄肥勤施，切忌浓肥' },
 ];
 
-// 推荐的热门植物
 const popularPlants = [
   { id: '1', name: '绿萝', careLevel: 1, category: '观叶植物' },
   { id: '2', name: '虎皮兰', careLevel: 1, category: '观叶植物' },
@@ -46,304 +34,155 @@ const popularPlants = [
 ];
 
 export function EncyclopediaScreen() {
-  const theme = useTheme();
-  const navigation = useNavigation<any>();
-
-  const handlePlantPress = (plantId: string, plantName: string) => {
-    navigation.navigate('EncyclopediaDetail', { plantId, plantName });
-  };
-
   return (
     <SafeAreaView style={styles.container}>
-      <Layout style={styles.header} level="1">
-        <Text category="h2">养护百科</Text>
-        <Text appearance="hint">新手进阶指南</Text>
-      </Layout>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>养护百科</Text>
+        <Text style={styles.headerSubtitle}>新手进阶指南</Text>
+      </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* 搜索栏 - UI Kitten Input */}
-        <Input
-          placeholder="搜索植物名称或养护问题"
-          style={styles.searchBar}
-          accessoryLeft={<Icons.Search size={18} />}
-        />
-
-        {/* 难度筛选 - UI Kitten Button */}
-        <Layout style={styles.section} level="1">
-          <Text category="s1" style={styles.sectionTitle}>难度等级</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.difficultyScroll}>
-            {difficultyLevels.map((item) => (
-              <Button
-                key={item.id}
-                style={[styles.difficultyChip, { borderColor: item.color }]}
-                appearance="outline"
-                status={item.level <= 2 ? 'success' : item.level === 3 ? 'warning' : 'danger'}
-                size="small"
-              >
-                {item.name}
-              </Button>
-            ))}
-          </ScrollView>
-        </Layout>
-
-        {/* 分类 - UI Kitten Card */}
-        <Layout style={styles.section} level="1">
-          <Text category="s1" style={styles.sectionTitle}>植物分类</Text>
-          <View style={styles.categoryGrid}>
-            {categories.map((item) => (
-              <Card key={item.id} style={styles.categoryCard} appearance="filled" status="basic">
-                <View style={styles.categoryIcon}>
-                  <Text style={styles.categoryEmoji}>{item.icon}</Text>
-                </View>
-                <Text category="s1" style={styles.categoryName}>{item.name}</Text>
-                <Text appearance="hint" style={styles.categoryCount}>{item.count} 种</Text>
-              </Card>
-            ))}
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <View style={styles.content}>
+          {/* 搜索栏 */}
+          <View style={styles.searchContainer}>
+            <Icons.Search size={18} color={colors['text-tertiary']} />
+            <TextInput placeholder="搜索植物名称或养护问题" placeholderTextColor={colors['text-tertiary']} style={styles.searchInput} />
           </View>
-        </Layout>
 
-        {/* 热门植物 - UI Kitten Card */}
-        <Layout style={styles.section} level="1">
-          <View style={styles.sectionHeader}>
-            <Text category="s1" style={styles.sectionTitle}>热门植物</Text>
-            <Button
-              size="tiny"
-              appearance="ghost"
-              status="primary"
-              accessoryRight={<Icons.ChevronRight size={14} />}
-            >
-              查看全部
-            </Button>
+          {/* 难度筛选 */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>难度等级</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <View style={styles.difficultyRow}>
+                {difficultyLevels.map((item) => (
+                  <TouchableOpacity key={item.id} style={[styles.difficultyChip, { borderColor: item.color }]} activeOpacity={0.7}>
+                    <Text style={[styles.difficultyChipText, { color: item.color }]}>{item.name}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </ScrollView>
           </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.plantsScroll}>
-            {popularPlants.map((plant) => (
-              <Card
-                key={plant.id}
-                style={styles.plantCard}
-                onPress={() => handlePlantPress(plant.id, plant.name)}
-              >
-                <View style={styles.plantImage}>
-                  <Text style={styles.plantEmoji}>🌿</Text>
-                </View>
-                <Text category="s1" style={styles.plantName}>{plant.name}</Text>
-                <View style={styles.plantMeta}>
-                  <Text appearance="hint" category="c1" style={styles.plantCategory}>{plant.category}</Text>
-                  <View style={styles.plantLevel}>
-                    {Array.from({ length: plant.careLevel }, (_, i) => (
-                      <Text key={i} style={styles.star}>★</Text>
-                    ))}
-                  </View>
-                </View>
-              </Card>
-            ))}
-          </ScrollView>
-        </Layout>
 
-        {/* 环境指标说明 */}
-        <Layout style={styles.section} level="1">
-          <Text category="s1" style={styles.sectionTitle}>养护图标说明</Text>
-          <Card style={styles.legendCard}>
-            <View style={styles.legendGrid}>
-              <View style={styles.legendItem}>
-                <View style={styles.legendIcon}>
-                  <Icons.Sun size={20} />
-                </View>
-                <Text appearance="hint">喜阳</Text>
+          {/* 分类 */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>植物分类</Text>
+            <View style={styles.categoryGrid}>
+              {categories.map((item) => (
+                <TouchableOpacity key={item.id} style={styles.categoryCard} activeOpacity={0.7}>
+                  <View style={styles.categoryIcon}><Text style={styles.categoryEmoji}>{item.icon}</Text></View>
+                  <Text style={styles.categoryName}>{item.name}</Text>
+                  <Text style={styles.categoryCount}>{item.count} 种</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          {/* 热门植物 */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>热门植物</Text>
+              <TouchableOpacity style={styles.viewAllButton} activeOpacity={0.7}>
+                <Text style={styles.viewAllText}>查看全部</Text>
+                <Icons.ChevronRight size={14} color={colors.primary} />
+              </TouchableOpacity>
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <View style={styles.plantsRow}>
+                {popularPlants.map((plant) => (
+                  <TouchableOpacity key={plant.id} style={styles.plantCard} activeOpacity={0.7}>
+                    <View style={styles.plantImage}><Text style={styles.plantEmoji}>🌿</Text></View>
+                    <Text style={styles.plantName}>{plant.name}</Text>
+                    <View style={styles.plantMeta}>
+                      <Text style={styles.plantCategory}>{plant.category}</Text>
+                      <Text style={styles.plantStars}>★</Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
               </View>
-              <View style={styles.legendItem}>
-                <View style={styles.legendIcon}>
-                  <Icons.CloudRain size={20} />
-                </View>
-                <Text appearance="hint">喜湿</Text>
-              </View>
-              <View style={styles.legendItem}>
-                <View style={styles.legendIcon}>
-                  <Icons.Snowflake size={20} />
-                </View>
-                <Text appearance="hint">耐寒</Text>
+            </ScrollView>
+          </View>
+
+          {/* 养护图标说明 */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>养护图标说明</Text>
+            <View style={styles.legendCard}>
+              <View style={styles.legendRow}>
+                <View style={styles.legendItem}><View style={styles.legendIcon}><Icons.Sun size={20} color={colors.warning} /></View><Text style={styles.legendText}>喜阳</Text></View>
+                <View style={styles.legendItem}><View style={[styles.legendIcon, { backgroundColor: colors.info + '15' }]}><Icons.CloudRain size={20} color={colors.info} /></View><Text style={styles.legendText}>喜湿</Text></View>
+                <View style={styles.legendItem}><View style={[styles.legendIcon, { backgroundColor: colors.info + '15' }]}><Icons.Snowflake size={20} color={colors.info} /></View><Text style={styles.legendText}>耐寒</Text></View>
               </View>
             </View>
-          </Card>
-        </Layout>
+          </View>
 
-        {/* 避坑指南 - UI Kitten Card */}
-        <Layout style={styles.section} level="1">
-          <View style={styles.sectionHeader}>
-            <View style={styles.sectionTitleRow}>
+          {/* 避坑指南 */}
+          <View style={[styles.section, styles.lastSection]}>
+            <View style={styles.pitfallHeader}>
               <Icons.AlertTriangle size={18} color={colors.error} />
-              <Text category="s1" status="danger">避坑指南</Text>
+              <Text style={styles.pitfallTitle}>避坑指南</Text>
             </View>
-          </View>
-          <Text appearance="hint" style={styles.pitfallsSubtitle}>新手必看，这些坑不要踩</Text>
-          <View style={styles.pitfallsGrid}>
-            {pitfallsData.map((pitfall) => (
-              <Card key={pitfall.id} style={styles.pitfallCard} appearance="filled" status="basic">
-                <View style={styles.pitfallContent}>
-                  <View style={styles.pitfallIcon}>
-                    <Text category="c1" status="danger">{pitfall.id}</Text>
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text category="s1">{pitfall.title}</Text>
-                    <Text appearance="hint" category="c1">{pitfall.desc}</Text>
+            <Text style={styles.pitfallSubtitle}>新手必看，这些坑不要踩</Text>
+            <View style={styles.pitfallsList}>
+              {pitfallsData.map((pitfall) => (
+                <View key={pitfall.id} style={styles.pitfallCard}>
+                  <View style={styles.pitfallIcon}><Text style={styles.pitfallNumber}>{pitfall.id}</Text></View>
+                  <View style={styles.pitfallContent}>
+                    <Text style={styles.pitfallItemTitle}>{pitfall.title}</Text>
+                    <Text style={styles.pitfallItemDesc}>{pitfall.desc}</Text>
                   </View>
                 </View>
-              </Card>
-            ))}
+              ))}
+            </View>
           </View>
-        </Layout>
-
-        <View style={styles.bottomSpacer} />
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  header: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.md,
-  },
-  content: {
-    flex: 1,
-  },
-  searchBar: {
-    marginHorizontal: spacing.lg,
-    marginTop: spacing.md,
-  },
-  section: {
-    marginTop: spacing.xl,
-    paddingHorizontal: spacing.lg,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.md,
-  },
-  sectionTitle: {
-    marginBottom: spacing.md,
-  },
-  sectionTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  difficultyScroll: {
-    gap: spacing.sm,
-    paddingRight: spacing.lg,
-  },
-  difficultyChip: {
-    minWidth: 72,
-  },
-  categoryGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.md,
-  },
-  categoryCard: {
-    width: '47%',
-    alignItems: 'center',
-  },
-  categoryIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: colors.secondary + '12',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: spacing.sm,
-  },
-  categoryEmoji: {
-    fontSize: 28,
-  },
-  categoryName: {
-    marginBottom: spacing.xs,
-  },
-  categoryCount: {},
-  plantsScroll: {
-    gap: spacing.md,
-    paddingRight: spacing.lg,
-  },
-  plantCard: {
-    width: 110,
-  },
-  plantImage: {
-    width: 70,
-    height: 70,
-    borderRadius: borderRadius.lg,
-    backgroundColor: colors.secondary + '10',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  plantEmoji: {
-    fontSize: 36,
-  },
-  plantName: {
-    marginTop: spacing.sm,
-    textAlign: 'center',
-  },
-  plantMeta: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: spacing.xs,
-  },
-  plantCategory: {},
-  plantLevel: {
-    flexDirection: 'row',
-  },
-  star: {
-    fontSize: 10,
-  },
-  legendCard: {
-    ...shadows.sm,
-  },
-  legendGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-  },
-  legendItem: {
-    alignItems: 'center',
-  },
-  legendIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: colors.warning + '15',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: spacing.sm,
-  },
-  pitfallsSubtitle: {
-    marginBottom: spacing.md,
-  },
-  pitfallsGrid: {
-    gap: spacing.sm,
-  },
-  pitfallCard: {
-    borderLeftWidth: 3,
-    borderLeftColor: colors.error,
-    ...shadows.sm,
-  },
-  pitfallContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  pitfallIcon: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: colors.error + '12',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: spacing.md,
-  },
-  bottomSpacer: {
-    height: spacing.xxl,
-  },
+  container: { flex: 1, backgroundColor: colors.background },
+  header: { backgroundColor: colors.surface, paddingHorizontal: spacing.lg, paddingTop: spacing.xl * 1.5, paddingBottom: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.border },
+  headerTitle: { fontSize: 20, fontWeight: 'bold', color: colors.text },
+  headerSubtitle: { fontSize: 14, color: colors['text-secondary'], marginTop: spacing.xs },
+  content: { paddingHorizontal: spacing.lg, paddingTop: spacing.lg },
+  searchContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, borderRadius: 12, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
+  searchInput: { flex: 1, marginLeft: spacing.sm, fontSize: 15, color: colors.text },
+  section: { marginTop: spacing.xl },
+  sectionTitle: { fontSize: 18, fontWeight: '600', color: colors.text, marginBottom: spacing.md },
+  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.md },
+  viewAllButton: { flexDirection: 'row', alignItems: 'center' },
+  viewAllText: { color: colors.primary, fontSize: 14, marginRight: spacing.xs },
+  difficultyRow: { flexDirection: 'row', gap: spacing.sm },
+  difficultyChip: { paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderWidth: 1, borderRadius: 20 },
+  difficultyChipText: { fontSize: 14, fontWeight: '500' },
+  categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
+  categoryCard: { width: '47%', backgroundColor: colors.surface, borderRadius: 16, padding: spacing.md, alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 12, elevation: 1 },
+  categoryIcon: { width: 56, height: 56, borderRadius: 28, backgroundColor: colors.success + '15', alignItems: 'center', justifyContent: 'center', marginBottom: spacing.sm },
+  categoryEmoji: { fontSize: 28 },
+  categoryName: { fontSize: 15, fontWeight: '500', color: colors.text },
+  categoryCount: { fontSize: 13, color: colors['text-tertiary'] },
+  plantsRow: { flexDirection: 'row', gap: spacing.md },
+  plantCard: { backgroundColor: colors.surface, borderRadius: 16, padding: spacing.sm, width: 112, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 12, elevation: 1 },
+  plantImage: { width: 64, height: 64, borderRadius: 12, backgroundColor: colors.success + '15', alignItems: 'center', justifyContent: 'center' },
+  plantEmoji: { fontSize: 36 },
+  plantName: { fontSize: 15, fontWeight: '500', color: colors.text, textAlign: 'center', marginTop: spacing.sm },
+  plantMeta: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: spacing.xs },
+  plantCategory: { fontSize: 12, color: colors['text-tertiary'] },
+  plantStars: { color: colors.warning, fontSize: 12 },
+  legendCard: { backgroundColor: colors.surface, borderRadius: 16, padding: spacing.md, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 12, elevation: 1 },
+  legendRow: { flexDirection: 'row', justifyContent: 'space-around' },
+  legendItem: { alignItems: 'center' },
+  legendIcon: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.warning + '15', alignItems: 'center', justifyContent: 'center', marginBottom: spacing.sm },
+  legendText: { fontSize: 13, color: colors['text-tertiary'] },
+  pitfallHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.xs },
+  pitfallTitle: { fontSize: 18, fontWeight: '600', color: colors.error },
+  pitfallSubtitle: { fontSize: 14, color: colors['text-secondary'], marginBottom: spacing.md },
+  pitfallsList: { gap: spacing.sm },
+  pitfallCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, borderRadius: 12, padding: spacing.md, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 12, elevation: 1, borderLeftWidth: 3, borderLeftColor: colors.error },
+  pitfallIcon: { width: 28, height: 28, borderRadius: 14, backgroundColor: colors.error + '15', alignItems: 'center', justifyContent: 'center', marginRight: spacing.md },
+  pitfallNumber: { color: colors.error, fontWeight: 'bold', fontSize: 14 },
+  pitfallContent: { flex: 1 },
+  pitfallItemTitle: { fontSize: 15, fontWeight: '500', color: colors.text },
+  pitfallItemDesc: { fontSize: 13, color: colors['text-tertiary'] },
+  lastSection: { marginBottom: spacing.xxl * 2 },
 });

@@ -78,6 +78,13 @@ const iconEmojiMap: Record<string, string> = {
   moon: '🌙',
   cloud: '☁️',
   umbrella: '☂️',
+  stethoscope: '🩺',
+  quote: '💬',
+  lightbulb: '💡',
+  'edit-2': '✏️',
+  'message-circle': '💬',
+  'circle': '⚪',
+  thermometer: '🌡️',
 };
 
 interface IconProps {
@@ -152,6 +159,13 @@ export const Icons = {
   TrendingUp: (props: Omit<IconProps, 'name'>) => <Icon name="trending-up" {...props} />,
   SunMedium: (props: Omit<IconProps, 'name'>) => <Icon name="sun-medium" {...props} />,
   Info: (props: Omit<IconProps, 'name'>) => <Icon name="info" {...props} />,
+  Home: (props: Omit<IconProps, 'name'>) => <Icon name="home" {...props} />,
+  Stethoscope: (props: Omit<IconProps, 'name'>) => <Icon name="stethoscope" {...props} />,
+  Lightbulb: (props: Omit<IconProps, 'name'>) => <Icon name="lightbulb" {...props} />,
+  Edit2: (props: Omit<IconProps, 'name'>) => <Icon name="edit-2" {...props} />,
+  Thermometer: (props: Omit<IconProps, 'name'>) => <Icon name="thermometer" {...props} />,
+  Circle: (props: Omit<IconProps, 'name'>) => <Icon name="circle" {...props} />,
+  Quote: (props: Omit<IconProps, 'name'>) => <Icon name="quote" {...props} />,
 };
 
 // 导出专用于 emoji 的组件，供需要直接显示 emoji 的场景使用

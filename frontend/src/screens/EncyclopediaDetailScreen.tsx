@@ -1,23 +1,11 @@
-// 养护百科详情页 - UI Kitten 组件
+// 养护百科详情页 - 使用纯 StyleSheet
 import React from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import {
-  TopNavigation,
-  Text,
-  Card,
-  Layout,
-  List,
-  ListItem,
-  Button,
-  Icon,
-  useTheme,
-} from '@ui-kitten/components';
 import { Icons } from '../components/Icon';
-import { colors, spacing, borderRadius, fontSize } from '../constants/theme';
+import { colors, spacing } from '../constants/theme';
 
-// 模拟植物详情数据
 const mockPlantDetail = {
   id: '1',
   name: '绿萝',
@@ -29,376 +17,110 @@ const mockPlantDetail = {
   waterRequirement: '见干见湿',
   temperature: '15-30°C',
   humidity: '40-60%',
-  fertilization: '春夏季每2周一次',
-  repotting: '每年春季换盆',
   difficulties: [
     { id: '1', title: '黄叶', solution: '可能是浇水过多或过少导致，检查土壤干湿度后调整浇水频率' },
     { id: '2', title: '叶片发白', solution: '可能是光照过强导致，应放置在散光或阴凉处' },
     { id: '3', title: '生长缓慢', solution: '可能是营养不足，可适当施肥' },
   ],
-  commonMistakes: [
-    '浇水过多导致烂根',
-    '长时间放在强光下暴晒',
-    '冬季浇水过勤',
-    '不通风导致病虫害',
-  ],
-  tips: [
-    '适合放在北向窗户边',
-    '水培也很容易成活',
-    '经常喷水增加空气湿度',
-    '每月擦拭叶片保持光泽',
-  ],
+  tips: ['适合放在北向窗户边', '水培也很容易成活', '经常喷水增加空气湿度', '每月擦拭叶片保持光泽'],
 };
 
 export function EncyclopediaDetailScreen() {
-  const theme = useTheme();
   const navigation = useNavigation();
-  // const route = useRoute<RouteProp<RootStackParamList, 'EncyclopediaDetail'>>();
-
   const plant = mockPlantDetail;
-
-  const renderStars = (level: number) => {
-    return Array.from({ length: 5 }, (_, i) => (
-      <Text
-        key={i}
-        style={{
-          color: i < level ? colors.warning : colors['text-light'],
-          fontSize: 18,
-        }}
-      >
-        ★
-      </Text>
-    ));
-  };
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* 头部 - UI Kitten TopNavigation */}
-      <TopNavigation
-        title={plant.name}
-        alignment="center"
-        accessoryLeft={() => (
-          <Button
-            appearance="ghost"
-            status="basic"
-            accessoryLeft={(props) => <Icons.ArrowLeft {...props} size={24} />}
-            onPress={() => navigation.goBack()}
-          />
-        )}
-      />
-
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* 植物图片占位 */}
-        <View style={styles.imageContainer}>
-          <Text style={styles.plantEmoji}>🌿</Text>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <View style={styles.heroSection}>
+          <View style={styles.navBar}>
+            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}><Icons.ChevronLeft size={20} color="#fff" /></TouchableOpacity>
+            <Text style={styles.navTitle}>植物详情</Text>
+            <View style={styles.placeholder} />
+          </View>
+          <View style={styles.plantInfo}>
+            <View style={styles.plantIcon}><Icons.Flower2 size={40} color="#fff" /></View>
+            <Text style={styles.plantName}>{plant.name}</Text>
+            <Text style={styles.plantScientific}>{plant.scientificName}</Text>
+            <View style={styles.tagRow}>
+              <View style={styles.tag}><Text style={styles.tagText}>{plant.category}</Text></View>
+              <View style={styles.tag}><Text style={styles.tagText}>难度 {plant.careLevel}</Text></View>
+            </View>
+          </View>
         </View>
 
-        {/* 基本信息 - UI Kitten Layout */}
-        <Layout style={styles.section} level="1">
-          <Text category="h2">{plant.name}</Text>
-          <Text appearance="hint" category="s1" style={styles.scientificName}>{plant.scientificName}</Text>
-          <Text status="success" category="c1" style={styles.categoryBadge}>{plant.category}</Text>
-        </Layout>
-
-        {/* 养护难度 - UI Kitten Card */}
-        <Layout style={styles.section} level="1">
-          <Text category="s1" style={styles.sectionTitle}>养护难度</Text>
-          <Card style={styles.difficultyCard}>
-            <View style={styles.starsContainer}>
-              {renderStars(plant.careLevel)}
-            </View>
-            <Text category="p1">
-              {plant.careLevel === 1 ? '入门级' :
-               plant.careLevel === 2 ? '初级' :
-               plant.careLevel === 3 ? '中级' :
-               plant.careLevel === 4 ? '高级' : '专家级'}
-            </Text>
-          </Card>
-        </Layout>
-
-        {/* 生长环境指标 - UI Kitten Cards */}
-        <Layout style={styles.section} level="1">
-          <Text category="s1" style={styles.sectionTitle}>生长环境</Text>
-          <View style={styles.metricsGrid}>
-            <Card style={styles.metricCard}>
-              <Icons.Sun size={28} />
-              <Text appearance="hint" category="c1">光照</Text>
-              <Text>{plant.lightRequirement}</Text>
-            </Card>
-            <Card style={styles.metricCard}>
-              <Icons.CloudRain size={28} />
-              <Text appearance="hint" category="c1">水分</Text>
-              <Text>{plant.waterRequirement}</Text>
-            </Card>
-            <Card style={styles.metricCard}>
-              <Icons.Snowflake size={28} />
-              <Text appearance="hint" category="c1">温度</Text>
-              <Text>{plant.temperature}</Text>
-            </Card>
-            <Card style={styles.metricCard}>
-              <Icons.Droplets size={28} />
-              <Text appearance="hint" category="c1">湿度</Text>
-              <Text>{plant.humidity}</Text>
-            </Card>
+        <View style={styles.content}>
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>简介</Text>
+            <Text style={styles.description}>{plant.description}</Text>
           </View>
-        </Layout>
 
-        {/* 养护说明 - UI Kitten Card */}
-        <Layout style={styles.section} level="1">
-          <Text category="s1" style={styles.sectionTitle}>养护说明</Text>
-          <Card style={styles.infoCard}>
-            <Text>{plant.description}</Text>
-          </Card>
-
-          <View style={styles.infoItem}>
-            <Text appearance="hint" category="c1">施肥</Text>
-            <Text category="s1">{plant.fertilization}</Text>
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>养护要求</Text>
+            <View style={styles.careList}>
+              <View style={styles.careItem}><View style={styles.careIcon}><Icons.Sun size={20} color={colors.warning} /></View><View><Text style={styles.careLabel}>光照</Text><Text style={styles.careValue}>{plant.lightRequirement}</Text></View></View>
+              <View style={styles.careItem}><View style={[styles.careIcon, { backgroundColor: colors.info + '15' }]}><Icons.Droplets size={20} color={colors.info} /></View><View><Text style={styles.careLabel}>浇水</Text><Text style={styles.careValue}>{plant.waterRequirement}</Text></View></View>
+              <View style={styles.careItem}><View style={[styles.careIcon, { backgroundColor: colors.error + '15' }]}><Icons.Thermometer size={20} color={colors.error} /></View><View><Text style={styles.careLabel}>温度</Text><Text style={styles.careValue}>{plant.temperature}</Text></View></View>
+              <View style={styles.careItem}><View style={[styles.careIcon, { backgroundColor: colors.info + '15' }]}><Icons.CloudRain size={20} color={colors.info} /></View><View><Text style={styles.careLabel}>湿度</Text><Text style={styles.careValue}>{plant.humidity}</Text></View></View>
+            </View>
           </View>
-          <View style={styles.infoItem}>
-            <Text appearance="hint" category="c1">换盆</Text>
-            <Text category="s1">{plant.repotting}</Text>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>常见问题</Text>
+            {plant.difficulties.map((item) => (
+              <View key={item.id} style={styles.problemCard}>
+                <View style={styles.problemHeader}><Icons.AlertCircle size={16} color={colors.warning} /><Text style={styles.problemTitle}>{item.title}</Text></View>
+                <Text style={styles.problemSolution}>{item.solution}</Text>
+              </View>
+            ))}
           </View>
-        </Layout>
 
-        {/* 常见问题 - UI Kitten Cards */}
-        <Layout style={styles.section} level="1">
-          <Text category="s1" style={styles.sectionTitle}>常见问题</Text>
-          {plant.difficulties.map((item) => (
-            <Card key={item.id} style={styles.problemCard}>
-              <Text category="s1">{item.title}</Text>
-              <Text appearance="hint">{item.solution}</Text>
-            </Card>
-          ))}
-        </Layout>
-
-        {/* 避坑指南 - UI Kitten Card */}
-        <Layout style={styles.section} level="1">
-          <Text category="s1" status="danger" style={styles.sectionTitle}>避坑指南</Text>
-          <Card style={styles.warningCard} status="danger">
-            <View style={styles.warningHeader}>
-              <Icons.AlertTriangle size={24} />
-              <Text category="s1">新手常见错误</Text>
-            </View>
-          </Card>
-          {plant.commonMistakes.map((mistake, index) => (
-            <View key={index} style={styles.mistakeItem}>
-              <Text appearance="hint">× {mistake}</Text>
-            </View>
-          ))}
-        </Layout>
-
-        {/* 养护小贴士 - UI Kitten Layout */}
-        <Layout style={styles.section} level="1">
-          <Text category="s1" style={styles.sectionTitle}>养护小贴士</Text>
-          {plant.tips.map((tip, index) => (
-            <View key={index} style={styles.tipItem}>
-              <View style={styles.tipBullet} />
-              <Text>{tip}</Text>
-            </View>
-          ))}
-        </Layout>
-
-        <View style={{ height: 40 }} />
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>养护小贴士</Text>
+            {plant.tips.map((tip, index) => (
+              <View key={index} style={styles.tipItem}><Icons.Check size={16} color={colors.success} /><Text style={styles.tipText}>{tip}</Text></View>
+            ))}
+          </View>
+        </View>
       </ScrollView>
+
+      <View style={styles.bottomButton}>
+        <TouchableOpacity style={styles.submitButton}><Text style={styles.submitButtonText}>添加到我的花园</Text></TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    backgroundColor: colors.surface,
-  },
-  backButton: {
-    padding: spacing.xs,
-  },
-  headerTitle: {
-    fontSize: fontSize.lg,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  content: {
-    flex: 1,
-  },
-  imageContainer: {
-    height: 200,
-    backgroundColor: colors.secondary + '20',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  plantEmoji: {
-    fontSize: 80,
-  },
-  section: {
-    padding: spacing.lg,
-  },
-  plantName: {
-    fontSize: fontSize.xl,
-    fontWeight: 'bold',
-    color: colors.text,
-  },
-  scientificName: {
-    fontSize: fontSize.sm,
-    color: colors['text-secondary'],
-    fontStyle: 'italic',
-    marginTop: spacing.xs,
-  },
-  categoryBadge: {
-    backgroundColor: colors.secondary + '20',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.full,
-    alignSelf: 'flex-start',
-    marginTop: spacing.sm,
-  },
-  categoryText: {
-    fontSize: fontSize.xs,
-    color: colors.secondary,
-    fontWeight: '500',
-  },
-  sectionTitle: {
-    fontSize: fontSize.lg,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: spacing.md,
-  },
-  difficultyCard: {
-    backgroundColor: colors.surface,
-    padding: spacing.lg,
-    borderRadius: borderRadius.lg,
-    alignItems: 'center',
-  },
-  starsContainer: {
-    flexDirection: 'row',
-    gap: 4,
-  },
-  difficultyText: {
-    fontSize: fontSize.md,
-    color: colors['text-secondary'],
-    marginTop: spacing.sm,
-  },
-  metricsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.md,
-  },
-  metricCard: {
-    width: '47%',
-    backgroundColor: colors.surface,
-    padding: spacing.md,
-    borderRadius: borderRadius.lg,
-    alignItems: 'center',
-  },
-  metricLabel: {
-    fontSize: fontSize.xs,
-    color: colors['text-secondary'],
-    marginTop: spacing.sm,
-  },
-  metricValue: {
-    fontSize: fontSize.sm,
-    color: colors.text,
-    fontWeight: '500',
-    marginTop: spacing.xs,
-  },
-  infoCard: {
-    backgroundColor: colors.surface,
-    padding: spacing.lg,
-    borderRadius: borderRadius.lg,
-    marginBottom: spacing.md,
-  },
-  infoText: {
-    fontSize: fontSize.sm,
-    color: colors['text-secondary'],
-    lineHeight: 22,
-  },
-  infoItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    backgroundColor: colors.surface,
-    padding: spacing.md,
-    borderRadius: borderRadius.md,
-    marginBottom: spacing.sm,
-  },
-  infoLabel: {
-    fontSize: fontSize.sm,
-    color: colors['text-secondary'],
-  },
-  infoValue: {
-    fontSize: fontSize.sm,
-    color: colors.text,
-    fontWeight: '500',
-  },
-  problemCard: {
-    backgroundColor: colors.surface,
-    padding: spacing.md,
-    borderRadius: borderRadius.lg,
-    marginBottom: spacing.sm,
-  },
-  problemTitle: {
-    fontSize: fontSize.md,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  problemSolution: {
-    fontSize: fontSize.sm,
-    color: colors['text-secondary'],
-    marginTop: spacing.xs,
-    lineHeight: 20,
-  },
-  warningCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.error + '10',
-    padding: spacing.md,
-    borderRadius: borderRadius.lg,
-    gap: spacing.sm,
-    marginBottom: spacing.md,
-  },
-  warningHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  warningTitle: {
-    fontSize: fontSize.md,
-    fontWeight: '600',
-    color: colors.error,
-  },
-  mistakeItem: {
-    backgroundColor: colors.surface,
-    padding: spacing.md,
-    borderRadius: borderRadius.md,
-    marginBottom: spacing.sm,
-  },
-  mistakeText: {
-    fontSize: fontSize.sm,
-    color: colors['text-secondary'],
-  },
-  tipItem: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: spacing.sm,
-  },
-  tipBullet: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: colors.secondary,
-    marginTop: 6,
-    marginRight: spacing.sm,
-  },
-  tipText: {
-    flex: 1,
-    fontSize: fontSize.sm,
-    color: colors.text,
-    lineHeight: 20,
-  },
+  container: { flex: 1, backgroundColor: colors.background },
+  heroSection: { backgroundColor: colors.primary, paddingTop: spacing.xl },
+  navBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.md, paddingBottom: spacing.md },
+  backButton: { width: 32, height: 32, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
+  navTitle: { color: '#fff', fontSize: 17, fontWeight: '600' },
+  placeholder: { width: 32 },
+  plantInfo: { alignItems: 'center', paddingBottom: spacing.xl * 2 },
+  plantIcon: { width: 80, height: 80, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center', marginBottom: spacing.md },
+  plantName: { fontSize: 24, fontWeight: 'bold', color: '#fff' },
+  plantScientific: { fontSize: 14, color: 'rgba(255,255,255,0.8)', fontStyle: 'italic', marginTop: spacing.xs },
+  tagRow: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md },
+  tag: { backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: spacing.sm, paddingVertical: spacing.xs, borderRadius: 10 },
+  tagText: { color: '#fff', fontSize: 12 },
+  content: { paddingHorizontal: spacing.lg, marginTop: -spacing.lg },
+  section: { backgroundColor: colors.surface, borderRadius: 16, padding: spacing.md, marginBottom: spacing.md, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 12, elevation: 1 },
+  sectionTitle: { fontSize: 18, fontWeight: '600', color: colors.text, marginBottom: spacing.md },
+  description: { fontSize: 15, color: colors['text-secondary'], lineHeight: 22 },
+  careList: { gap: spacing.sm },
+  careItem: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  careIcon: { width: 40, height: 40, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  careLabel: { fontSize: 13, color: colors['text-tertiary'] },
+  careValue: { fontSize: 15, fontWeight: '500', color: colors.text },
+  problemCard: { backgroundColor: colors.background, borderRadius: 12, padding: spacing.sm, marginBottom: spacing.sm },
+  problemHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginBottom: spacing.xs },
+  problemTitle: { fontSize: 15, fontWeight: '500', color: colors.text },
+  problemSolution: { fontSize: 14, color: colors['text-secondary'], marginLeft: 24 },
+  tipItem: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.xs },
+  tipText: { fontSize: 14, color: colors['text-secondary'] },
+  bottomButton: { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: colors.surface, padding: spacing.md, borderTopWidth: 1, borderTopColor: colors.border },
+  submitButton: { backgroundColor: colors.primary, paddingVertical: spacing.md, borderRadius: 12, alignItems: 'center' },
+  submitButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
 });

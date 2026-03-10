@@ -1,341 +1,124 @@
-// 新手推荐页面 - 场景问答推荐系统 - UI Kitten 组件
+// 新手推荐页面 - 使用纯 StyleSheet
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
-import {
-  Button,
-  Card,
-  Text,
-  Radio,
-  RadioGroup,
-  ProgressBar,
-  TopNavigation,
-  Layout,
-  useTheme,
-} from '@ui-kitten/components';
 import { Icons } from '../components/Icon';
-import { colors, spacing, borderRadius, fontSize } from '../constants/theme';
+import { colors, spacing } from '../constants/theme';
 
-// 问答步骤
-interface QuestionStep {
-  id: number;
-  question: string;
-  options: {
-    label: string;
-    value: string;
-  }[];
-}
-
-// 推荐植物
-interface PlantRecommendation {
-  id: string;
-  name: string;
-  reason: string;
-  survivalRate: number;
-  careLevel: number;
-  features: string[];
-}
-
-const questions: QuestionStep[] = [
-  {
-    id: 1,
-    question: '你家的光照条件怎么样？',
-    options: [
-      { label: '光线充足', value: 'full-sun' },
-      { label: '一般光线', value: 'partial-sun' },
-      { label: '光线较弱', value: 'low-light' },
-    ],
-  },
-  {
-    id: 2,
-    question: '你经常出差吗？',
-    options: [
-      { label: '经常出差', value: 'often' },
-      { label: '偶尔出差', value: 'sometimes' },
-      { label: '不出差', value: 'never' },
-    ],
-  },
-  {
-    id: 3,
-    question: '家里有宠物或小孩吗？',
-    options: [
-      { label: '有猫/狗', value: 'pet' },
-      { label: '有小孩', value: 'child' },
-      { label: '都没有', value: 'none' },
-    ],
-  },
+const questions = [
+  { id: 1, question: '你家的光照条件怎么样？', options: [{ label: '光线充足', value: 'full-sun' }, { label: '一般光线', value: 'partial-sun' }, { label: '光线较弱', value: 'low-light' }] },
+  { id: 2, question: '你多久浇一次水？', options: [{ label: '每天想不起来', value: 'forgetful' }, { label: '一周一次', value: 'weekly' }, { label: '想起来就浇', value: 'occasional' }] },
+  { id: 3, question: '你养植物的目的是？', options: [{ label: '净化空气', value: 'air-purify' }, { label: '装饰美观', value: 'decoration' }, { label: '兴趣爱好', value: 'hobby' }] },
 ];
 
-// 模拟推荐结果
-const recommendations: PlantRecommendation[] = [
-  {
-    id: '1',
-    name: '绿萝',
-    reason: '耐阴性强，浇水频率低，非常适合经常出差或光线不好的环境',
-    survivalRate: 98,
-    careLevel: 1,
-    features: ['耐阴', '净化空气', '易繁殖'],
-  },
-  {
-    id: '2',
-    name: '虎皮兰',
-    reason: '极其耐旱，半个月不浇水也没问题，对光照要求不高',
-    survivalRate: 95,
-    careLevel: 1,
-    features: ['耐旱', '净化空气', '夜间放氧'],
-  },
-  {
-    id: '3',
-    name: '龟背竹',
-    reason: '颜值高又好养，但对光照有一定要求，适合光线一般的环境',
-    survivalRate: 90,
-    careLevel: 2,
-    features: ['ins风', '净化空气', '耐阴'],
-  },
+const recommendations = [
+  { id: '1', name: '绿萝', reason: '非常适合新手，光线弱也能存活，浇水一周一次即可', survivalRate: 98, features: ['净化空气', '耐阴', '易养护'] },
+  { id: '2', name: '虎皮兰', reason: '几乎不用管，一个月浇一次水都行，特别适合忙碌的人', survivalRate: 95, features: ['耐旱', '净化空气', '美观'] },
+  { id: '3', name: '吊兰', reason: '生命力顽强，繁殖容易，还能吸收甲醛', survivalRate: 92, features: ['空气净化', '易繁殖', '垂吊美'] },
 ];
 
 export function RecommendationScreen() {
-  const theme = useTheme();
-  const navigation = useNavigation();
-  const [currentStep, setCurrentStep] = useState(0);
-  const [answers, setAnswers] = useState<Record<number, string>>({});
+  const [currentQuestion, setCurrentQuestion] = useState(0);
   const [showResults, setShowResults] = useState(false);
+  const progress = ((currentQuestion + 1) / questions.length) * 100;
 
-  const handleAnswer = (value: string) => {
-    const step = questions[currentStep];
-    setAnswers(prev => ({ ...prev, [step.id]: value }));
-
-    if (currentStep < questions.length - 1) {
-      setCurrentStep(prev => prev + 1);
+  const handleAnswer = () => {
+    if (currentQuestion < questions.length - 1) {
+      setCurrentQuestion(currentQuestion + 1);
     } else {
       setShowResults(true);
     }
   };
 
-  const handleRestart = () => {
-    setCurrentStep(0);
-    setAnswers({});
-    setShowResults(false);
-  };
+  const handleRestart = () => { setCurrentQuestion(0); setShowResults(false); };
 
-  const renderQuestions = () => (
-    <View style={styles.questionContainer}>
-      <View style={styles.progressContainer}>
-        <ProgressBar
-          progress={((currentStep + 1) / questions.length)}
-          size="medium"
-          status="primary"
-        />
-        <Text appearance="hint" category="c1" style={styles.progressText}>
-          {currentStep + 1} / {questions.length}
-        </Text>
+  return (
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <View style={styles.headerTitle}><Icons.Sparkles size={24} color={colors.warning} /><Text style={styles.headerTitleText}>新手推荐</Text></View>
+        <Text style={styles.headerSubtitle}>回答几个问题，帮你找到适合的植物</Text>
       </View>
-
-      <Text category="h6" style={styles.questionText}>
-        {questions[currentStep].question}
-      </Text>
-
-      <RadioGroup
-        selectedIndex={questions[currentStep].options.findIndex((_, i) => answers[currentStep] === questions[currentStep].options[i].value)}
-        onChange={(index) => handleAnswer(questions[currentStep].options[index].value)}
-      >
-        {questions[currentStep].options.map((option, index) => (
-          <Radio
-            key={index}
-            status="basic"
-            style={styles.optionRadio}
-          >
-            {option.label}
-          </Radio>
-        ))}
-      </RadioGroup>
-    </View>
-  );
-
-  const renderResults = () => (
-    <View style={styles.resultsContainer}>
-      <Layout style={styles.resultsHeader} level="1">
-        <Icons.Flower2 size={48} />
-        <Text category="h4">推荐结果</Text>
-        <Text appearance="hint">基于你的情况，为你推荐以下植物</Text>
-      </Layout>
-
-      {recommendations.map((plant, index) => (
-        <Card key={plant.id} style={styles.recommendCard}>
-          <View style={styles.recommendHeader}>
-            <View style={styles.recommendRank}>
-              <Text category="s1" style={styles.rankNumber}>{index + 1}</Text>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        {!showResults ? (
+          <View style={styles.content}>
+            <View style={styles.progressContainer}>
+              <View style={styles.progressRow}><Text style={styles.progressLabel}>问题 {currentQuestion + 1}/{questions.length}</Text><Text style={styles.progressLabel}>{Math.round(progress)}%</Text></View>
+              <View style={styles.progressBar}><View style={[styles.progressFill, { width: `${progress}%` }]} /></View>
             </View>
-            <View style={styles.recommendInfo}>
-              <Text category="h6">{plant.name}</Text>
-              <View style={styles.survivalRate}>
-                <Icons.Star size={14} />
-                <Text status="warning" category="c1">
-                  成活率 {plant.survivalRate}%
-                </Text>
-              </View>
-            </View>
-            <View style={styles.careLevel}>
-              <Text appearance="hint" category="c1">难度</Text>
-              <View style={styles.careStars}>
-                {Array.from({ length: 5 }, (_, i) => (
-                  <Text
-                    key={i}
-                    style={[
-                      styles.careStar,
-                      i < plant.careLevel ? styles.careStarActive : null,
-                    ]}
-                  >
-                    ★
-                  </Text>
+            <View style={styles.questionCard}>
+              <Text style={styles.questionText}>{questions[currentQuestion].question}</Text>
+              <View style={styles.optionsList}>
+                {questions[currentQuestion].options.map((option, index) => (
+                  <TouchableOpacity key={index} onPress={handleAnswer} style={styles.optionButton} activeOpacity={0.7}>
+                    <Text style={styles.optionText}>{option.label}</Text>
+                  </TouchableOpacity>
                 ))}
               </View>
             </View>
           </View>
-
-          <Text>{plant.reason}</Text>
-
-          <View style={styles.featuresContainer}>
-            {plant.features.map((feature, idx) => (
-              <View key={idx} style={styles.featureTag}>
-                <Icons.Check size={12} />
-                <Text category="c1">{feature}</Text>
+        ) : (
+          <View style={styles.content}>
+            <View style={styles.resultHeader}>
+              <View style={styles.resultIcon}><Icons.Check size={32} color={colors.warning} /></View>
+              <Text style={styles.resultTitle}>为你推荐</Text>
+              <Text style={styles.resultSubtitle}>根据你的情况，这些植物很适合</Text>
+            </View>
+            {recommendations.map((plant) => (
+              <View key={plant.id} style={styles.recommendCard}>
+                <View style={styles.recommendRow}>
+                  <View style={styles.recommendIcon}><Icons.Flower2 size={28} color={colors.success} /></View>
+                  <View style={styles.recommendInfo}>
+                    <View style={styles.recommendTop}><Text style={styles.recommendName}>{plant.name}</Text><View style={styles.survivalBadge}><Text style={styles.survivalText}>存活率 {plant.survivalRate}%</Text></View></View>
+                    <Text style={styles.recommendReason}>{plant.reason}</Text>
+                  </View>
+                </View>
+                <View style={styles.featureRow}>{plant.features.map((feature, i) => <View key={i} style={styles.featureTag}><Text style={styles.featureText}>{feature}</Text></View>)}</View>
+                <TouchableOpacity style={styles.addButton}><Text style={styles.addButtonText}>添加到花园</Text></TouchableOpacity>
               </View>
             ))}
+            <TouchableOpacity onPress={handleRestart} style={styles.restartButton}><Text style={styles.restartButtonText}>重新测试</Text></TouchableOpacity>
           </View>
-
-          <Button
-            style={styles.addRecommendButton}
-            appearance="filled"
-            status="primary"
-          >
-            添加到花园
-          </Button>
-        </Card>
-      ))}
-
-      <Button
-        style={styles.restartButton}
-        appearance="outline"
-        status="primary"
-        onPress={handleRestart}
-      >
-        重新测试
-      </Button>
-    </View>
-  );
-
-  return (
-    <SafeAreaView style={styles.container}>
-      <TopNavigation
-        title="新手推荐"
-        alignment="center"
-        accessoryLeft={() => (
-          <Button
-            appearance="ghost"
-            status="basic"
-            accessoryLeft={(props) => <Icons.ArrowLeft {...props} size={24} />}
-            onPress={() => navigation.goBack()}
-          />
         )}
-      />
-
-      {showResults ? renderResults() : renderQuestions()}
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  questionContainer: {
-    flex: 1,
-    padding: spacing.lg,
-  },
-  progressContainer: {
-    marginBottom: spacing.xl,
-  },
-  progressText: {
-    marginTop: spacing.sm,
-    textAlign: 'right',
-  },
-  questionText: {
-    marginBottom: spacing.xl,
-  },
-  optionRadio: {
-    marginVertical: spacing.md,
-  },
-  resultsContainer: {
-    flex: 1,
-    padding: spacing.lg,
-  },
-  resultsHeader: {
-    alignItems: 'center',
-    marginBottom: spacing.xl,
-  },
-  recommendCard: {
-    marginBottom: spacing.md,
-  },
-  recommendHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  recommendRank: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  rankNumber: {
-    color: colors.white,
-    fontWeight: 'bold',
-  },
-  recommendInfo: {
-    flex: 1,
-    marginLeft: spacing.md,
-  },
-  survivalRate: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginTop: spacing.xs,
-  },
-  careLevel: {
-    alignItems: 'flex-end',
-  },
-  careStars: {
-    flexDirection: 'row',
-  },
-  careStar: {
-    fontSize: 12,
-  },
-  careStarActive: {
-    color: colors.warning,
-  },
-  featuresContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-    marginTop: spacing.md,
-  },
-  featureTag: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.secondary + '15',
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.sm,
-    gap: 4,
-  },
-  addRecommendButton: {
-    marginTop: spacing.md,
-  },
-  restartButton: {
-    marginTop: spacing.md,
-  },
+  container: { flex: 1, backgroundColor: colors.background },
+  header: { backgroundColor: colors.surface, paddingHorizontal: spacing.lg, paddingTop: spacing.xl * 1.5, paddingBottom: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.border },
+  headerTitle: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  headerTitleText: { fontSize: 20, fontWeight: 'bold', color: colors.text },
+  headerSubtitle: { fontSize: 14, color: colors['text-secondary'], marginTop: spacing.xs },
+  content: { padding: spacing.lg },
+  progressContainer: { marginBottom: spacing.lg },
+  progressRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: spacing.sm },
+  progressLabel: { fontSize: 14, color: colors['text-secondary'] },
+  progressBar: { height: 8, backgroundColor: colors.border, borderRadius: 4, overflow: 'hidden' },
+  progressFill: { height: '100%', backgroundColor: colors.primary, borderRadius: 4 },
+  questionCard: { backgroundColor: colors.surface, borderRadius: 16, padding: spacing.lg, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 12, elevation: 1 },
+  questionText: { fontSize: 18, fontWeight: '600', color: colors.text, marginBottom: spacing.lg },
+  optionsList: { gap: spacing.sm },
+  optionButton: { width: '100%', paddingVertical: spacing.md, borderWidth: 1, borderColor: colors.border, borderRadius: 12, alignItems: 'center' },
+  optionText: { fontSize: 15, fontWeight: '500', color: colors.text },
+  resultHeader: { alignItems: 'center', marginBottom: spacing.xl },
+  resultIcon: { width: 64, height: 64, borderRadius: 32, backgroundColor: colors.warning + '15', alignItems: 'center', justifyContent: 'center', marginBottom: spacing.md },
+  resultTitle: { fontSize: 20, fontWeight: 'bold', color: colors.text },
+  resultSubtitle: { fontSize: 14, color: colors['text-secondary'], marginTop: spacing.xs },
+  recommendCard: { backgroundColor: colors.surface, borderRadius: 16, padding: spacing.md, marginBottom: spacing.md, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 12, elevation: 1 },
+  recommendRow: { flexDirection: 'row' },
+  recommendIcon: { width: 56, height: 56, borderRadius: 12, backgroundColor: colors.success + '15', alignItems: 'center', justifyContent: 'center' },
+  recommendInfo: { flex: 1, marginLeft: spacing.sm },
+  recommendTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  recommendName: { fontSize: 18, fontWeight: 'bold', color: colors.text },
+  survivalBadge: { backgroundColor: colors.success + '15', paddingHorizontal: spacing.sm, paddingVertical: 2, borderRadius: 10 },
+  survivalText: { color: colors.success, fontSize: 12 },
+  recommendReason: { fontSize: 14, color: colors['text-secondary'], marginTop: spacing.xs },
+  featureRow: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.sm },
+  featureTag: { backgroundColor: colors.background, paddingHorizontal: spacing.sm, paddingVertical: spacing.xs, borderRadius: 10 },
+  featureText: { color: colors['text-tertiary'], fontSize: 12 },
+  addButton: { width: '100%', backgroundColor: colors.primary, paddingVertical: spacing.md, borderRadius: 12, alignItems: 'center', marginTop: spacing.md },
+  addButtonText: { color: '#fff', fontSize: 15, fontWeight: '600' },
+  restartButton: { paddingVertical: spacing.lg, borderWidth: 1, borderColor: colors.border, borderRadius: 12, alignItems: 'center', marginTop: spacing.md },
+  restartButtonText: { fontSize: 15, fontWeight: '500', color: colors['text-secondary'] },
 });

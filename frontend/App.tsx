@@ -3,12 +3,11 @@
  * 你的掌上植物管家，让养花不再凭感觉
  */
 import React, { useState } from 'react';
-import { StatusBar } from 'react-native';
+import { StatusBar, View, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
-import { ApplicationProvider, Layout } from '@ui-kitten/components';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AppNavigator } from './src/navigation/AppNavigator';
 import { colors } from './src/constants/theme';
-import { theme } from './src/theme';
 
 type TabName = 'Identify' | 'Garden' | 'Encyclopedia' | 'Profile';
 
@@ -16,15 +15,22 @@ function App() {
   const [currentTab, setCurrentTab] = useState<TabName>('Identify');
 
   return (
-    <ApplicationProvider {...theme}>
+    <SafeAreaProvider>
       <NavigationContainer>
-        <Layout style={{ flex: 1, backgroundColor: colors.background }}>
+        <View style={styles.container}>
           <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
           <AppNavigator currentTab={currentTab} onTabChange={setCurrentTab} />
-        </Layout>
+        </View>
       </NavigationContainer>
-    </ApplicationProvider>
+    </SafeAreaProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+});
 
 export default App;
