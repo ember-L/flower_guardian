@@ -11,6 +11,8 @@ class User(Base):
     username = Column(String(50), unique=True, index=True, nullable=False)
     email = Column(String(100), unique=True, index=True, nullable=False)
     password_hash = Column(String(255), nullable=False)
+    avatar_url = Column(String(500), nullable=True)
+    bio = Column(String(500), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     user_plants = relationship("UserPlant", back_populates="user")

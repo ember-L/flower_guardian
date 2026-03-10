@@ -6,7 +6,7 @@ from app.core.database import get_db
 from app.core.security import verify_password, get_password_hash, create_access_token, get_current_user
 from app.core.config import settings
 from app.models.user import User
-from app.schemas.user import UserCreate, UserResponse, Token
+from app.schemas.user import UserCreate, UserResponse, Token, UserUpdate, PasswordChange
 
 router = APIRouter(prefix="/api/users", tags=["users"])
 
@@ -47,3 +47,56 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
 @router.get("/me", response_model=UserResponse)
 def read_users_me(current_user: User = Depends(get_current_user)):
     return current_user
+
+
+@router.put("/me", response_model=UserResponse)
+def update_user(
+    user_update: UserUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """更新用户信息"""
+    if user_update.username:
+        # 检查用户名是否已被占用
+        existing = db.query(User).filter(
+            User.username == user_update.username,
+            User.id != current_user.id
+        ).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="Username already taken")
+        current_user.username = user_update.username
+
+    if user_update.email:
+        # 检查邮箱是否已被占用
+        existing = db.query(User).filter(
+            User.email == user_update.email,
+            User.id != current_user.id
+        ).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="Email already taken")
+        current_user.email = user_update.email
+
+    if user_update.avatar_url is not None:
+        current_user.avatar_url = user_update.avatar_url
+
+    if user_update.bio is not None:
+        current_user.bio = user_update.bio
+
+    db.commit()
+    db.refresh(current_user)
+    return current_user
+
+
+@router.post("/password")
+def change_password(
+    password_change: PasswordChange,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """修改密码"""
+    if not verify_password(password_change.old_password, current_user.password_hash):
+        raise HTTPException(status_code=400, detail="Incorrect old password")
+
+    current_user.password_hash = get_password_hash(password_change.new_password)
+    db.commit()
+    return {"message": "Password updated successfully"}

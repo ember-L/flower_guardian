@@ -59,3 +59,22 @@ def get_my_plants(
     current_user: User = Depends(get_current_user)
 ):
     return db.query(UserPlant).filter(UserPlant.user_id == current_user.id).all()
+
+
+@router.delete("/my/{user_plant_id}")
+def delete_user_plant(
+    user_plant_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """删除用户的植物"""
+    user_plant = db.query(UserPlant).filter(
+        UserPlant.id == user_plant_id,
+        UserPlant.user_id == current_user.id
+    ).first()
+    if not user_plant:
+        raise HTTPException(status_code=404, detail="Plant not found")
+
+    db.delete(user_plant)
+    db.commit()
+    return {"message": "Plant deleted successfully"}

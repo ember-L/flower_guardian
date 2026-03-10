@@ -4,6 +4,9 @@ import { View, StyleSheet, ScrollView, TouchableOpacity, Text, Switch, Alert } f
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Icons } from '../components/Icon';
 import { colors, spacing } from '../constants/theme';
+import { NavigationProps } from '../navigation/AppNavigator';
+
+interface ReminderScreenProps extends Partial<NavigationProps> {}
 
 const mockReminders = [
   { id: '1', plantName: '绿萝', type: 'water', title: '浇水', interval: 7, enabled: true },
@@ -15,15 +18,25 @@ const mockReminders = [
 const reminderTypeIcons: Record<string, any> = { water: Icons.Droplets, fertilize: Icons.Flower2, prune: Icons.Scissors };
 const reminderTypeColors: Record<string, string> = { water: colors.primary, fertilize: colors.secondary, prune: colors.warning };
 
-export function ReminderScreen() {
+export function ReminderScreen({ onGoBack }: ReminderScreenProps) {
   const [reminders, setReminders] = useState(mockReminders);
   const toggleReminder = (id: string) => setReminders(prev => prev.map(r => r.id === id ? { ...r, enabled: !r.enabled } : r));
   const handleSnooze = () => Alert.alert('延迟提醒', '选择延迟时间', [{ text: '1天后', onPress: () => {} }, { text: '3天后', onPress: () => {} }, { text: '取消', style: 'cancel' }]);
 
+  const handleGoBack = () => {
+    if (onGoBack) {
+      onGoBack();
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <View style={styles.headerTitle}><Icons.Bell size={24} color={colors.primary} /><Text style={styles.headerTitleText}>智能提醒</Text></View>
+        <View style={styles.headerTop}>
+          <TouchableOpacity onPress={handleGoBack} style={styles.backButton}><Icons.ChevronLeft size={20} color={colors.primary} /></TouchableOpacity>
+          <View style={styles.headerTitle}><Icons.Bell size={24} color={colors.primary} /><Text style={styles.headerTitleText}>智能提醒</Text></View>
+          <View style={styles.placeholder} />
+        </View>
         <Text style={styles.headerSubtitle}>管理你的植物养护提醒</Text>
       </View>
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -61,6 +74,9 @@ export function ReminderScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   header: { backgroundColor: colors.surface, paddingHorizontal: spacing.lg, paddingTop: spacing.xl * 1.5, paddingBottom: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.border },
+  headerTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  backButton: { width: 32, height: 32, borderRadius: 16, backgroundColor: colors.primary + '15', alignItems: 'center', justifyContent: 'center' },
+  placeholder: { width: 32 },
   headerTitle: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   headerTitleText: { fontSize: 20, fontWeight: 'bold', color: colors.text },
   headerSubtitle: { fontSize: 14, color: colors['text-secondary'], marginTop: spacing.xs },

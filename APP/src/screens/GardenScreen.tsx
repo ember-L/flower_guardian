@@ -13,27 +13,29 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Icons } from '../components/Icon';
 import { colors, spacing } from '../constants/theme';
+import { NavigationProps } from '../navigation/AppNavigator';
 
-const quotes = [
-  "每一朵花，都是大自然的微笑",
-  "用心浇灌，静待花开",
-  "生命因绿色而美好",
-];
+interface GardenScreenProps extends Partial<NavigationProps> {}
 
-const mockPlants = [
-  { id: '1', name: '绿萝', nickname: '小绿', image: '', nextAction: '浇水', daysUntil: 2, health: 'good', environment: 'other', quote: '用心浇灌，静待花开' },
-  { id: '2', name: '虎皮兰', nickname: '小兰', image: '', nextAction: '施肥', daysUntil: 5, health: 'good', environment: 'south-balcony', quote: '' },
-  { id: '3', name: '吊兰', nickname: '吊吊', image: '', nextAction: '修剪', daysUntil: 1, health: 'warning', environment: 'office', quote: '' },
-];
+export function GardenScreen({ onNavigate, currentTab, onTabChange }: GardenScreenProps) {
+  const quotes = [
+    "每一朵花，都是大自然的微笑",
+    "用心浇灌，静待花开",
+    "生命因绿色而美好",
+  ];
 
-const environmentLabels: Record<string, string> = {
-  'south-balcony': '南阳台',
-  'north-bedroom': '北卧室',
-  'office': '办公室',
-  'other': '其他位置',
-};
+  const mockPlants = [
+    { id: '1', name: '绿萝', nickname: '小绿', image: '', nextAction: '浇水', daysUntil: 2, health: 'good', environment: 'other', quote: '用心浇灌，静待花开' },
+    { id: '2', name: '虎皮兰', nickname: '小兰', image: '', nextAction: '施肥', daysUntil: 5, health: 'good', environment: 'south-balcony', quote: '' },
+    { id: '3', name: '吊兰', nickname: '吊吊', image: '', nextAction: '修剪', daysUntil: 1, health: 'warning', environment: 'office', quote: '' },
+  ];
 
-export function GardenScreen() {
+  const environmentLabels: Record<string, string> = {
+    'south-balcony': '南阳台',
+    'north-bedroom': '北卧室',
+    'office': '办公室',
+    'other': '其他位置',
+  };
   const [plants, setPlants] = useState(mockPlants);
   const [showAddModal, setShowAddModal] = useState(false);
   const [newPlantName, setNewPlantName] = useState('');

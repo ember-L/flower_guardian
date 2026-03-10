@@ -18,3 +18,10 @@ class DiaryResponse(DiaryCreate):
 
     class Config:
         from_attributes = True
+
+
+class DiaryUpdate(BaseModel):
+    content: Optional[str] = None
+    images: Optional[List[str]] = None
+    height: Optional[int] = None
+    leaf_count: Optional[int] = None

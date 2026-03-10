@@ -2,9 +2,11 @@
 import React from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
 import { Icons } from '../components/Icon';
 import { colors, spacing } from '../constants/theme';
+import { NavigationProps } from '../navigation/AppNavigator';
+
+interface EncyclopediaDetailScreenProps extends Partial<NavigationProps> {}
 
 const mockPlantDetail = {
   id: '1',
@@ -25,16 +27,21 @@ const mockPlantDetail = {
   tips: ['适合放在北向窗户边', '水培也很容易成活', '经常喷水增加空气湿度', '每月擦拭叶片保持光泽'],
 };
 
-export function EncyclopediaDetailScreen() {
-  const navigation = useNavigation();
+export function EncyclopediaDetailScreen({ onGoBack }: EncyclopediaDetailScreenProps) {
   const plant = mockPlantDetail;
+
+  const handleGoBack = () => {
+    if (onGoBack) {
+      onGoBack();
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.heroSection}>
           <View style={styles.navBar}>
-            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}><Icons.ChevronLeft size={20} color="#fff" /></TouchableOpacity>
+            <TouchableOpacity onPress={handleGoBack} style={styles.backButton}><Icons.ChevronLeft size={20} color="#fff" /></TouchableOpacity>
             <Text style={styles.navTitle}>植物详情</Text>
             <View style={styles.placeholder} />
           </View>

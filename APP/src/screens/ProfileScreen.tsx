@@ -4,6 +4,9 @@ import { View, StyleSheet, ScrollView, TouchableOpacity, Text } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Icons } from '../components/Icon';
 import { colors, spacing } from '../constants/theme';
+import { NavigationProps } from '../navigation/AppNavigator';
+
+interface ProfileScreenProps extends Partial<NavigationProps> {}
 
 const menuItems = [
   { id: '1', icon: Icons.BookOpen, title: '养花日记', subtitle: '记录植物成长', screen: 'Diary', color: colors.secondary },
@@ -14,7 +17,19 @@ const menuItems = [
   { id: '6', icon: Icons.HelpCircle, title: '帮助反馈', subtitle: '联系我们', screen: 'Help', color: colors['text-secondary'] },
 ];
 
-export function ProfileScreen() {
+export function ProfileScreen({ onNavigate, currentTab, onTabChange }: ProfileScreenProps) {
+  const handleMenuPress = (screen: string) => {
+    if (onNavigate) {
+      const screenMap: Record<string, 'Diagnosis' | 'Recommendation' | 'Reminder' | 'EncyclopediaDetail' | 'Diary'> = {
+        'Diary': 'Diary',
+        'Diagnosis': 'Diagnosis',
+        'Recommendation': 'Recommendation',
+        'Reminder': 'Reminder',
+        'EncyclopediaDetail': 'EncyclopediaDetail',
+      };
+      onNavigate(screenMap[screen] || null);
+    }
+  };
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -60,7 +75,7 @@ export function ProfileScreen() {
         <View style={styles.menuSection}>
           <Text style={styles.menuSectionTitle}>功能入口</Text>
           {menuItems.map((item, index) => (
-            <TouchableOpacity key={item.id} style={[styles.menuItem, index < menuItems.length - 1 && styles.menuItemBorder]} activeOpacity={0.7}>
+            <TouchableOpacity key={item.id} style={[styles.menuItem, index < menuItems.length - 1 && styles.menuItemBorder]} activeOpacity={0.7} onPress={() => handleMenuPress(item.screen)}>
               <View style={[styles.menuIcon, { backgroundColor: item.color + '15' }]}><item.icon size={20} color={item.color} /></View>
               <View style={styles.menuContent}><Text style={styles.menuTitle}>{item.title}</Text><Text style={styles.menuSubtitle}>{item.subtitle}</Text></View>
               <Icons.ChevronRight size={18} color={colors['text-tertiary']} />

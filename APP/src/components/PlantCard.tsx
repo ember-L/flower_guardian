@@ -65,7 +65,7 @@ export function PlantCard({ visible, plant, onClose, onAddToGarden }: PlantCardP
 
             {/* 植物图片 */}
             <View style={styles.imageContainer}>
-              <Text style={styles.plantEmoji}>🌿</Text>
+              <Icons.Leaf size={60} color={colors.success} />
             </View>
 
             {/* 植物名称 */}
@@ -89,13 +89,13 @@ export function PlantCard({ visible, plant, onClose, onAddToGarden }: PlantCardP
 
               <View style={styles.metricItem}>
                 <Text style={styles.metricLabel}>光照需求</Text>
-                <Text style={styles.metricEmoji}>☁️</Text>
+                <Icons.Cloud size={18} color={colors['text-secondary']} />
                 <Text style={styles.metricValue}>{plant.lightRequirement || '耐阴'}</Text>
               </View>
 
               <View style={styles.metricItem}>
                 <Text style={styles.metricLabel}>水分需求</Text>
-                <Text style={styles.metricEmoji}>💧</Text>
+                <Icons.Droplets size={18} color={colors.info} />
                 <Text style={styles.metricValue}>{plant.waterRequirement || '见干见湿'}</Text>
               </View>
             </View>
@@ -156,9 +156,6 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
     alignSelf: 'center',
   },
-  plantEmoji: {
-    fontSize: 60,
-  },
   plantName: {
     fontSize: 20,
     fontWeight: 'bold',
@@ -202,10 +199,6 @@ const styles = StyleSheet.create({
   },
   stars: {
     flexDirection: 'row',
-    marginVertical: spacing.xs,
-  },
-  metricEmoji: {
-    fontSize: 18,
     marginVertical: spacing.xs,
   },
   metricValue: {

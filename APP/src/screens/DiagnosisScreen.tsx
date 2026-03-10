@@ -5,6 +5,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 import { Icons } from '../components/Icon';
 import { colors, spacing } from '../constants/theme';
+import { NavigationProps } from '../navigation/AppNavigator';
+
+interface DiagnosisScreenProps extends Partial<NavigationProps> {}
 
 interface DiagnosisResult {
   id: string;
@@ -24,7 +27,7 @@ const mockDiagnosis: DiagnosisResult = {
   prevention: '遵循"见干见湿"浇水原则，保持通风',
 };
 
-export function DiagnosisScreen() {
+export function DiagnosisScreen({ onGoBack, onNavigate, currentTab, onTabChange }: DiagnosisScreenProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [diagnosisResult, setDiagnosisResult] = useState<DiagnosisResult | null>(null);
 

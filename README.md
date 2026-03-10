@@ -22,9 +22,21 @@
 |------|------|
 | 后端 | FastAPI + PostgreSQL |
 | 前端 | React Native (移动端) + Web |
-| CV模型 | YOLOv11 |
+| CV模型 | YOLOv11 (双模型：植物识别 + 病虫害识别) |
+| 模型部署 | ONNX Runtime (服务器端 + 边缘端) |
 | AI大模型 | Qwen API |
 | 部署 | Docker Compose |
+
+## CV 模型架构
+
+项目采用**双 YOLO 模型架构**：
+
+| 模型 | 功能 | 支持类别 |
+|------|------|----------|
+| 植物识别模型 | 识别常见室内植物、花卉、蔬菜 | 30+ 类别 |
+| 病虫害识别模型 | 识别病虫害、生理性病害 | 昆虫、病害、生理障碍 |
+
+详细技术文档见：[CV 模型使用指南](docs/plans/2026-03-10-cv-model-usage-guide.md)
 
 ## 核心功能
 
@@ -70,22 +82,29 @@ Flower_Guardian/
 │   │   ├── db/            # 数据库
 │   │   ├── models/        # 数据模型
 │   │   ├── schemas/       # Pydantic 模型
-│   │   └── services/     # 业务逻辑
+│   │   └── services/     # 业务逻辑（识别服务）
 │   ├── dataset/           # 数据集处理
-│   │   ├── augmentation.py
-│   │   ├── downloader.py
-│   │   └── preprocessing.py
+│   ├── models/            # 训练好的模型文件
+│   │   ├── plant/        # 植物识别模型
+│   │   └── pest/         # 病虫害识别模型
 │   ├── train/             # 模型训练
-│   │   ├── config.py
-│   │   └── trainer.py
+│   │   ├── config.py      # 训练配置
+│   │   ├── train_plant.py # 植物模型训练
+│   │   ├── train_pest.py # 病虫害模型训练
+│   │   └── export_onnx.py # 模型导出
 │   ├── Dockerfile
 │   └── requirements.txt
 ├── frontend/              # React Native 前端
 │   ├── android/          # Android 配置
 │   ├── ios/              # iOS 配置
 │   ├── src/              # 源代码
+│   │   ├── services/    # 识别服务（本地+服务端）
+│   │   └── screens/     # 页面组件
 │   ├── app.json
 │   └── ...
+├── docs/                   # 文档
+│   └── plans/            # 技术规划文档
+│       └── cv-model-usage-guide.md  # CV模型使用指南
 ├── docker-compose.yml     # Docker 部署配置
 └── design.md             # 设计文档
 ```
@@ -149,16 +168,47 @@ npm start
 
 ## API 端点
 
+### 用户认证
 | 端点 | 描述 |
 |------|------|
 | `POST /api/users/register` | 用户注册 |
 | `POST /api/users/login` | 用户登录 |
-| `GET /api/plants` | 获取用户植物列表 |
-| `POST /api/plants` | 添加植物 |
+| `GET /api/users/me` | 获取当前用户 |
+| `PUT /api/users/me` | 更新用户信息 |
+| `POST /api/users/password` | 修改密码 |
+
+### 植物管理
+| 端点 | 描述 |
+|------|------|
+| `GET /api/plants` | 获取植物列表 |
+| `GET /api/plants/{id}` | 获取植物详情 |
+| `GET /api/plants/my` | 获取我的植物 |
+| `POST /api/plants/my` | 添加我的植物 |
+| `DELETE /api/plants/my/{id}` | 删除我的植物 |
+
+### 智能提醒
+| 端点 | 描述 |
+|------|------|
 | `GET /api/reminders` | 获取提醒列表 |
-| `POST /api/recognition` | 花卉识别 |
-| `POST /api/diagnosis` | 病虫害诊断 |
+| `POST /api/reminders` | 创建提醒 |
+| `PUT /api/reminders/{id}` | 更新提醒 |
+| `DELETE /api/reminders/{id}` | 删除提醒 |
+
+### 图像识别（CV模型）
+| 端点 | 描述 |
+|------|------|
+| `POST /api/recognition/plant` | 植物识别 |
+| `POST /api/recognition/full` | 完整识别（植物+病虫害） |
+| `POST /api/diagnosis/pest` | 病虫害识别 |
+| `POST /api/diagnosis/full` | 完整诊断（含建议） |
+
+### 养花日记
+| 端点 | 描述 |
+|------|------|
 | `GET /api/diaries` | 获取日记列表 |
+| `POST /api/diaries` | 创建日记 |
+| `PUT /api/diaries/{id}` | 更新日记 |
+| `DELETE /api/diaries/{id}` | 删除日记 |
 
 ## 环境变量
 
@@ -170,6 +220,50 @@ npm start
 | `SECRET_KEY` | JWT 密钥 | your-secret-key |
 | `ALGORITHM` | JWT 算法 | HS256 |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | Token 过期时间 | 30 |
+
+## CV 模型使用
+
+### 模型训练
+
+```bash
+# 训练植物识别模型
+python backend/train/train_plant.py
+
+# 训练病虫害识别模型
+python backend/train/train_pest.py
+
+# 自定义参数训练
+python -c "
+from train.train_plant import train_plant_model
+from train.config import TrainConfig
+
+config = TrainConfig()
+config.epochs = 50
+config.model_type = 'yolo11s'
+train_plant_model()
+"
+```
+
+### 模型导出
+
+```bash
+# 导出为 ONNX 格式
+python backend/train/export_onnx.py --type all
+
+# 导出量化模型（更适合移动端）
+python backend/train/export_onnx.py --type quantized
+```
+
+### 模型版本
+
+| 模型 | 文件 | 说明 |
+|------|------|------|
+| 植物识别 | `plant_yolo11n.pt` | PyTorch 格式 |
+| 植物识别 | `plant_yolo11n.onnx` | ONNX 格式 |
+| 病虫害 | `pest_yolo11n.pt` | PyTorch 格式 |
+| 病虫害 | `pest_yolo11n.onnx` | ONNX 格式 |
+
+详细说明见：[CV 模型使用指南](docs/plans/2026-03-10-cv-model-usage-guide.md)
 
 ## 配色方案
 

@@ -4,12 +4,15 @@ import { View, StyleSheet, ScrollView, TouchableOpacity, Text, TextInput } from 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Icons } from '../components/Icon';
 import { colors, spacing } from '../constants/theme';
+import { NavigationProps } from '../navigation/AppNavigator';
+
+interface EncyclopediaScreenProps extends Partial<NavigationProps> {}
 
 const categories = [
-  { id: '1', name: '观叶植物', icon: '🌿', count: 120 },
-  { id: '2', name: '多肉植物', icon: '🪴', count: 85 },
-  { id: '3', name: '开花植物', icon: '🌸', count: 95 },
-  { id: '4', name: '绿植', icon: '🎋', count: 150 },
+  { id: '1', name: '观叶植物', icon: 'leaf', count: 120 },
+  { id: '2', name: '多肉植物', icon: 'sprout', count: 85 },
+  { id: '3', name: '开花植物', icon: 'flower2', count: 95 },
+  { id: '4', name: '绿植', icon: 'tree', count: 150 },
 ];
 
 const difficultyLevels = [
@@ -33,7 +36,12 @@ const popularPlants = [
   { id: '4', name: '多肉', careLevel: 2, category: '多肉植物' },
 ];
 
-export function EncyclopediaScreen() {
+export function EncyclopediaScreen({ onNavigate, currentTab, onTabChange }: EncyclopediaScreenProps) {
+  const handlePlantPress = () => {
+    if (onNavigate) {
+      onNavigate('EncyclopediaDetail');
+    }
+  };
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -67,13 +75,16 @@ export function EncyclopediaScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>植物分类</Text>
             <View style={styles.categoryGrid}>
-              {categories.map((item) => (
-                <TouchableOpacity key={item.id} style={styles.categoryCard} activeOpacity={0.7}>
-                  <View style={styles.categoryIcon}><Text style={styles.categoryEmoji}>{item.icon}</Text></View>
-                  <Text style={styles.categoryName}>{item.name}</Text>
-                  <Text style={styles.categoryCount}>{item.count} 种</Text>
-                </TouchableOpacity>
-              ))}
+              {categories.map((item) => {
+                const CategoryIcon = Icons[item.icon as keyof typeof Icons] || Icons.Leaf;
+                return (
+                  <TouchableOpacity key={item.id} style={styles.categoryCard} activeOpacity={0.7} onPress={handlePlantPress}>
+                    <View style={styles.categoryIcon}><CategoryIcon size={28} color={colors.secondary} /></View>
+                    <Text style={styles.categoryName}>{item.name}</Text>
+                    <Text style={styles.categoryCount}>{item.count} 种</Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
           </View>
 
@@ -89,12 +100,12 @@ export function EncyclopediaScreen() {
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               <View style={styles.plantsRow}>
                 {popularPlants.map((plant) => (
-                  <TouchableOpacity key={plant.id} style={styles.plantCard} activeOpacity={0.7}>
-                    <View style={styles.plantImage}><Text style={styles.plantEmoji}>🌿</Text></View>
+                  <TouchableOpacity key={plant.id} style={styles.plantCard} activeOpacity={0.7} onPress={handlePlantPress}>
+                    <View style={styles.plantImage}><Icons.Leaf size={36} color={colors.secondary} /></View>
                     <Text style={styles.plantName}>{plant.name}</Text>
                     <View style={styles.plantMeta}>
                       <Text style={styles.plantCategory}>{plant.category}</Text>
-                      <Text style={styles.plantStars}>★</Text>
+                      <Icons.Star size={12} color={colors.warning} />
                     </View>
                   </TouchableOpacity>
                 ))}

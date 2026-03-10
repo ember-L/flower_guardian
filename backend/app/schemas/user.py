@@ -19,6 +19,8 @@ class UserLogin(BaseModel):
 
 class UserResponse(UserBase):
     id: int
+    avatar_url: Optional[str] = None
+    bio: Optional[str] = None
     created_at: datetime
 
     class Config:
@@ -28,3 +30,15 @@ class UserResponse(UserBase):
 class Token(BaseModel):
     access_token: str
     token_type: str
+
+
+class UserUpdate(BaseModel):
+    username: Optional[str] = None
+    email: Optional[EmailStr] = None
+    avatar_url: Optional[str] = None
+    bio: Optional[str] = None
+
+
+class PasswordChange(BaseModel):
+    old_password: str
+    new_password: str

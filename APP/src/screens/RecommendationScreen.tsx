@@ -4,6 +4,9 @@ import { View, StyleSheet, ScrollView, TouchableOpacity, Text } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Icons } from '../components/Icon';
 import { colors, spacing } from '../constants/theme';
+import { NavigationProps } from '../navigation/AppNavigator';
+
+interface RecommendationScreenProps extends Partial<NavigationProps> {}
 
 const questions = [
   { id: 1, question: '你家的光照条件怎么样？', options: [{ label: '光线充足', value: 'full-sun' }, { label: '一般光线', value: 'partial-sun' }, { label: '光线较弱', value: 'low-light' }] },
@@ -17,7 +20,7 @@ const recommendations = [
   { id: '3', name: '吊兰', reason: '生命力顽强，繁殖容易，还能吸收甲醛', survivalRate: 92, features: ['空气净化', '易繁殖', '垂吊美'] },
 ];
 
-export function RecommendationScreen() {
+export function RecommendationScreen({ onGoBack }: RecommendationScreenProps) {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [showResults, setShowResults] = useState(false);
   const progress = ((currentQuestion + 1) / questions.length) * 100;
@@ -32,10 +35,20 @@ export function RecommendationScreen() {
 
   const handleRestart = () => { setCurrentQuestion(0); setShowResults(false); };
 
+  const handleGoBack = () => {
+    if (onGoBack) {
+      onGoBack();
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <View style={styles.headerTitle}><Icons.Sparkles size={24} color={colors.warning} /><Text style={styles.headerTitleText}>新手推荐</Text></View>
+        <View style={styles.headerTop}>
+          <TouchableOpacity onPress={handleGoBack} style={styles.backButton}><Icons.ChevronLeft size={20} color={colors.primary} /></TouchableOpacity>
+          <View style={styles.headerTitle}><Icons.Sparkles size={24} color={colors.warning} /><Text style={styles.headerTitleText}>新手推荐</Text></View>
+          <View style={styles.placeholder} />
+        </View>
         <Text style={styles.headerSubtitle}>回答几个问题，帮你找到适合的植物</Text>
       </View>
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -87,6 +100,9 @@ export function RecommendationScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   header: { backgroundColor: colors.surface, paddingHorizontal: spacing.lg, paddingTop: spacing.xl * 1.5, paddingBottom: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.border },
+  headerTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  backButton: { width: 32, height: 32, borderRadius: 16, backgroundColor: colors.primary + '15', alignItems: 'center', justifyContent: 'center' },
+  placeholder: { width: 32 },
   headerTitle: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   headerTitleText: { fontSize: 20, fontWeight: 'bold', color: colors.text },
   headerSubtitle: { fontSize: 14, color: colors['text-secondary'], marginTop: spacing.xs },

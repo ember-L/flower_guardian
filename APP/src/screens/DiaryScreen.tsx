@@ -4,6 +4,9 @@ import { View, StyleSheet, ScrollView, TouchableOpacity, Text } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Icons } from '../components/Icon';
 import { colors, spacing } from '../constants/theme';
+import { NavigationProps } from '../navigation/AppNavigator';
+
+interface DiaryScreenProps extends Partial<NavigationProps> {}
 
 const mockDiaries = [
   { id: '1', plantName: '绿萝', date: '2024-01-20', content: '今天给绿萝换了一个大一点的花盆，加了新土，期待它长得更好！', likes: 12, comments: 3, compareWithPrevious: true },
@@ -11,13 +14,20 @@ const mockDiaries = [
   { id: '3', plantName: '虎皮兰', date: '2024-01-10', content: '虎皮兰的纹路越来越清晰了，养护得当果然不一样。', likes: 5, comments: 1 },
 ];
 
-export function DiaryScreen() {
+export function DiaryScreen({ onGoBack }: DiaryScreenProps) {
   const [selectedTab, setSelectedTab] = useState(0);
+
+  const handleGoBack = () => {
+    if (onGoBack) {
+      onGoBack();
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <View style={styles.headerTop}>
+          <TouchableOpacity onPress={handleGoBack} style={styles.backButton}><Icons.ChevronLeft size={20} color={colors.primary} /></TouchableOpacity>
           <View style={styles.headerTitle}><Icons.BookOpen size={24} color={colors.secondary} /><Text style={styles.headerTitleText}>养花日记</Text></View>
           <TouchableOpacity style={styles.writeButton}><Text style={styles.writeButtonText}>+ 写日记</Text></TouchableOpacity>
         </View>
@@ -53,6 +63,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   header: { backgroundColor: colors.surface, paddingHorizontal: spacing.lg, paddingTop: spacing.xl * 1.5, paddingBottom: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.border },
   headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  backButton: { width: 32, height: 32, borderRadius: 16, backgroundColor: colors.primary + '15', alignItems: 'center', justifyContent: 'center' },
   headerTitle: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   headerTitleText: { fontSize: 20, fontWeight: 'bold', color: colors.text },
   writeButton: { backgroundColor: colors.primary, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderRadius: 12 },
