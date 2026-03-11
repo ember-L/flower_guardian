@@ -17,7 +17,7 @@ import { NavigationProps } from '../navigation/AppNavigator';
 
 interface GardenScreenProps extends Partial<NavigationProps> {}
 
-export function GardenScreen({ onNavigate, currentTab, onTabChange }: GardenScreenProps) {
+export function GardenScreen({ onNavigate, currentTab, onTabChange, isLoggedIn, onRequireLogin, onLogout }: GardenScreenProps) {
   const quotes = [
     "每一朵花，都是大自然的微笑",
     "用心浇灌，静待花开",
@@ -38,6 +38,8 @@ export function GardenScreen({ onNavigate, currentTab, onTabChange }: GardenScre
   };
   const [plants, setPlants] = useState(mockPlants);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingPlant, setEditingPlant] = useState<typeof mockPlants[0] | null>(null);
   const [newPlantName, setNewPlantName] = useState('');
   const [newPlantNickname, setNewPlantNickname] = useState('');
 
@@ -58,7 +60,37 @@ export function GardenScreen({ onNavigate, currentTab, onTabChange }: GardenScre
     ]);
   };
 
+  const handleEditPlant = (plant: typeof mockPlants[0]) => {
+    setEditingPlant(plant);
+    setNewPlantName(plant.name);
+    setNewPlantNickname(plant.nickname);
+    setShowEditModal(true);
+  };
+
+  const handleSaveEdit = () => {
+    if (!editingPlant || !newPlantName.trim()) {
+      Alert.alert('请输入植物名称');
+      return;
+    }
+    setPlants(plants.map(p => {
+      if (p.id === editingPlant.id) {
+        return { ...p, name: newPlantName, nickname: newPlantNickname || newPlantName };
+      }
+      return p;
+    }));
+    setShowEditModal(false);
+    setEditingPlant(null);
+    setNewPlantName('');
+    setNewPlantNickname('');
+  };
+
   const handleAddPlant = () => {
+    if (!isLoggedIn) {
+      if (onRequireLogin) {
+        onRequireLogin();
+      }
+      return;
+    }
     if (!newPlantName.trim()) {
       Alert.alert('请输入植物名称');
       return;
@@ -96,7 +128,7 @@ export function GardenScreen({ onNavigate, currentTab, onTabChange }: GardenScre
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       {/* 头部 */}
       <View style={styles.header}>
         <View style={styles.headerTop}>
@@ -115,7 +147,7 @@ export function GardenScreen({ onNavigate, currentTab, onTabChange }: GardenScre
       </View>
 
       {/* 植物列表 */}
-      <ScrollView style={styles.list} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.list} contentContainerStyle={styles.listContent} showsVerticalScrollIndicator={false}>
         {plants.length === 0 ? (
           <View style={styles.emptyContainer}>
             <View style={styles.emptyIcon}>
@@ -176,7 +208,7 @@ export function GardenScreen({ onNavigate, currentTab, onTabChange }: GardenScre
                       <Icons.Droplets size={16} color={colors.info} />
                       <Text style={styles.actionButtonText}>已浇水</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.actionButton} activeOpacity={0.7}>
+                    <TouchableOpacity onPress={() => handleEditPlant(plant)} style={styles.actionButton} activeOpacity={0.7}>
                       <Icons.Edit2 size={16} color={colors.success} />
                       <Text style={[styles.actionButtonText, { color: colors.success }]}>编辑</Text>
                     </TouchableOpacity>
@@ -220,6 +252,39 @@ export function GardenScreen({ onNavigate, currentTab, onTabChange }: GardenScre
           </View>
         </View>
       </Modal>
+
+      {/* 编辑植物弹窗 */}
+      <Modal visible={showEditModal} animationType="slide" transparent onRequestClose={() => setShowEditModal(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>编辑植物</Text>
+              <TouchableOpacity onPress={() => setShowEditModal(false)}>
+                <Icons.X size={24} color={colors['text-tertiary']} />
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.inputLabel}>植物名称</Text>
+            <TextInput
+              value={newPlantName}
+              onChangeText={setNewPlantName}
+              placeholder="例如：绿萝、吊兰"
+              style={styles.input}
+              placeholderTextColor={colors['text-tertiary']}
+            />
+            <Text style={styles.inputLabel}>昵称（选填）</Text>
+            <TextInput
+              value={newPlantNickname}
+              onChangeText={setNewPlantNickname}
+              placeholder="例如：小绿、花花"
+              style={styles.input}
+              placeholderTextColor={colors['text-tertiary']}
+            />
+            <TouchableOpacity onPress={handleSaveEdit} style={styles.submitButton}>
+              <Text style={styles.submitButtonText}>保存修改</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -233,7 +298,8 @@ const styles = StyleSheet.create({
   addButton: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, backgroundColor: colors.primary, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderRadius: 12 },
   addButtonText: { color: '#fff', fontSize: 14, fontWeight: '500' },
   headerSubtitle: { fontSize: 14, color: colors['text-secondary'], marginTop: spacing.xs },
-  list: { flex: 1, padding: spacing.lg },
+  list: { flex: 1 },
+  listContent: { padding: spacing.lg, paddingBottom: spacing.xxl * 4 },
   emptyContainer: { alignItems: 'center', paddingVertical: spacing.xxl * 2 },
   emptyIcon: { width: 80, height: 80, borderRadius: 40, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.md },
   emptyTitle: { fontSize: 18, fontWeight: '600', color: colors.text, marginBottom: spacing.xs },

@@ -1,5 +1,5 @@
 // 导航配置 - 支持子页面跳转
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Platform, TouchableOpacity, Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icons } from '../components/Icon';
@@ -13,9 +13,15 @@ import { RecommendationScreen } from '../screens/RecommendationScreen';
 import { ReminderScreen } from '../screens/ReminderScreen';
 import { EncyclopediaDetailScreen } from '../screens/EncyclopediaDetailScreen';
 import { DiaryScreen } from '../screens/DiaryScreen';
+import { StoreScreen } from '../screens/StoreScreen';
+import { StoreDetailScreen } from '../screens/StoreDetailScreen';
+import { OrdersScreen } from '../screens/OrdersScreen';
+import { LoginScreen } from '../screens/LoginScreen';
+import { RegisterScreen } from '../screens/RegisterScreen';
+import { getCurrentUser, isAuthenticated, logout as authLogout, checkAuthStatus } from '../services/auth';
 
-export type TabName = 'Identify' | 'Garden' | 'Encyclopedia' | 'Profile';
-export type SubPageName = 'Diagnosis' | 'Recommendation' | 'Reminder' | 'EncyclopediaDetail' | 'Diary' | null;
+export type TabName = 'Identify' | 'Garden' | 'Encyclopedia' | 'Store' | 'Profile';
+export type SubPageName = 'Diagnosis' | 'Recommendation' | 'Reminder' | 'EncyclopediaDetail' | 'Diary' | 'StoreDetail' | 'OrderDetail' | 'Login' | 'Register' | null;
 
 interface TabConfig {
   name: TabName;
@@ -27,32 +33,66 @@ export interface NavigationProps {
   currentTab: TabName;
   currentSubPage: SubPageName;
   onTabChange: (tab: TabName) => void;
-  onNavigate: (page: SubPageName) => void;
+  onNavigate: (page: SubPageName, params?: any) => void;
   onGoBack: () => void;
+  isLoggedIn?: boolean;
+  onRequireLogin?: () => void;
+  onLogout?: () => void;
 }
 
 export function AppNavigator() {
+  const insets = useSafeAreaInsets();
   const [currentTab, setCurrentTab] = useState<TabName>('Identify');
   const [currentSubPage, setCurrentSubPage] = useState<SubPageName>(null);
+  const [navParams, setNavParams] = useState<any>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
+
+  useEffect(() => {
+    checkAuthStatus().then(setIsLoggedIn).finally(() => setAuthChecked(true));
+  }, []);
+
+  const handleLoginSuccess = () => {
+    setIsLoggedIn(true);
+    setCurrentSubPage(null);
+  };
+
+  const handleLogout = async () => {
+    await authLogout();
+    setIsLoggedIn(false);
+    setCurrentTab('Identify');
+  };
+
+  const handleRequireLogin = (callback: () => void) => {
+    if (!isLoggedIn) {
+      setCurrentSubPage('Login');
+      return false;
+    }
+    return true;
+  };
 
   const tabs: TabConfig[] = [
     { name: 'Identify', label: '识别', icon: Icons.Home },
     { name: 'Garden', label: '花园', icon: Icons.Flower2 },
     { name: 'Encyclopedia', label: '百科', icon: Icons.BookOpen },
+    { name: 'Store', label: '商城', icon: Icons.Leaf },
     { name: 'Profile', label: '我的', icon: Icons.User },
   ];
 
   const handleTabChange = (tab: TabName) => {
     setCurrentTab(tab);
     setCurrentSubPage(null);
+    setNavParams(null);
   };
 
-  const handleNavigate = (page: SubPageName) => {
+  const handleNavigate = (page: SubPageName, params?: any) => {
+    setNavParams(params);
     setCurrentSubPage(page);
   };
 
   const handleGoBack = () => {
     setCurrentSubPage(null);
+    setNavParams(null);
   };
 
   const renderContent = () => {
@@ -72,17 +112,43 @@ export function AppNavigator() {
     if (currentSubPage === 'Diary') {
       return <DiaryScreen onGoBack={handleGoBack} onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} />;
     }
+    if (currentSubPage === 'StoreDetail') {
+      return <StoreDetailScreen onGoBack={handleGoBack} onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} productId={navParams?.productId} />;
+    }
+    if (currentSubPage === 'OrderDetail') {
+      return <OrdersScreen onGoBack={handleGoBack} onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} />;
+    }
+    if (currentSubPage === 'Login') {
+      return (
+        <LoginScreen
+          onGoBack={handleGoBack}
+          onLoginSuccess={handleLoginSuccess}
+          onSwitchToRegister={() => setCurrentSubPage('Register')}
+        />
+      );
+    }
+    if (currentSubPage === 'Register') {
+      return (
+        <RegisterScreen
+          onGoBack={handleGoBack}
+          onRegisterSuccess={handleLoginSuccess}
+          onSwitchToLogin={() => setCurrentSubPage('Login')}
+        />
+      );
+    }
 
     // 渲染主页面
     switch (currentTab) {
       case 'Identify':
         return <IdentifyScreen onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} />;
       case 'Garden':
-        return <GardenScreen onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} />;
+        return <GardenScreen onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} isLoggedIn={isLoggedIn} onRequireLogin={() => setCurrentSubPage('Login')} onLogout={handleLogout} />;
       case 'Encyclopedia':
         return <EncyclopediaScreen onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} />;
+      case 'Store':
+        return <StoreScreen onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} isLoggedIn={isLoggedIn} onRequireLogin={() => setCurrentSubPage('Login')} />;
       case 'Profile':
-        return <ProfileScreen onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} />;
+        return <ProfileScreen onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} isLoggedIn={isLoggedIn} onLogout={handleLogout} onRequireLogin={() => setCurrentSubPage('Login')} />;
       default:
         return <IdentifyScreen onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} />;
     }

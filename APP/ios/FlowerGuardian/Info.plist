@@ -35,6 +35,12 @@
 	</dict>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string></string>
+	<key>NSCameraUsageDescription</key>
+	<string>护花使者需要使用相机来拍摄植物照片进行识别</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>护花使者需要访问相册来选择植物照片进行识别</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>护花使者需要保存识别结果图片到相册</string>
 	<key>RCTNewArchEnabled</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>

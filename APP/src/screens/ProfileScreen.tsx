@@ -1,6 +1,6 @@
 // 我的屏幕 - 使用纯 StyleSheet
 import React from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, Text } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity, Text, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Icons } from '../components/Icon';
 import { colors, spacing } from '../constants/theme';
@@ -17,7 +17,28 @@ const menuItems = [
   { id: '6', icon: Icons.HelpCircle, title: '帮助反馈', subtitle: '联系我们', screen: 'Help', color: colors['text-secondary'] },
 ];
 
-export function ProfileScreen({ onNavigate, currentTab, onTabChange }: ProfileScreenProps) {
+export function ProfileScreen({ onNavigate, currentTab, onTabChange, isLoggedIn, onRequireLogin, onLogout }: ProfileScreenProps) {
+  const handleLoginPress = () => {
+    if (onRequireLogin) {
+      onRequireLogin();
+    }
+  };
+
+  const handleLogoutPress = () => {
+    Alert.alert('退出登录', '确定要退出登录吗？', [
+      { text: '取消', style: 'cancel' },
+      {
+        text: '确定',
+        style: 'destructive',
+        onPress: () => {
+          if (onLogout) {
+            onLogout();
+          }
+        },
+      },
+    ]);
+  };
+
   const handleMenuPress = (screen: string) => {
     if (onNavigate) {
       const screenMap: Record<string, 'Diagnosis' | 'Recommendation' | 'Reminder' | 'EncyclopediaDetail' | 'Diary'> = {
@@ -35,19 +56,31 @@ export function ProfileScreen({ onNavigate, currentTab, onTabChange }: ProfileSc
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* 用户信息 */}
         <View style={styles.profileHeader}>
-          <View style={styles.avatarContainer}>
-            <View style={styles.avatar}>
-              <Icons.User size={36} color="#fff" />
-            </View>
-            <View style={styles.avatarBadge}>
-              <Icons.Sparkles size={12} color={colors.warning} />
-            </View>
-          </View>
-          <View style={styles.profileInfo}>
-            <Text style={styles.userName}>养花小白</Text>
-            <View style={styles.levelBadge}><Text style={styles.levelText}>Lv.3 园丁</Text></View>
-            <Text style={styles.plantCount}>已养护 2 盆植物</Text>
-          </View>
+          {isLoggedIn ? (
+            <>
+              <View style={styles.avatarContainer}>
+                <View style={styles.avatar}>
+                  <Icons.User size={36} color="#fff" />
+                </View>
+                <View style={styles.avatarBadge}>
+                  <Icons.Sparkles size={12} color={colors.warning} />
+                </View>
+              </View>
+              <View style={styles.profileInfo}>
+                <Text style={styles.userName}>养花小白</Text>
+                <View style={styles.levelBadge}><Text style={styles.levelText}>Lv.3 园丁</Text></View>
+                <Text style={styles.plantCount}>已养护 2 盆植物</Text>
+              </View>
+            </>
+          ) : (
+            <>
+              <TouchableOpacity onPress={handleLoginPress} style={styles.loginButton} activeOpacity={0.8}>
+                <Icons.User size={36} color={colors.primary} />
+                <Text style={styles.loginButtonText}>点击登录</Text>
+                <Text style={styles.loginButtonSubtext}>登录后可保存植物和记录</Text>
+              </TouchableOpacity>
+            </>
+          )}
         </View>
 
         {/* 快捷统计 */}
@@ -99,6 +132,9 @@ const styles = StyleSheet.create({
   avatarContainer: { position: 'relative' },
   avatar: { width: 72, height: 72, borderRadius: 36, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
   avatarBadge: { position: 'absolute', bottom: -4, right: -4, width: 28, height: 28, borderRadius: 14, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: colors.surface },
+  loginButton: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: spacing.lg },
+  loginButtonText: { fontSize: 20, fontWeight: 'bold', color: colors.primary, marginTop: spacing.sm },
+  loginButtonSubtext: { fontSize: 14, color: colors['text-secondary'], marginTop: spacing.xs },
   profileInfo: { marginLeft: spacing.lg, flex: 1 },
   userName: { fontSize: 20, fontWeight: 'bold', color: colors.text },
   levelBadge: { backgroundColor: colors.warning, paddingHorizontal: spacing.sm, paddingVertical: 2, borderRadius: 10, alignSelf: 'flex-start', marginTop: spacing.xs },

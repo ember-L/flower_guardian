@@ -14,6 +14,7 @@ class User(Base):
     avatar_url = Column(String(500), nullable=True)
     bio = Column(String(500), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+    role = Column(String(20), default="user")  # admin 或 user
 
     user_plants = relationship("UserPlant", back_populates="user")
     reminders = relationship("Reminder", back_populates="user")

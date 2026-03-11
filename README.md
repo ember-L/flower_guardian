@@ -21,7 +21,8 @@
 | 层级 | 技术 |
 |------|------|
 | 后端 | FastAPI + PostgreSQL |
-| 前端 | React Native (移动端) + Web |
+| 管理后台 | Next.js 14 + Tailwind CSS |
+| 前端 | React Native (移动端) |
 | CV模型 | YOLOv11 (双模型：植物识别 + 病虫害识别) |
 | 模型部署 | ONNX Runtime (服务器端 + 边缘端) |
 | AI大模型 | Qwen API |
@@ -70,6 +71,11 @@
 - 对比图功能
 - 植物生命线生长曲线
 
+### 7. 植物商城 (MVP)
+- 商品浏览与购买
+- 支持快递配送和到店自提
+- 订单管理
+
 ## 项目结构
 
 ```
@@ -77,7 +83,7 @@ Flower_Guardian/
 ├── backend/                 # FastAPI 后端
 │   ├── app/
 │   │   ├── api/            # API 端点
-│   │   │   └── endpoints/ # 用户、植物、提醒、日记、识别、诊断
+│   │   │   └── endpoints/ # 用户、植物、商品、订单、提醒、日记、识别、诊断
 │   │   ├── core/          # 核心配置
 │   │   ├── db/            # 数据库
 │   │   ├── models/        # 数据模型
@@ -94,14 +100,20 @@ Flower_Guardian/
 │   │   └── export_onnx.py # 模型导出
 │   ├── Dockerfile
 │   └── requirements.txt
-├── frontend/              # React Native 前端
-│   ├── android/          # Android 配置
+├── web/                    # Next.js 管理后台
+│   ├── src/
+│   │   ├── app/          # 页面路由
+│   │   │   └── admin/    # 管理后台页面
+│   │   └── lib/          # 工具库
+│   └── package.json
+├── APP/                   # React Native 移动端
 │   ├── ios/              # iOS 配置
+│   ├── android/          # Android 配置
 │   ├── src/              # 源代码
-│   │   ├── services/    # 识别服务（本地+服务端）
-│   │   └── screens/     # 页面组件
-│   ├── app.json
-│   └── ...
+│   │   ├── services/    # API 服务
+│   │   ├── screens/     # 页面组件
+│   │   └── navigation/  # 导航配置
+│   └── package.json
 ├── docs/                   # 文档
 │   └── plans/            # 技术规划文档
 │       └── cv-model-usage-guide.md  # CV模型使用指南
@@ -154,10 +166,10 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload
 ```
 
-#### 前端
+#### 前端 (React Native 移动端)
 
 ```bash
-cd frontend
+cd APP
 
 # 安装依赖
 npm install
@@ -165,6 +177,20 @@ npm install
 # 运行开发服务器
 npm start
 ```
+
+#### 管理后台 (Web)
+
+```bash
+cd web
+
+# 安装依赖
+npm install
+
+# 运行开发服务器
+npm run dev
+```
+
+管理后台地址: http://localhost:3000/admin
 
 ## API 端点
 
@@ -210,6 +236,35 @@ npm start
 | `PUT /api/diaries/{id}` | 更新日记 |
 | `DELETE /api/diaries/{id}` | 删除日记 |
 
+### 商品管理 (管理员)
+| 端点 | 描述 | 权限 |
+|------|------|------|
+| `GET /api/admin/products` | 获取商品列表 | Admin |
+| `POST /api/admin/products` | 创建商品 | Admin |
+| `GET /api/admin/products/{id}` | 获取商品详情 | Admin |
+| `PUT /api/admin/products/{id}` | 更新商品 | Admin |
+| `DELETE /api/admin/products/{id}` | 删除商品 | Admin |
+
+### 商品浏览 (客户)
+| 端点 | 描述 |
+|------|------|
+| `GET /api/products` | 获取商品列表（仅上架） |
+| `GET /api/products/{id}` | 获取商品详情 |
+
+### 订单管理 (管理员)
+| 端点 | 描述 | 权限 |
+|------|------|------|
+| `GET /api/admin/orders` | 获取订单列表 | Admin |
+| `GET /api/admin/orders/{id}` | 获取订单详情 | Admin |
+| `PUT /api/admin/orders/{id}` | 更新订单状态 | Admin |
+
+### 客户订单
+| 端点 | 描述 |
+|------|------|
+| `POST /api/orders` | 创建订单 |
+| `GET /api/orders` | 我的订单列表 |
+| `GET /api/orders/{id}` | 订单详情 |
+
 ## 环境变量
 
 后端环境变量：
@@ -220,6 +275,37 @@ npm start
 | `SECRET_KEY` | JWT 密钥 | your-secret-key |
 | `ALGORITHM` | JWT 算法 | HS256 |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | Token 过期时间 | 30 |
+
+## 订单系统 (MVP)
+
+### 概述
+植物商城模块，支持客户下单购买植物，管理员管理商品和订单。
+
+### 功能
+- **商品管理**: 管理员添加/编辑/上架/下架商品
+- **订单管理**: 管理员确认订单、发货、完成订单
+- **客户下单**: 客户浏览商品、下单、选择配送方式
+- **配送方式**: 支持快递配送和到店自提
+- **支付方式**: MVP 阶段仅支持线下支付
+
+### 管理员设置
+要创建管理员用户，需要将用户的 `role` 字段设置为 `admin`：
+
+```python
+# 在数据库中手动更新
+from app.core.database import get_db
+from app.models.user import User
+
+db = next(get_db())
+user = db.query(User).filter(User.username == "admin").first()
+user.role = "admin"
+db.commit()
+```
+
+### API 配置
+- 管理后台: http://localhost:3000/admin
+- 后端 API: http://localhost:8000
+- 移动端连接后端时，需使用实际 IP 地址（iOS 模拟器不支持 localhost）
 
 ## CV 模型使用
 
@@ -269,6 +355,11 @@ python backend/train/export_onnx.py --type quantized
 
 - **主色调**: `#e94b52` (珊瑚红)
 - **辅助色**: 清新绿 + 暖木色/米黄色
+
+## 设计文档
+
+- [管理员 Web 端及订单系统设计方案](docs/plans/2026-03-10-admin-web-order-system-design.md)
+- [管理员 Web 端及订单系统实施计划](docs/plans/2026-03-10-admin-web-order-system-implementation.md)
 
 ## License
 

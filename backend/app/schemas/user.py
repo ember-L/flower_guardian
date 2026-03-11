@@ -21,6 +21,7 @@ class UserResponse(UserBase):
     id: int
     avatar_url: Optional[str] = None
     bio: Optional[str] = None
+    role: str = "user"
     created_at: datetime
 
     class Config:
