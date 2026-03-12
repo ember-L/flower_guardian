@@ -8,6 +8,7 @@ from app.core.security import get_current_user
 from app.models.user import User
 from app.models.product import Product
 from app.models.order import Order, OrderItem
+from app.models.cart import CartItem
 from app.schemas.order import (
     OrderCreate, OrderUpdate, OrderResponse, OrderListResponse
 )
@@ -165,3 +166,67 @@ def get_my_order(
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
     return order
+
+
+@router.post("/orders/{order_id}/cancel")
+def cancel_order(
+    order_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    order = db.query(Order).filter(
+        Order.id == order_id,
+        Order.user_id == current_user.id
+    ).first()
+
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    if order.status != "pending":
+        raise HTTPException(status_code=400, detail="Only pending orders can be cancelled")
+
+    # 恢复库存
+    for item in order.items:
+        product = db.query(Product).filter(Product.id == item.product_id).first()
+        if product:
+            product.stock += item.quantity
+
+    order.status = "cancelled"
+    db.commit()
+
+    return {"message": "Order cancelled successfully"}
+
+
+@router.post("/orders/{order_id}/reorder")
+def reorder(
+    order_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    order = db.query(Order).filter(
+        Order.id == order_id,
+        Order.user_id == current_user.id
+    ).first()
+
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    # 将订单商品添加到购物车
+    for item in order.items:
+        existing = db.query(CartItem).filter(
+            CartItem.user_id == current_user.id,
+            CartItem.product_id == item.product_id
+        ).first()
+
+        if existing:
+            existing.quantity += item.quantity
+        else:
+            cart_item = CartItem(
+                user_id=current_user.id,
+                product_id=item.product_id,
+                quantity=item.quantity
+            )
+            db.add(cart_item)
+
+    db.commit()
+    return {"message": "Items added to cart"}

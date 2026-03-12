@@ -28,17 +28,6 @@
 | AI大模型 | Qwen API |
 | 部署 | Docker Compose |
 
-## CV 模型架构
-
-项目采用**双 YOLO 模型架构**：
-
-| 模型 | 功能 | 支持类别 |
-|------|------|----------|
-| 植物识别模型 | 识别常见室内植物、花卉、蔬菜 | 30+ 类别 |
-| 病虫害识别模型 | 识别病虫害、生理性病害 | 昆虫、病害、生理障碍 |
-
-详细技术文档见：[CV 模型使用指南](docs/plans/2026-03-10-cv-model-usage-guide.md)
-
 ## 核心功能
 
 ### 1. 花卉识别
@@ -94,29 +83,16 @@ Flower_Guardian/
 │   │   ├── plant/        # 植物识别模型
 │   │   └── pest/         # 病虫害识别模型
 │   ├── train/             # 模型训练
-│   │   ├── config.py      # 训练配置
-│   │   ├── train_plant.py # 植物模型训练
-│   │   ├── train_pest.py # 病虫害模型训练
-│   │   └── export_onnx.py # 模型导出
 │   ├── Dockerfile
 │   └── requirements.txt
 ├── web/                    # Next.js 管理后台
-│   ├── src/
-│   │   ├── app/          # 页面路由
-│   │   │   └── admin/    # 管理后台页面
-│   │   └── lib/          # 工具库
-│   └── package.json
 ├── APP/                   # React Native 移动端
 │   ├── ios/              # iOS 配置
 │   ├── android/          # Android 配置
 │   ├── src/              # 源代码
-│   │   ├── services/    # API 服务
-│   │   ├── screens/     # 页面组件
-│   │   └── navigation/  # 导航配置
 │   └── package.json
 ├── docs/                   # 文档
 │   └── plans/            # 技术规划文档
-│       └── cv-model-usage-guide.md  # CV模型使用指南
 ├── docker-compose.yml     # Docker 部署配置
 └── design.md             # 设计文档
 ```
@@ -128,6 +104,8 @@ Flower_Guardian/
 - Docker & Docker Compose
 - Python 3.11+
 - Node.js 18+ (本地开发)
+- Xcode (iOS 开发)
+- Android Studio (Android 开发)
 
 ### 使用 Docker Compose 启动
 
@@ -192,6 +170,150 @@ npm run dev
 
 管理后台地址: http://localhost:3000/admin
 
+## APP 打包
+
+### iOS 打包 (生成 .ipa)
+
+**方式一：Xcode 打包**
+
+1. 在 Xcode 中打开项目：
+   ```bash
+   open ios/FlowerGuardian.xcworkspace
+   ```
+
+2. 选择目标设备和签名方式：
+   - 点击 Xcode 菜单 → Product → Destination → Any iOS Device
+   - 或者选择 Generic iOS Device
+
+3. 打包构建：
+   ```bash
+   # 方法一：使用 xcodebuild 命令行
+   xcodebuild -workspace ios/FlowerGuardian.xcworkspace \
+     -scheme FlowerGuardian \
+     -configuration Release \
+     -derivedDataPath ./build \
+     -archivePath ./build/FlowerGuardian.xcarchive \
+     archive
+   ```
+
+4. 导出 IPA：
+   ```bash
+   xcodebuild -exportArchive \
+     -archivePath ./build/FlowerGuardian.xcarchive \
+     -exportOptionsPlist ios/ExportOptions.plist \
+     -exportPath ./build
+   ```
+
+**方式二：React Native CLI**
+
+```bash
+cd APP
+
+# 清空构建缓存
+rm -rf ios/build
+
+# Release 构建（需要配置签名）
+react-native build-ios --mode=release
+
+# 或指定证书
+react-native build-ios --scheme=FlowerGuardian --configuration=Release
+```
+
+**导出配置说明**
+
+在 `ios/ExportOptions.plist` 中配置：
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>method</key>
+    <string>app-store</string>
+    <!-- method 可选: app-store, ad-hoc, enterprise, development -->
+    <key>teamID</key>
+    <string>你的Apple开发者团队ID</string>
+    <key>signingStyle</key>
+    <string>automatic</string>
+</dict>
+</plist>
+```
+
+### Android 打包 (生成 .apk / .aab)
+
+**方式一：命令行打包**
+
+```bash
+cd APP/android
+
+# 调试 APK（无需签名）
+./gradlew assembleDebug
+
+# 发布 APK（需要配置签名）
+./gradlew assembleRelease
+
+# 生成 AAB（用于 Google Play）
+./gradlew bundleRelease
+```
+
+**方式二：React Native CLI**
+
+```bash
+cd APP
+
+# 调试 APK
+react-native build-android --mode=debug
+
+# 发布 APK
+react-native build-android --mode=release
+```
+
+**签名配置**
+
+1. 生成签名密钥：
+   ```bash
+   keytool -genkeypair -v -storetype PKCS12 -keystore my-release-key.jks -alias my-key-alias -keyalg RSA -keysize 2048 -validity 10000
+   ```
+
+2. 在 `android/app/build.gradle` 中配置：
+   ```gradle
+   android {
+       signingConfigs {
+           release {
+               storeFile file("my-release-key.jks")
+               storePassword "密码"
+               keyAlias "my-key-alias"
+               keyPassword "密码"
+           }
+       }
+       buildTypes {
+           release {
+               signingConfig signingConfigs.release
+           }
+       }
+   }
+   ```
+
+**APK 输出位置**
+
+- Debug: `APP/android/app/build/outputs/apk/debug/app-debug.apk`
+- Release: `APP/android/app/build/outputs/apk/release/app-release.apk`
+- AAB: `APP/android/app/build/outputs/bundle/release/app-release.aab`
+
+### APP 连接后端配置
+
+APP 需要连接后端 API，修改配置文件：
+
+```typescript
+// APP/src/services/config.ts
+export const API_BASE_URL = 'http://192.168.1.100:8000';
+```
+
+- iOS 模拟器：使用 Mac 的局域网 IP
+- iOS 真机：使用后端服务器的实际 IP 或域名
+- Android 模拟器：使用 `10.0.2.2` 访问主机 localhost
+- Android 真机：使用后端服务器的实际 IP 或域名
+
 ## API 端点
 
 ### 用户认证
@@ -201,7 +323,6 @@ npm run dev
 | `POST /api/users/login` | 用户登录 |
 | `GET /api/users/me` | 获取当前用户 |
 | `PUT /api/users/me` | 更新用户信息 |
-| `POST /api/users/password` | 修改密码 |
 
 ### 植物管理
 | 端点 | 描述 |
@@ -212,13 +333,10 @@ npm run dev
 | `POST /api/plants/my` | 添加我的植物 |
 | `DELETE /api/plants/my/{id}` | 删除我的植物 |
 
-### 智能提醒
+### 智能推荐
 | 端点 | 描述 |
 |------|------|
-| `GET /api/reminders` | 获取提醒列表 |
-| `POST /api/reminders` | 创建提醒 |
-| `PUT /api/reminders/{id}` | 更新提醒 |
-| `DELETE /api/reminders/{id}` | 删除提醒 |
+| `POST /api/recommend` | 获取新手推荐 |
 
 ### 图像识别（CV模型）
 | 端点 | 描述 |
@@ -236,34 +354,14 @@ npm run dev
 | `PUT /api/diaries/{id}` | 更新日记 |
 | `DELETE /api/diaries/{id}` | 删除日记 |
 
-### 商品管理 (管理员)
-| 端点 | 描述 | 权限 |
-|------|------|------|
-| `GET /api/admin/products` | 获取商品列表 | Admin |
-| `POST /api/admin/products` | 创建商品 | Admin |
-| `GET /api/admin/products/{id}` | 获取商品详情 | Admin |
-| `PUT /api/admin/products/{id}` | 更新商品 | Admin |
-| `DELETE /api/admin/products/{id}` | 删除商品 | Admin |
-
-### 商品浏览 (客户)
+### 商品与订单
 | 端点 | 描述 |
 |------|------|
-| `GET /api/products` | 获取商品列表（仅上架） |
-| `GET /api/products/{id}` | 获取商品详情 |
-
-### 订单管理 (管理员)
-| 端点 | 描述 | 权限 |
-|------|------|------|
-| `GET /api/admin/orders` | 获取订单列表 | Admin |
-| `GET /api/admin/orders/{id}` | 获取订单详情 | Admin |
-| `PUT /api/admin/orders/{id}` | 更新订单状态 | Admin |
-
-### 客户订单
-| 端点 | 描述 |
-|------|------|
+| `GET /api/products` | 获取商品列表 |
+| `GET /api/cart` | 获取购物车 |
+| `POST /api/cart/items` | 添加到购物车 |
 | `POST /api/orders` | 创建订单 |
 | `GET /api/orders` | 我的订单列表 |
-| `GET /api/orders/{id}` | 订单详情 |
 
 ## 环境变量
 
@@ -276,19 +374,8 @@ npm run dev
 | `ALGORITHM` | JWT 算法 | HS256 |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | Token 过期时间 | 30 |
 
-## 订单系统 (MVP)
+## 管理员设置
 
-### 概述
-植物商城模块，支持客户下单购买植物，管理员管理商品和订单。
-
-### 功能
-- **商品管理**: 管理员添加/编辑/上架/下架商品
-- **订单管理**: 管理员确认订单、发货、完成订单
-- **客户下单**: 客户浏览商品、下单、选择配送方式
-- **配送方式**: 支持快递配送和到店自提
-- **支付方式**: MVP 阶段仅支持线下支付
-
-### 管理员设置
 要创建管理员用户，需要将用户的 `role` 字段设置为 `admin`：
 
 ```python
@@ -302,12 +389,14 @@ user.role = "admin"
 db.commit()
 ```
 
-### API 配置
-- 管理后台: http://localhost:3000/admin
-- 后端 API: http://localhost:8000
-- 移动端连接后端时，需使用实际 IP 地址（iOS 模拟器不支持 localhost）
+## CV 模型架构
 
-## CV 模型使用
+项目采用**双 YOLO 模型架构**：
+
+| 模型 | 功能 | 支持类别 |
+|------|------|----------|
+| 植物识别模型 | 识别常见室内植物、花卉、蔬菜 | 47 类别 |
+| 病虫害识别模型 | 识别病虫害、生理性病害 | 昆虫、病害、生理障碍 |
 
 ### 模型训练
 
@@ -317,17 +406,6 @@ python backend/train/train_plant.py
 
 # 训练病虫害识别模型
 python backend/train/train_pest.py
-
-# 自定义参数训练
-python -c "
-from train.train_plant import train_plant_model
-from train.config import TrainConfig
-
-config = TrainConfig()
-config.epochs = 50
-config.model_type = 'yolo11s'
-train_plant_model()
-"
 ```
 
 ### 模型导出
@@ -335,19 +413,7 @@ train_plant_model()
 ```bash
 # 导出为 ONNX 格式
 python backend/train/export_onnx.py --type all
-
-# 导出量化模型（更适合移动端）
-python backend/train/export_onnx.py --type quantized
 ```
-
-### 模型版本
-
-| 模型 | 文件 | 说明 |
-|------|------|------|
-| 植物识别 | `plant_yolo11n.pt` | PyTorch 格式 |
-| 植物识别 | `plant_yolo11n.onnx` | ONNX 格式 |
-| 病虫害 | `pest_yolo11n.pt` | PyTorch 格式 |
-| 病虫害 | `pest_yolo11n.onnx` | ONNX 格式 |
 
 详细说明见：[CV 模型使用指南](docs/plans/2026-03-10-cv-model-usage-guide.md)
 
@@ -358,9 +424,13 @@ python backend/train/export_onnx.py --type quantized
 
 ## 设计文档
 
-- [管理员 Web 端及订单系统设计方案](docs/plans/2026-03-10-admin-web-order-system-design.md)
-- [管理员 Web 端及订单系统实施计划](docs/plans/2026-03-10-admin-web-order-system-implementation.md)
+- [新手推荐页面与植物百科完善设计](docs/plans/2026-03-12-recommendation-screen-design.md)
+- [新手推荐页面实施计划](docs/plans/2026-03-12-recommendation-implementation.md)
 
 ## License
 
 MIT License
+
+---
+
+*文档最后更新：2026-03-12*

@@ -3,8 +3,23 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.router import api_router
 from app.core.database import engine
 from app.db.base import Base
+from contextlib import asynccontextmanager
 
-app = FastAPI(title="护花使者 API", version="1.0.0")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # 启动时初始化植物数据
+    from app.db.seed_plants import seed_plants
+    from app.core.database import SessionLocal
+    db = SessionLocal()
+    try:
+        seed_plants(db)
+    finally:
+        db.close()
+    yield
+
+
+app = FastAPI(title="护花使者 API", version="1.0.0", lifespan=lifespan)
 
 # Create database tables
 Base.metadata.create_all(bind=engine)

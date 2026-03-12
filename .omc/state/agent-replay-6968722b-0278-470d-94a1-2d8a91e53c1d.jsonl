@@ -1,0 +1,6 @@
+{"t":0,"agent":"system","event":"skill_invoked","skill_name":"ui-ux-pro-max"}
+{"t":0,"agent":"system","event":"skill_invoked","skill_name":"superpowers:brainstorming"}
+{"t":0,"agent":"a575d06","agent_type":"unknown","event":"agent_stop","success":true}
+{"t":0,"agent":"a3ecb64","agent_type":"unknown","event":"agent_stop","success":true}
+{"t":0,"agent":"system","event":"skill_invoked","skill_name":"superpowers:writing-plans"}
+{"t":0,"agent":"aecb4c9","agent_type":"unknown","event":"agent_stop","success":true}

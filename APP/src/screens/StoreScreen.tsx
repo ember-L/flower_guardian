@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -13,19 +13,16 @@ import {
 import { getProducts, Product } from '../services/storeService';
 import { colors, spacing, shadows } from '../constants/theme';
 import { NavigationProps } from '../navigation/AppNavigator';
+import { Icons } from '../components/Icon';
 
 interface StoreScreenProps extends Partial<NavigationProps> {}
 
-export function StoreScreen({ onNavigate, isLoggedIn, onRequireLogin }: StoreScreenProps) {
+export function StoreScreen({ navigation, isLoggedIn, onRequireLogin }: StoreScreenProps) {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
 
-  useEffect(() => {
-    loadProducts();
-  }, []);
-
-  const loadProducts = async () => {
+  const loadProducts = useCallback(async () => {
     try {
       const data = await getProducts();
       setProducts(data);
@@ -34,20 +31,45 @@ export function StoreScreen({ onNavigate, isLoggedIn, onRequireLogin }: StoreScr
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadProducts();
+  }, [loadProducts]);
+
+  useEffect(() => {
+    const unsubscribe = navigation?.addListener('focus', () => {
+      loadProducts();
+    });
+    return unsubscribe;
+  }, [navigation, loadProducts]);
 
   const filteredProducts = search
     ? products.filter((p) => p.name.includes(search))
     : products;
 
+  const navigateToDetail = (productId: number) => {
+    if (navigation?.onNavigate) {
+      navigation.onNavigate('StoreDetail', { productId });
+    }
+  };
+
+  const navigateToCart = () => {
+    if (navigation?.onNavigate) {
+      navigation.onNavigate('Cart');
+    }
+  };
+
+  const navigateToOrders = () => {
+    if (navigation?.onNavigate) {
+      navigation.onNavigate('OrderDetail', { orderId: 0 }); // This will show the orders list
+    }
+  };
+
   const renderProduct = ({ item }: { item: Product }) => (
     <TouchableOpacity
       style={styles.productCard}
-      onPress={() => {
-        if (onNavigate) {
-          onNavigate('StoreDetail', { productId: item.id });
-        }
-      }}
+      onPress={() => navigateToDetail(item.id)}
     >
       <Image
         source={{ uri: item.image_url || 'https://via.placeholder.com/150' }}
@@ -76,11 +98,26 @@ export function StoreScreen({ onNavigate, isLoggedIn, onRequireLogin }: StoreScr
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>植物商城</Text>
+      {/* 头部 - 渐变背景 */}
+      <View style={styles.headerGradient}>
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>植物商城</Text>
+          <View style={styles.headerButtons}>
+            <TouchableOpacity style={styles.headerBtn} onPress={navigateToOrders}>
+              <Icons.FileText size={20} color="#fff" />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.headerBtn} onPress={navigateToCart}>
+              <Icons.ShoppingCart size={20} color="#fff" />
+            </TouchableOpacity>
+          </View>
+        </View>
       </View>
 
+      {/* 搜索栏 - 毛玻璃效果 */}
       <View style={styles.searchContainer}>
+        <View style={styles.searchIcon}>
+          <Icons.Search size={18} color={colors.primary} />
+        </View>
         <TextInput
           style={styles.searchInput}
           placeholder="搜索商品"
@@ -107,23 +144,64 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
+  headerGradient: { backgroundColor: colors.primary, borderBottomLeftRadius: 24, borderBottomRightRadius: 24, overflow: 'hidden' },
   header: {
-    padding: spacing.md,
-    backgroundColor: colors.white,
+    padding: spacing.lg,
+    paddingTop: spacing.xl * 1.5,
+    paddingBottom: spacing.lg,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   headerTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: colors.text,
+    color: '#fff',
+    textShadowColor: 'rgba(0,0,0,0.15)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+  headerButtons: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  headerBtn: {
+    padding: spacing.xs,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 12,
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   searchContainer: {
-    padding: spacing.md,
-    backgroundColor: colors.white,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    borderRadius: 24,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    marginHorizontal: spacing.lg,
+    marginTop: -spacing.md,
+    marginBottom: spacing.md,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  searchIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.primary + '15',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   searchInput: {
-    backgroundColor: colors.background,
-    borderRadius: 8,
-    padding: spacing.sm,
+    flex: 1,
+    marginLeft: spacing.sm,
+    fontSize: 15,
     color: colors.text,
   },
   listContent: {

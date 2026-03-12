@@ -7,7 +7,7 @@ from PIL import Image
 class PlantRecognitionService:
     """植物识别服务"""
 
-    def __init__(self, model_path: str = "backend/models/plant/plant_yolo11n.pt"):
+    def __init__(self, model_path: str = "backend/models/plant.pt"):
         self.model = None
         self.model_path = model_path
         self.classes = self._load_classes()
@@ -15,21 +15,34 @@ class PlantRecognitionService:
 
     def _load_classes(self) -> dict:
         """加载植物类别"""
+        classes = {}
         try:
             with open("backend/dataset/plant_classes.json", "r", encoding="utf-8") as f:
                 data = json.load(f)
         except FileNotFoundError:
-            # 尝试从当前目录加载
-            with open("dataset/plant_classes.json", "r", encoding="utf-8") as f:
-                data = json.load(f)
+            try:
+                with open("dataset/plant_classes.json", "r", encoding="utf-8") as f:
+                    data = json.load(f)
+            except FileNotFoundError:
+                return classes
 
-        classes = {}
-        for category in data.values():
-            for item in category:
-                classes[str(item["id"])] = {
-                    "name": item["name"],
-                    "care_tips": item.get("care_tips", "")
+        # 新格式：直接是键值对 {"0": {...}, "1": {...}}
+        if "classes" in data:
+            for key, value in data["classes"].items():
+                classes[key] = {
+                    "name": value.get("zh_name", value.get("en_name", "")),
+                    "care_tips": value.get("care_tips", "")
                 }
+        else:
+            # 旧格式：按类别分组
+            for category in data.values():
+                if isinstance(category, list):
+                    for item in category:
+                        if isinstance(item, dict) and "id" in item:
+                            classes[str(item["id"])] = {
+                                "name": item.get("name", ""),
+                                "care_tips": item.get("care_tips", "")
+                            }
         return classes
 
     def _load_model(self):

@@ -16,12 +16,19 @@ import { DiaryScreen } from '../screens/DiaryScreen';
 import { StoreScreen } from '../screens/StoreScreen';
 import { StoreDetailScreen } from '../screens/StoreDetailScreen';
 import { OrdersScreen } from '../screens/OrdersScreen';
+import { CartScreen } from '../screens/CartScreen';
+import { OrderDetailScreen } from '../screens/OrderDetailScreen';
+import { DiagnosisHistoryScreen } from '../screens/DiagnosisHistoryScreen';
+import { DiagnosisDetailScreen } from '../screens/DiagnosisDetailScreen';
 import { LoginScreen } from '../screens/LoginScreen';
 import { RegisterScreen } from '../screens/RegisterScreen';
+import { WriteDiaryScreen } from '../screens/WriteDiaryScreen';
+import { DiaryDetailScreen } from '../screens/DiaryDetailScreen';
+import { GrowthCurveScreen } from '../screens/GrowthCurveScreen';
 import { getCurrentUser, isAuthenticated, logout as authLogout, checkAuthStatus } from '../services/auth';
 
 export type TabName = 'Identify' | 'Garden' | 'Encyclopedia' | 'Store' | 'Profile';
-export type SubPageName = 'Diagnosis' | 'Recommendation' | 'Reminder' | 'EncyclopediaDetail' | 'Diary' | 'StoreDetail' | 'OrderDetail' | 'Login' | 'Register' | null;
+export type SubPageName = 'Diagnosis' | 'Recommendation' | 'Reminder' | 'EncyclopediaDetail' | 'Diary' | 'StoreDetail' | 'Cart' | 'Checkout' | 'OrderDetail' | 'DiagnosisHistory' | 'DiagnosisDetail' | 'Login' | 'Register' | 'WriteDiary' | 'DiaryDetail' | 'GrowthCurve' | null;
 
 interface TabConfig {
   name: TabName;
@@ -38,6 +45,7 @@ export interface NavigationProps {
   isLoggedIn?: boolean;
   onRequireLogin?: () => void;
   onLogout?: () => void;
+  route?: { params?: any };
 }
 
 export function AppNavigator() {
@@ -72,9 +80,9 @@ export function AppNavigator() {
   };
 
   const tabs: TabConfig[] = [
-    { name: 'Identify', label: '识别', icon: Icons.Home },
     { name: 'Garden', label: '花园', icon: Icons.Flower2 },
     { name: 'Encyclopedia', label: '百科', icon: Icons.BookOpen },
+    { name: 'Identify', label: '首页', icon: Icons.Home },
     { name: 'Store', label: '商城', icon: Icons.Leaf },
     { name: 'Profile', label: '我的', icon: Icons.User },
   ];
@@ -107,7 +115,7 @@ export function AppNavigator() {
       return <ReminderScreen onGoBack={handleGoBack} onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} />;
     }
     if (currentSubPage === 'EncyclopediaDetail') {
-      return <EncyclopediaDetailScreen onGoBack={handleGoBack} onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} />;
+      return <EncyclopediaDetailScreen onGoBack={handleGoBack} onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} route={navParams || {}} />;
     }
     if (currentSubPage === 'Diary') {
       return <DiaryScreen onGoBack={handleGoBack} onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} />;
@@ -115,8 +123,20 @@ export function AppNavigator() {
     if (currentSubPage === 'StoreDetail') {
       return <StoreDetailScreen onGoBack={handleGoBack} onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} productId={navParams?.productId} />;
     }
+    if (currentSubPage === 'Cart') {
+      return <CartScreen onGoBack={handleGoBack} onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} />;
+    }
+    if (currentSubPage === 'Checkout') {
+      return <CartScreen onGoBack={handleGoBack} onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} />;
+    }
     if (currentSubPage === 'OrderDetail') {
-      return <OrdersScreen onGoBack={handleGoBack} onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} />;
+      return <OrderDetailScreen route={navParams || {}} onGoBack={handleGoBack} onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} />;
+    }
+    if (currentSubPage === 'DiagnosisHistory') {
+      return <DiagnosisHistoryScreen onGoBack={handleGoBack} onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} />;
+    }
+    if (currentSubPage === 'DiagnosisDetail') {
+      return <DiagnosisDetailScreen route={navParams || {}} onGoBack={handleGoBack} onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} />;
     }
     if (currentSubPage === 'Login') {
       return (
@@ -135,6 +155,15 @@ export function AppNavigator() {
           onSwitchToLogin={() => setCurrentSubPage('Login')}
         />
       );
+    }
+    if (currentSubPage === 'WriteDiary') {
+      return <WriteDiaryScreen onGoBack={handleGoBack} onNavigate={handleNavigate} />;
+    }
+    if (currentSubPage === 'DiaryDetail') {
+      return <DiaryDetailScreen onGoBack={handleGoBack} onNavigate={handleNavigate} diaryId={navParams?.diaryId} />;
+    }
+    if (currentSubPage === 'GrowthCurve') {
+      return <GrowthCurveScreen onGoBack={handleGoBack} onNavigate={handleNavigate} preselectedPlantId={navParams?.preselectedPlantId} />;
     }
 
     // 渲染主页面

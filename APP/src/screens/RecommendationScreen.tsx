@@ -1,43 +1,93 @@
 // 新手推荐页面 - 使用纯 StyleSheet
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, Text } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity, Text, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Icons } from '../components/Icon';
 import { colors, spacing } from '../constants/theme';
 import { NavigationProps } from '../navigation/AppNavigator';
+import { getRecommendations, PlantRecommendation, RecommendRequest } from '../services/recommendService';
+import { addToMyGarden } from '../services/plantService';
 
 interface RecommendationScreenProps extends Partial<NavigationProps> {}
 
+// 扩展到5个问题
 const questions = [
-  { id: 1, question: '你家的光照条件怎么样？', options: [{ label: '光线充足', value: 'full-sun', icon: Icons.Sun }, { label: '一般光线', value: 'partial-sun', icon: Icons.Cloud }, { label: '光线较弱', value: 'low-light', icon: Icons.Moon }] },
-  { id: 2, question: '你多久浇一次水？', options: [{ label: '经常忘记', value: 'forgetful', icon: Icons.Clock }, { label: '一周一次', value: 'weekly', icon: Icons.Calendar }, { label: '想起来就浇', value: 'occasional', icon: Icons.Droplets }] },
+  { id: 1, question: '你家的光照条件怎么样？', options: [{ label: '光线充足', value: 'full', icon: Icons.Sun }, { label: '一般光线', value: 'partial', icon: Icons.Cloud }, { label: '光线较弱', value: 'low', icon: Icons.Moon }] },
+  { id: 2, question: '你多久浇一次水？', options: [{ label: '经常忘记', value: 'monthly', icon: Icons.Clock }, { label: '一周一次', value: 'weekly', icon: Icons.Calendar }, { label: '想起来就浇', value: 'frequent', icon: Icons.Droplets }] },
   { id: 3, question: '你养植物的目的是？', options: [{ label: '净化空气', value: 'air-purify', icon: Icons.Wind }, { label: '装饰美观', value: 'decoration', icon: Icons.Flower2 }, { label: '兴趣爱好', value: 'hobby', icon: Icons.Heart }] },
+  { id: 4, question: '你家有小孩或宠物吗？', options: [{ label: '有', value: 'true', icon: Icons.Heart }, { label: '没有', value: 'false', icon: Icons.Check }] },
+  { id: 5, question: '你有多少养植物经验？', options: [{ label: '新手', value: 'beginner', icon: Icons.Star }, { label: '养过几盆', value: 'intermediate', icon: Icons.Star }, { label: '老手', value: 'expert', icon: Icons.Star }] },
 ];
 
-const recommendations = [
-  { id: '1', name: '绿萝', reason: '非常适合新手，光线弱也能存活，浇水一周一次即可', survivalRate: 98, features: ['净化空气', '耐阴', '易养护'], icon: Icons.Leaf },
-  { id: '2', name: '虎皮兰', reason: '几乎不用管，一个月浇一次水都行，特别适合忙碌的人', survivalRate: 95, features: ['耐旱', '净化空气', '美观'], icon: Icons.Flower2 },
-  { id: '3', name: '吊兰', reason: '生命力顽强，繁殖容易，还能吸收甲醛', survivalRate: 92, features: ['空气净化', '易繁殖', '垂吊美'], icon: Icons.Sprout },
-];
+// 用户答案存储
+const userAnswers: Record<string, string> = {};
 
 export function RecommendationScreen({ onGoBack }: RecommendationScreenProps) {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [showResults, setShowResults] = useState(false);
+  const [recommendations, setRecommendations] = useState<PlantRecommendation[]>([]);
+  const [loading, setLoading] = useState(false);
   const progress = ((currentQuestion + 1) / questions.length) * 100;
 
-  const handleAnswer = () => {
+  const handleAnswer = async () => {
     if (selectedOption !== null) {
+      // 保存答案
+      const question = questions[currentQuestion];
+      const option = question.options[selectedOption];
+      userAnswers[question.id.toString()] = option.value;
+
       if (currentQuestion < questions.length - 1) {
         setCurrentQuestion(currentQuestion + 1);
         setSelectedOption(null);
       } else {
-        setShowResults(true);
+        // 所有问题回答完毕，获取推荐
+        setLoading(true);
+        try {
+          const request: RecommendRequest = {
+            light: (userAnswers['1'] || 'partial') as RecommendRequest['light'],
+            watering: (userAnswers['2'] || 'weekly') as RecommendRequest['watering'],
+            purpose: (userAnswers['3'] || 'decoration') as RecommendRequest['purpose'],
+            has_pets_kids: userAnswers['4'] === 'true',
+            experience: (userAnswers['5'] || 'beginner') as RecommendRequest['experience'],
+          };
+          const result = await getRecommendations(request);
+          setRecommendations(result);
+          setShowResults(true);
+        } catch (error) {
+          console.error('获取推荐失败', error);
+          Alert.alert('提示', '获取推荐失败，请稍后重试');
+        } finally {
+          setLoading(false);
+        }
       }
     }
   };
 
-  const handleRestart = () => { setCurrentQuestion(0); setSelectedOption(null); setShowResults(false); };
+  const handleAddToGarden = async (plant: PlantRecommendation) => {
+    try {
+      await addToMyGarden({
+        plant_id: plant.plant_id,
+        nickname: plant.name,
+        acquired_from: 'recommendation',
+      });
+      Alert.alert('成功', '已添加到我的花园');
+    } catch (error: any) {
+      if (error.response?.status === 401) {
+        Alert.alert('提示', '请先登录后再添加');
+      } else {
+        Alert.alert('提示', '添加失败，请稍后重试');
+      }
+    }
+  };
+
+  const handleRestart = () => {
+    setCurrentQuestion(0);
+    setSelectedOption(null);
+    setShowResults(false);
+    setRecommendations([]);
+    Object.keys(userAnswers).forEach(key => delete userAnswers[key]);
+  };
 
   const handleGoBack = () => {
     if (onGoBack) {
@@ -116,17 +166,23 @@ export function RecommendationScreen({ onGoBack }: RecommendationScreenProps) {
             {/* 继续按钮 */}
             <TouchableOpacity
               onPress={handleAnswer}
-              disabled={selectedOption === null}
+              disabled={selectedOption === null || loading}
               style={[
                 styles.continueButton,
-                selectedOption === null && styles.continueButtonDisabled
+                (selectedOption === null || loading) && styles.continueButtonDisabled
               ]}
               activeOpacity={0.8}
             >
-              <Text style={styles.continueButtonText}>
-                {currentQuestion < questions.length - 1 ? '下一题' : '查看结果'}
-              </Text>
-              <Icons.ArrowRight size={20} color="#fff" />
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <>
+                  <Text style={styles.continueButtonText}>
+                    {currentQuestion < questions.length - 1 ? '下一题' : '查看结果'}
+                  </Text>
+                  <Icons.ArrowRight size={20} color="#fff" />
+                </>
+              )}
             </TouchableOpacity>
           </View>
         ) : (
@@ -141,37 +197,54 @@ export function RecommendationScreen({ onGoBack }: RecommendationScreenProps) {
             </View>
 
             {/* 推荐列表 */}
-            {recommendations.map((plant) => (
-              <View key={plant.id} style={styles.recommendCard}>
-                <View style={styles.recommendRow}>
-                  <View style={styles.recommendIcon}>
-                    <plant.icon size={32} color={colors.success} />
-                  </View>
-                  <View style={styles.recommendInfo}>
-                    <View style={styles.recommendTop}>
-                      <Text style={styles.recommendName}>{plant.name}</Text>
-                      <View style={styles.survivalBadge}>
-                        <Icons.Star size={12} color={colors.warning} />
-                        <Text style={styles.survivalText}>存活率 {plant.survivalRate}%</Text>
+            {recommendations.length > 0 ? (
+              recommendations.map((plant, index) => (
+                <View key={index} style={styles.recommendCard}>
+                  <View style={styles.recommendRow}>
+                    <View style={styles.recommendIcon}>
+                      <Icons.Leaf size={32} color={colors.success} />
+                    </View>
+                    <View style={styles.recommendInfo}>
+                      <View style={styles.recommendTop}>
+                        <Text style={styles.recommendName}>{plant.name}</Text>
+                        <View style={styles.survivalBadge}>
+                          <Icons.Star size={12} color={colors.warning} />
+                          <Text style={styles.survivalText}>匹配度 {plant.match_score}%</Text>
+                        </View>
                       </View>
+                      <Text style={styles.recommendReason}>{plant.reason}</Text>
                     </View>
-                    <Text style={styles.recommendReason}>{plant.reason}</Text>
                   </View>
+                  <View style={styles.featureRow}>
+                    {plant.features.map((feature, i) => (
+                      <View key={i} style={styles.featureTag}>
+                        <Icons.Check size={12} color={colors.success} />
+                        <Text style={styles.featureText}>{feature}</Text>
+                      </View>
+                    ))}
+                    {plant.is_toxic && (
+                      <View style={[styles.featureTag, { backgroundColor: colors.error + '15' }]}>
+                        <Icons.AlertCircle size={12} color={colors.error} />
+                        <Text style={[styles.featureText, { color: colors.error }]}>有毒</Text>
+                      </View>
+                    )}
+                  </View>
+                  <TouchableOpacity
+                    style={styles.addButton}
+                    activeOpacity={0.8}
+                    onPress={() => handleAddToGarden(plant)}
+                  >
+                    <Icons.Plus size={18} color="#fff" />
+                    <Text style={styles.addButtonText}>添加到花园</Text>
+                  </TouchableOpacity>
                 </View>
-                <View style={styles.featureRow}>
-                  {plant.features.map((feature, i) => (
-                    <View key={i} style={styles.featureTag}>
-                      <Icons.Check size={12} color={colors.success} />
-                      <Text style={styles.featureText}>{feature}</Text>
-                    </View>
-                  ))}
-                </View>
-                <TouchableOpacity style={styles.addButton} activeOpacity={0.8}>
-                  <Icons.Plus size={18} color="#fff" />
-                  <Text style={styles.addButtonText}>添加到花园</Text>
-                </TouchableOpacity>
+              ))
+            ) : (
+              <View style={styles.emptyResult}>
+                <Icons.Search size={48} color={colors['text-tertiary']} />
+                <Text style={styles.emptyText}>暂无推荐，请尝试其他条件</Text>
               </View>
-            ))}
+            )}
 
             {/* 重新测试 */}
             <TouchableOpacity onPress={handleRestart} style={styles.restartButton} activeOpacity={0.8}>
@@ -404,6 +477,17 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
   },
   addButtonText: { color: '#fff', fontSize: 14, fontWeight: '600' },
+
+  // 空结果
+  emptyResult: {
+    alignItems: 'center',
+    padding: spacing.xl,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: colors['text-tertiary'],
+    marginTop: spacing.md,
+  },
 
   // 重新测试
   restartButton: {

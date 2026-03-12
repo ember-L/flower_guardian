@@ -14,22 +14,36 @@ class PestRecognitionService:
 
     def _load_classes(self) -> dict:
         """加载病虫害类别"""
+        classes = {}
         try:
             with open("backend/dataset/pest_classes.json", "r", encoding="utf-8") as f:
                 data = json.load(f)
         except FileNotFoundError:
-            # 尝试从当前目录加载
-            with open("dataset/pest_classes.json", "r", encoding="utf-8") as f:
-                data = json.load(f)
+            try:
+                with open("dataset/pest_classes.json", "r", encoding="utf-8") as f:
+                    data = json.load(f)
+            except FileNotFoundError:
+                return classes
 
-        classes = {}
-        for category in data.values():
-            for item in category:
-                classes[str(item["id"])] = {
-                    "name": item["name"],
-                    "treatment": item.get("treatment", ""),
-                    "severity": item.get("severity", "low")
+        # 支持新的扁平格式 {"0": {...}, "1": {...}}
+        if "classes" in data:
+            for key, value in data["classes"].items():
+                classes[key] = {
+                    "name": value.get("name", value.get("zh_name", "")),
+                    "treatment": value.get("treatment", ""),
+                    "severity": value.get("severity", "low")
                 }
+        else:
+            # 旧格式：按类别分组
+            for category in data.values():
+                if isinstance(category, list):
+                    for item in category:
+                        if isinstance(item, dict) and "id" in item:
+                            classes[str(item["id"])] = {
+                                "name": item.get("name", ""),
+                                "treatment": item.get("treatment", ""),
+                                "severity": item.get("severity", "low")
+                            }
         return classes
 
     def _load_model(self):

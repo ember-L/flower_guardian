@@ -17,6 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Icons } from '../components/Icon';
 import { colors, spacing, borderRadius } from '../constants/theme';
 import { takePhoto, selectFromGallery, recognizePlant, RecognitionResult } from '../services/recognitionService';
+import { getPopularPlants, Plant } from '../services/plantService';
 import { NavigationProps } from '../navigation/AppNavigator';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -28,6 +29,20 @@ export function IdentifyScreen({ onNavigate, currentTab, onTabChange }: Identify
   const [showPlantCard, setShowPlantCard] = useState(false);
   const [recognitionResult, setRecognitionResult] = useState<RecognitionResult | null>(null);
   const [plantNickname, setPlantNickname] = useState('');
+  const [recommendPlants, setRecommendPlants] = useState<Plant[]>([]);
+
+  useEffect(() => {
+    loadRecommendPlants();
+  }, []);
+
+  const loadRecommendPlants = async () => {
+    try {
+      const data = await getPopularPlants(10);
+      setRecommendPlants(data.items || []);
+    } catch (error) {
+      console.error('加载推荐植物失败', error);
+    }
+  };
 
   // 动画值
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -136,10 +151,10 @@ export function IdentifyScreen({ onNavigate, currentTab, onTabChange }: Identify
     }
   };
 
-  const handleRecommendPlant = (plant: typeof recommendPlants[0]) => {
-    if (onNavigate) {
+  const handleRecommendPlant = (plant: Plant) => {
+    if (onNavigate && plant.id) {
       // 跳转到百科详情
-      onNavigate('EncyclopediaDetail');
+      onNavigate('EncyclopediaDetail', { plantId: plant.id });
     } else {
       Alert.alert(plant.name, `即将跳转到${plant.name}的详情页`);
     }
@@ -148,11 +163,6 @@ export function IdentifyScreen({ onNavigate, currentTab, onTabChange }: Identify
   const tips = [
     { title: '今日光照提示', content: '晴天适合给喜阳植物晒太阳，注意遮阴保护耐阴植物', icon: Icons.Sun, iconColor: '#f59e0b' },
     { title: '浇水小技巧', content: '早晨或傍晚浇水最佳，避免中午高温时段', icon: Icons.Droplets, iconColor: '#0ea5e9' },
-  ];
-
-  const recommendPlants = [
-    { name: '绿萝', desc: '生命力顽强，净化空气', tags: ['易养护', '净化空气'], color: '#10b981' },
-    { name: '虎皮兰', desc: '耐旱美观，空气净化', tags: ['耐旱', '美观'], color: '#6366f1' },
   ];
 
   return (
@@ -402,7 +412,7 @@ export function IdentifyScreen({ onNavigate, currentTab, onTabChange }: Identify
           <View style={[styles.section, styles.lastSection]}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>今日推荐</Text>
-              <TouchableOpacity style={styles.viewAllButton}>
+              <TouchableOpacity style={styles.viewAllButton} onPress={() => onTabChange?.('Encyclopedia')}>
                 <Text style={styles.viewAllText}>查看全部</Text>
                 <Icons.ChevronRight size={14} color={colors.primary} />
               </TouchableOpacity>
@@ -412,29 +422,36 @@ export function IdentifyScreen({ onNavigate, currentTab, onTabChange }: Identify
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.recommendScroll}
             >
-              {recommendPlants.map((plant, index) => (
+              {recommendPlants.map((plant, index) => {
+                // 根据分类设置颜色
+                const colorMap: Record<string, string> = {
+                  '室内': '#10b981',
+                  '多肉': '#6366f1',
+                  '开花': '#f59e0b',
+                  '草本': '#0ea5e9',
+                };
+                const plantColor = colorMap[plant.category || '室内'] || '#10b981';
+                return (
                 <TouchableOpacity
-                  key={index}
+                  key={plant.id || index}
                   style={styles.recommendCard}
                   activeOpacity={0.8}
                   onPress={() => handleRecommendPlant(plant)}
                 >
-                  <View style={[styles.recommendImage, { backgroundColor: plant.color + '20' }]}>
-                    <Icons.Plant size={40} color={plant.color} />
+                  <View style={[styles.recommendImage, { backgroundColor: plantColor + '20' }]}>
+                    <Icons.Plant size={40} color={plantColor} />
                   </View>
                   <View style={styles.recommendInfo}>
                     <Text style={styles.recommendName}>{plant.name}</Text>
-                    <Text style={styles.recommendDesc}>{plant.desc}</Text>
+                    <Text style={styles.recommendDesc}>{plant.description?.slice(0, 20) || plant.category || '室内植物'}</Text>
                     <View style={styles.recommendTags}>
-                      {plant.tags.map((tag, i) => (
-                        <View key={i} style={[styles.recommendTag, { backgroundColor: plant.color + '15' }]}>
-                          <Text style={[styles.recommendTagText, { color: plant.color }]}>{tag}</Text>
-                        </View>
-                      ))}
+                      <View style={[styles.recommendTag, { backgroundColor: plantColor + '15' }]}>
+                        <Text style={[styles.recommendTagText, { color: plantColor }]}>{plant.category || '室内'}</Text>
+                      </View>
                     </View>
                   </View>
                 </TouchableOpacity>
-              ))}
+              )})}
             </ScrollView>
           </View>
         </View>

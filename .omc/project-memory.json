@@ -1,0 +1,349 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1773277795610,
+  "projectRoot": "/Users/ember/Flower_Guardian",
+  "techStack": {
+    "languages": [],
+    "frameworks": [],
+    "packageManager": null,
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": null,
+    "testCommand": null,
+    "lintCommand": null,
+    "devCommand": null,
+    "scripts": {}
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": null
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [
+      "docs"
+    ],
+    "gitBranches": null
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "APP": {
+      "path": "APP",
+      "purpose": "Application code",
+      "fileCount": 17,
+      "lastAccessed": 1773277795602,
+      "keyFiles": [
+        "App.tsx",
+        "Gemfile",
+        "README.md",
+        "app.json",
+        "babel.config.js"
+      ]
+    },
+    "backend": {
+      "path": "backend",
+      "purpose": null,
+      "fileCount": 10,
+      "lastAccessed": 1773277795602,
+      "keyFiles": [
+        "Dockerfile",
+        "requirements.txt",
+        "train_pest_model.py",
+        "train_plant.py",
+        "train_plant_model.py"
+      ]
+    },
+    "docs": {
+      "path": "docs",
+      "purpose": "Documentation",
+      "fileCount": 2,
+      "lastAccessed": 1773277795602,
+      "keyFiles": [
+        "README.md",
+        "WINDOWS_GPU_TRAINING.md"
+      ]
+    },
+    "web": {
+      "path": "web",
+      "purpose": null,
+      "fileCount": 11,
+      "lastAccessed": 1773277795604,
+      "keyFiles": [
+        "README.md",
+        "components.json",
+        "eslint.config.mjs",
+        "next-env.d.ts",
+        "next.config.ts"
+      ]
+    },
+    "workspace-3719c470-b38f-45f6-a6a9-a3524b966a55 (1)": {
+      "path": "workspace-3719c470-b38f-45f6-a6a9-a3524b966a55 (1)",
+      "purpose": null,
+      "fileCount": 15,
+      "lastAccessed": 1773277795604,
+      "keyFiles": [
+        "Caddyfile",
+        "README.md",
+        "bun.lock",
+        "components.json",
+        "eslint.config.mjs"
+      ]
+    },
+    "APP/__tests__": {
+      "path": "APP/__tests__",
+      "purpose": "Test files",
+      "fileCount": 2,
+      "lastAccessed": 1773277795605,
+      "keyFiles": [
+        "App.test.tsx",
+        "Recognition.test.tsx"
+      ]
+    },
+    "backend/app": {
+      "path": "backend/app",
+      "purpose": "Application code",
+      "fileCount": 2,
+      "lastAccessed": 1773277795605,
+      "keyFiles": [
+        "__init__.py",
+        "main.py"
+      ]
+    },
+    "backend/models": {
+      "path": "backend/models",
+      "purpose": "Data models",
+      "fileCount": 1,
+      "lastAccessed": 1773277795606,
+      "keyFiles": [
+        "download_models.py"
+      ]
+    },
+    "backend/tests": {
+      "path": "backend/tests",
+      "purpose": "Test files",
+      "fileCount": 1,
+      "lastAccessed": 1773277795606,
+      "keyFiles": [
+        "test_recognition_api.py"
+      ]
+    },
+    "web/node_modules": {
+      "path": "web/node_modules",
+      "purpose": "Dependencies",
+      "fileCount": 2,
+      "lastAccessed": 1773277795609,
+      "keyFiles": []
+    }
+  },
+  "hotPaths": [
+    {
+      "path": "APP/src/screens/EncyclopediaScreen.tsx",
+      "accessCount": 10,
+      "lastAccessed": 1773293658944,
+      "type": "file"
+    },
+    {
+      "path": "APP/src/screens/DiagnosisHistoryScreen.tsx",
+      "accessCount": 9,
+      "lastAccessed": 1773279546444,
+      "type": "file"
+    },
+    {
+      "path": "APP/src/screens/DiagnosisScreen.tsx",
+      "accessCount": 9,
+      "lastAccessed": 1773282383975,
+      "type": "file"
+    },
+    {
+      "path": "APP/src/screens/DiagnosisDetailScreen.tsx",
+      "accessCount": 4,
+      "lastAccessed": 1773279430818,
+      "type": "file"
+    },
+    {
+      "path": "backend/app/services/recognition.py",
+      "accessCount": 3,
+      "lastAccessed": 1773282401163,
+      "type": "file"
+    },
+    {
+      "path": "APP/src/constants/theme.ts",
+      "accessCount": 3,
+      "lastAccessed": 1773287274833,
+      "type": "file"
+    },
+    {
+      "path": "APP/src/constants",
+      "accessCount": 3,
+      "lastAccessed": 1773293677455,
+      "type": "directory"
+    },
+    {
+      "path": "docs/plans/2026-03-12-plant-recognition-design.md",
+      "accessCount": 2,
+      "lastAccessed": 1773281816755,
+      "type": "file"
+    },
+    {
+      "path": "APP/src/components/Icon.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1773287383611,
+      "type": "file"
+    },
+    {
+      "path": "APP/package.json",
+      "accessCount": 2,
+      "lastAccessed": 1773293889924,
+      "type": "directory"
+    },
+    {
+      "path": "APP/src/screens/StoreScreen.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1773295535749,
+      "type": "file"
+    },
+    {
+      "path": "backend/app/api/endpoints/recognition.py",
+      "accessCount": 1,
+      "lastAccessed": 1773281489438,
+      "type": "file"
+    },
+    {
+      "path": "APP/src/services/recognitionService.ts",
+      "accessCount": 1,
+      "lastAccessed": 1773281507364,
+      "type": "file"
+    },
+    {
+      "path": "backend/train_plant_model.py",
+      "accessCount": 1,
+      "lastAccessed": 1773281715636,
+      "type": "file"
+    },
+    {
+      "path": "docs/plans/2026-03-12-plant-recognition-implementation.md",
+      "accessCount": 1,
+      "lastAccessed": 1773281891435,
+      "type": "file"
+    },
+    {
+      "path": "APP/src/data/plantClasses.ts",
+      "accessCount": 1,
+      "lastAccessed": 1773282062191,
+      "type": "file"
+    },
+    {
+      "path": "APP/src/utils/networkMonitor.ts",
+      "accessCount": 1,
+      "lastAccessed": 1773282251530,
+      "type": "file"
+    },
+    {
+      "path": "APP/src/services/hybridRecognition.ts",
+      "accessCount": 1,
+      "lastAccessed": 1773282280160,
+      "type": "file"
+    },
+    {
+      "path": "README.md",
+      "accessCount": 1,
+      "lastAccessed": 1773292126630,
+      "type": "file"
+    },
+    {
+      "path": "",
+      "accessCount": 1,
+      "lastAccessed": 1773292128672,
+      "type": "directory"
+    },
+    {
+      "path": "APP/src/screens/GardenScreen.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1773293658997,
+      "type": "file"
+    },
+    {
+      "path": "docs/plans/2026-03-12-header-modernization-design.md",
+      "accessCount": 1,
+      "lastAccessed": 1773293876362,
+      "type": "file"
+    },
+    {
+      "path": "APP/src/services/storeService.ts",
+      "accessCount": 1,
+      "lastAccessed": 1773295535805,
+      "type": "file"
+    },
+    {
+      "path": "backend/app/api/endpoints/products.py",
+      "accessCount": 1,
+      "lastAccessed": 1773295535857,
+      "type": "file"
+    },
+    {
+      "path": "APP/src/services/config.ts",
+      "accessCount": 1,
+      "lastAccessed": 1773295553669,
+      "type": "file"
+    },
+    {
+      "path": "backend/app",
+      "accessCount": 1,
+      "lastAccessed": 1773295553864,
+      "type": "directory"
+    },
+    {
+      "path": "backend/app/api/router.py",
+      "accessCount": 1,
+      "lastAccessed": 1773295561039,
+      "type": "directory"
+    },
+    {
+      "path": "backend/app/api/endpoints/cart.py",
+      "accessCount": 1,
+      "lastAccessed": 1773295581508,
+      "type": "file"
+    },
+    {
+      "path": "docs/plans/2026-03-12-store-api-connection-design.md",
+      "accessCount": 1,
+      "lastAccessed": 1773296515567,
+      "type": "file"
+    },
+    {
+      "path": "APP/src/screens/OrderDetailScreen.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1773296540980,
+      "type": "file"
+    },
+    {
+      "path": "APP/src/screens/StoreDetailScreen.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1773296541033,
+      "type": "file"
+    },
+    {
+      "path": "APP/src/screens/CartScreen.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1773296541084,
+      "type": "file"
+    },
+    {
+      "path": "APP/src/screens/OrdersScreen.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1773296551896,
+      "type": "file"
+    },
+    {
+      "path": "docs/plans/2026-03-12-store-api-connection-implementation.md",
+      "accessCount": 1,
+      "lastAccessed": 1773296610649,
+      "type": "file"
+    }
+  ],
+  "userDirectives": []
+}

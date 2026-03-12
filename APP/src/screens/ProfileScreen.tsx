@@ -11,10 +11,11 @@ interface ProfileScreenProps extends Partial<NavigationProps> {}
 const menuItems = [
   { id: '1', icon: Icons.BookOpen, title: '养花日记', subtitle: '记录植物成长', screen: 'Diary', color: colors.secondary },
   { id: '2', icon: Icons.Stethoscope, title: '病症诊断', subtitle: 'AI诊断病虫害', screen: 'Diagnosis', color: colors.error },
-  { id: '3', icon: Icons.Sparkles, title: '新手推荐', subtitle: '场景问答选植物', screen: 'Recommendation', color: colors.warning },
-  { id: '4', icon: Icons.Bell, title: '提醒管理', subtitle: '智能提醒设置', screen: 'Reminder', color: colors.primary },
-  { id: '5', icon: Icons.Settings, title: '设置', subtitle: '偏好设置', screen: 'Settings', color: colors['text-secondary'] },
-  { id: '6', icon: Icons.HelpCircle, title: '帮助反馈', subtitle: '联系我们', screen: 'Help', color: colors['text-secondary'] },
+  { id: '3', icon: Icons.History, title: '诊断历史', subtitle: '查看历史诊断记录', screen: 'DiagnosisHistory', color: colors.info },
+  { id: '4', icon: Icons.Sparkles, title: '新手推荐', subtitle: '场景问答选植物', screen: 'Recommendation', color: colors.warning },
+  { id: '5', icon: Icons.Bell, title: '提醒管理', subtitle: '智能提醒设置', screen: 'Reminder', color: colors.primary },
+  { id: '6', icon: Icons.Settings, title: '设置', subtitle: '偏好设置', screen: 'Settings', color: colors['text-secondary'] },
+  { id: '7', icon: Icons.HelpCircle, title: '帮助反馈', subtitle: '联系我们', screen: 'Help', color: colors['text-secondary'] },
 ];
 
 export function ProfileScreen({ onNavigate, currentTab, onTabChange, isLoggedIn, onRequireLogin, onLogout }: ProfileScreenProps) {
@@ -41,9 +42,10 @@ export function ProfileScreen({ onNavigate, currentTab, onTabChange, isLoggedIn,
 
   const handleMenuPress = (screen: string) => {
     if (onNavigate) {
-      const screenMap: Record<string, 'Diagnosis' | 'Recommendation' | 'Reminder' | 'EncyclopediaDetail' | 'Diary'> = {
+      const screenMap: Record<string, 'Diagnosis' | 'Recommendation' | 'Reminder' | 'EncyclopediaDetail' | 'Diary' | 'DiagnosisHistory'> = {
         'Diary': 'Diary',
         'Diagnosis': 'Diagnosis',
+        'DiagnosisHistory': 'DiagnosisHistory',
         'Recommendation': 'Recommendation',
         'Reminder': 'Reminder',
         'EncyclopediaDetail': 'EncyclopediaDetail',

@@ -36,4 +36,4 @@ class OrderItem(Base):
     subtotal = Column(Numeric(10, 2), nullable=False)
 
     order = relationship("Order", back_populates="items")
-    product = relationship("Product", backref="order_items")
+    product = relationship("Product", back_populates="order_items")

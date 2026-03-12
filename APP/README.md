@@ -1,97 +1,181 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# 🌿 APP - React Native 移动端
 
-# Getting Started
+护花使者移动端应用，采用 React Native 开发，支持 iOS 和 Android 双平台。
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+[![React Native](https://img.shields.io/badge/React%20Native-0.84-blue)](https://reactnative.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue)](https://www.typescriptlang.org)
+[![iOS](https://img.shields.io/badge/iOS-Supported-green)](https://apple.com)
+[![Android](https://img.shields.io/badge/Android-Supported-green)](https://android.com)
 
-## Step 1: Start Metro
+## 🚀 快速开始
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+### 环境要求
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+- Node.js 18+
+- React Native CLI
+- Xcode (iOS 开发)
+- Android Studio (Android 开发)
 
-```sh
-# Using npm
+### 安装依赖
+
+```bash
+cd APP
+
+# 安装项目依赖
+npm install
+
+# 或使用 yarn
+yarn install
+```
+
+### 运行开发服务器
+
+```bash
+# 启动 Metro bundler
 npm start
 
-# OR using Yarn
-yarn start
+# 或后台运行
+npm start &
 ```
 
-## Step 2: Build and run your app
+### 运行 APP
 
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
-
-### Android
-
-```sh
-# Using npm
-npm run android
-
-# OR using Yarn
-yarn android
-```
-
-### iOS
-
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
-
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
-
-```sh
-bundle install
-```
-
-Then, and every time you update your native dependencies, run:
-
-```sh
-bundle exec pod install
-```
-
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
-
-```sh
-# Using npm
+```bash
+# iOS 模拟器
 npm run ios
 
-# OR using Yarn
-yarn ios
+# iOS 真机
+npx react-native run-ios --device
+
+# Android 模拟器
+npm run android
+
+# Android 真机
+npx react-native run-android
 ```
 
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
+## 📁 项目结构
 
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
+```
+APP/
+├── src/
+│   ├── components/        # 可复用组件
+│   │   └── Icon.tsx      # 图标组件
+│   ├── screens/          # 页面组件
+│   │   ├── IdentifyScreen.tsx     # 🌸 植物识别
+│   │   ├── DiagnosisScreen.tsx    # 🦟 病虫害诊断
+│   │   ├── GardenScreen.tsx        # 🌿 我的花园
+│   │   ├── DiaryScreen.tsx        # 📖 植物日记
+│   │   ├── StoreScreen.tsx        # 🛒 商城
+│   │   ├── ProfileScreen.tsx       # 👤 个人中心
+│   │   ├── RecommendationScreen.tsx # ⭐ 新手推荐
+│   │   └── ...
+│   ├── navigation/        # 导航配置
+│   │   └── AppNavigator.tsx
+│   ├── services/         # API 服务
+│   │   ├── config.ts           # ⚙️ API 配置
+│   │   ├── plantService.ts     # 🌱 植物 API
+│   │   ├── recommendService.ts # ✨ 推荐 API
+│   │   ├── storeService.ts     # 🛍️ 商城 API
+│   │   └── ...
+│   ├── constants/        # 常量配置
+│   │   └── theme.ts       # 🎨 主题颜色
+│   └── types/             # 📝 类型定义
+├── ios/                   # 🍎 iOS 原生配置
+├── android/               # 🤖 Android 原生配置
+└── package.json
+```
 
-## Step 3: Modify your app
+## 🔧 配置说明
 
-Now that you have successfully run the app, let's make changes!
+### API 地址配置
 
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
+修改 `src/services/config.ts` 中的 API 地址：
 
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
+```typescript
+// 开发环境
+export const API_BASE_URL = 'http://192.168.1.100:8000';
 
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
+// 生产环境
+export const API_BASE_URL = 'https://your-domain.com';
+```
 
-## Congratulations! :tada:
+### iOS 真机调试
 
-You've successfully run and modified your React Native App. :partying_face:
+1. 连接 iPhone 到 Mac
+2. 运行 `npx react-native run-ios --device`
+3. 首次需要配置 Apple Developer 签名
 
-### Now what?
+### Android 真机调试
 
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
+1. 开启手机开发者模式
+2. 启用 USB 调试
+3. 运行 `npx react-native run-android`
 
-# Troubleshooting
+## 📦 打包发布
 
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
+### iOS 打包
 
-# Learn More
+```bash
+# Xcode 打开项目
+open ios/FlowerGuardian.xcworkspace
 
-To learn more about React Native, take a look at the following resources:
+# 或命令行打包
+xcodebuild -workspace ios/FlowerGuardian.xcworkspace \
+  -scheme FlowerGuardian \
+  -configuration Release \
+  archive
+```
 
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+### Android 打包
+
+```bash
+# 调试 APK
+cd android && ./gradlew assembleDebug
+
+# 发布 APK
+cd android && ./gradlew assembleRelease
+
+# AAB (Google Play)
+cd android && ./gradlew bundleRelease
+```
+
+## 🛠️ 技术栈
+
+| 技术 | 用途 |
+|------|------|
+| ⚛️ React Native 0.84 | 跨平台框架 |
+| 📘 TypeScript | 类型安全 |
+| 💨 NativeWind | CSS 样式 |
+| 🌐 Axios | HTTP 请求 |
+| 🧭 React Navigation | 导航 |
+| 🎨 Lucide Icons | 图标库 |
+
+## 📱 主要功能页面
+
+| 页面 | 功能描述 |
+|------|----------|
+| 🌸 首页/识别 | AI 植物识别、病虫害诊断 |
+| 🌿 花园 | 管理我的植物 |
+| 📖 百科 | 植物知识库 |
+| 🛒 商城 | 商品浏览购买 |
+| 👤 我的 | 个人中心 |
+
+## 🎯 核心特性
+
+- ✅ **AI 识别**: 双 YOLO 模型，精准识别 47+ 植物种类
+- ✅ **病虫害诊断**: 快速诊断植物健康问题
+- ✅ **智能推荐**: 根据环境推荐适合的植物
+- ✅ **花园管理**: 记录植物生长状态
+- ✅ **养护提醒**: 科学的浇水施肥提醒
+- ✅ **植物日记**: 记录植物成长瞬间
+
+## 📄 许可证
+
+MIT License
+
+---
+
+<p align="center">
+  🌻 护花使者 - 你的掌上植物管家 🌻
+</p>

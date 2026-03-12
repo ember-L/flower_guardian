@@ -1,0 +1,7 @@
+{
+  "tool_name": "Bash",
+  "tool_input_preview": "{\"command\":\"cd /Users/ember/Flower_Guardian/APP && npm install @react-native-community/netinfo --registry https://registry.npmjs.org\",\"timeout\":120000,\"description\":\"Install netinfo with npm registry\"...",
+  "error": "Exit code 1\nnpm error code ECONNREFUSED\nnpm error errno ECONNREFUSED\nnpm error FetchError: request to https://registry.npmjs.org/@react-native-community%2fnetinfo failed, reason: \nnpm error     at ClientRequest.<anonymous> (/opt/homebrew/lib/node_modules/npm/node_modules/minipass-fetch/lib/index.js:130:14)\nnpm error     at ClientRequest.emit (node:events:507:28)\nnpm error     at emitErrorEvent (node:_http_client:104:11)\nnpm error     at _destroy (node:_http_client:898:9)\nnpm error     at onSocke...",
+  "timestamp": "2026-03-12T02:23:44.439Z",
+  "retry_count": 1
+}

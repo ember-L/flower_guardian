@@ -1,0 +1,7 @@
+{
+  "tool_name": "Bash",
+  "tool_input_preview": "{\"command\":\"cd /Users/ember/Flower_Guardian/APP && npx expo install expo-linear-gradient\",\"timeout\":120000,\"description\":\"Install expo-linear-gradient dependency\"}",
+  "error": "Exit code 1\nnpm warn exec The following package was not found and will be installed: expo@55.0.6\nnpm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.\nnpm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported\nnpm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer su...",
+  "timestamp": "2026-03-12T05:38:25.193Z",
+  "retry_count": 1
+}

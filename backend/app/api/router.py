@@ -5,6 +5,10 @@ from app.api.endpoints.orders import router as orders_router, admin_router as or
 from app.api.endpoints.admin_users import router as admin_users_router
 from app.api.endpoints.admin_plants import router as admin_plants_router
 from app.api.endpoints.admin_stats import router as admin_stats_router
+from app.api.endpoints.cart import router as cart_router
+from app.api.endpoints.payments import router as payments_router
+from app.api.endpoints.diagnoses import router as diagnoses_router
+from app.api.endpoints.recommend import router as recommend_router
 
 api_router = APIRouter()
 api_router.include_router(users.router)
@@ -21,3 +25,7 @@ api_router.include_router(orders_admin_router)
 api_router.include_router(admin_users_router)
 api_router.include_router(admin_plants_router)
 api_router.include_router(admin_stats_router)
+api_router.include_router(cart_router)
+api_router.include_router(payments_router)
+api_router.include_router(diagnoses_router)
+api_router.include_router(recommend_router)

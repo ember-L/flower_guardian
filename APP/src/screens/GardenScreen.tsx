@@ -129,21 +129,23 @@ export function GardenScreen({ onNavigate, currentTab, onTabChange, isLoggedIn, 
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      {/* 头部 */}
-      <View style={styles.header}>
-        <View style={styles.headerTop}>
-          <View style={styles.headerTitle}>
-            <Icons.Flower2 size={24} color={colors.primary} />
-            <Text style={styles.headerTitleText}>我的花园</Text>
+      {/* 头部 - 渐变背景 */}
+      <View style={styles.headerGradient}>
+        <View style={styles.header}>
+          <View style={styles.headerTop}>
+            <View style={styles.headerTitle}>
+              <Icons.Flower2 size={24} color="#fff" />
+              <Text style={styles.headerTitleText}>我的花园</Text>
+            </View>
+            <TouchableOpacity onPress={() => setShowAddModal(true)} style={styles.addButton}>
+              <Icons.Plus size={16} color={colors.primary} />
+              <Text style={styles.addButtonText}>添加植物</Text>
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity onPress={() => setShowAddModal(true)} style={styles.addButton}>
-            <Icons.Plus size={16} color="#fff" />
-            <Text style={styles.addButtonText}>添加植物</Text>
-          </TouchableOpacity>
+          <Text style={styles.headerSubtitle}>
+            {plants.length > 0 ? `已养护 ${plants.length} 株植物` : '快来添加你的第一株植物吧'}
+          </Text>
         </View>
-        <Text style={styles.headerSubtitle}>
-          {plants.length > 0 ? `已养护 ${plants.length} 株植物` : '快来添加你的第一株植物吧'}
-        </Text>
       </View>
 
       {/* 植物列表 */}
@@ -291,13 +293,14 @@ export function GardenScreen({ onNavigate, currentTab, onTabChange, isLoggedIn, 
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
-  header: { backgroundColor: colors.surface, paddingHorizontal: spacing.lg, paddingTop: spacing.xl * 1.5, paddingBottom: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.border },
+  headerGradient: { backgroundColor: colors.primary, borderBottomLeftRadius: 24, borderBottomRightRadius: 24, overflow: 'hidden' },
+  header: { paddingHorizontal: spacing.lg, paddingTop: spacing.xl * 1.5, paddingBottom: spacing.lg },
   headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   headerTitle: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  headerTitleText: { fontSize: 20, fontWeight: 'bold', color: colors.text },
-  addButton: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, backgroundColor: colors.primary, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderRadius: 12 },
-  addButtonText: { color: '#fff', fontSize: 14, fontWeight: '500' },
-  headerSubtitle: { fontSize: 14, color: colors['text-secondary'], marginTop: spacing.xs },
+  headerTitleText: { fontSize: 24, fontWeight: 'bold', color: '#fff', textShadowColor: 'rgba(0,0,0,0.15)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2 },
+  addButton: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, backgroundColor: 'rgba(255,255,255,0.9)', paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderRadius: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 2 },
+  addButtonText: { color: colors.primary, fontSize: 14, fontWeight: '600' },
+  headerSubtitle: { fontSize: 14, color: 'rgba(255,255,255,0.85)', marginTop: spacing.xs, fontWeight: '500' },
   list: { flex: 1 },
   listContent: { padding: spacing.lg, paddingBottom: spacing.xxl * 4 },
   emptyContainer: { alignItems: 'center', paddingVertical: spacing.xxl * 2 },

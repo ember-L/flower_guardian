@@ -294,6 +294,9 @@ export const Icons = {
   Info: (props: Omit<LucideProps, 'name'>) => <Icon name="info" {...props} />,
   Home: (props: Omit<LucideProps, 'name'>) => <Icon name="home" {...props} />,
   Stethoscope: (props: Omit<LucideProps, 'name'>) => <Icon name="stethoscope" {...props} />,
+  History: (props: Omit<LucideProps, 'name'>) => <Icon name="history" {...props} />,
+  ShoppingCart: (props: Omit<LucideProps, 'name'>) => <Icon name="shopping-cart" {...props} />,
+  FileText: (props: Omit<LucideProps, 'name'>) => <Icon name="file-text" {...props} />,
   Shield: (props: Omit<LucideProps, 'name'>) => <Icon name="shield" {...props} />,
   ShieldCheck: (props: Omit<LucideProps, 'name'>) => <Icon name="shield-check" {...props} />,
   Lightbulb: (props: Omit<LucideProps, 'name'>) => <Icon name="lightbulb" {...props} />,
@@ -314,7 +317,9 @@ export const Icons = {
   Unlock: (props: Omit<LucideProps, 'name'>) => <Icon name="unlock" {...props} />,
   Eye: (props: Omit<LucideProps, 'name'>) => <Icon name="eye" {...props} />,
   EyeOff: (props: Omit<LucideProps, 'name'>) => <Icon name="eye-off" {...props} />,
+  Trash2: (props: Omit<LucideProps, 'name'>) => <Icon name="trash" {...props} />,
   ShieldCheck: (props: Omit<LucideProps, 'name'>) => <Icon name="shield-check" {...props} />,
+  ArrowLeftRight: (props: Omit<LucideProps, 'name'>) => <Icon name="arrow-right" {...props} />,
 };
 
 const styles = StyleSheet.create({

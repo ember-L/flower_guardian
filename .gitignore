@@ -9,7 +9,7 @@ frontend/*.jsbundle
 frontend/coverage/
 frontend/.metro-health-check*
 frontend/yarn-error.log
-
+dataset/*
 # iOS
 frontend/ios/build/
 frontend/ios/*.xcuserstate
