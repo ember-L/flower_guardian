@@ -28,6 +28,7 @@ export const API_ENDPOINTS = {
 
   // 识别
   RECOGNITION_PLANT: '/api/recognition/plant',
+  RECOGNITION_PUBLIC_PLANT: '/api/recognition/public/plant',
   RECOGNITION_FULL: '/api/recognition/full',
   DIAGNOSIS_PEST: '/api/diagnosis/pest',
   DIAGNOSIS_FULL: '/api/diagnosis/full',

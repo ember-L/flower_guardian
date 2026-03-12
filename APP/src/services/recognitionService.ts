@@ -1,5 +1,7 @@
 // 花卉识别服务
 import { launchCamera, launchImageLibrary, ImagePickerResponse } from 'react-native-image-picker';
+import axios from 'axios';
+import { API_BASE_URL } from './config';
 
 // 识别结果类型
 export interface RecognitionResult {
@@ -43,39 +45,45 @@ export const selectFromGallery = async (): Promise<ImagePickerResponse> => {
   return result;
 };
 
-// 模拟API调用 - 实际需要对接后端Yolov11模型
+// 调用后端API进行植物识别
 export const recognizePlant = async (imageUri: string): Promise<RecognitionResult> => {
-  // 模拟API延迟
-  await new Promise(resolve => setTimeout(resolve, 1500));
+  try {
+    // 将URI转换为FormData
+    const formData = new FormData();
+    formData.append('file', {
+      uri: imageUri,
+      type: 'image/jpeg',
+      name: 'plant.jpg',
+    } as any);
 
-  // 返回模拟结果
-  return {
-    id: '1',
-    name: '绿萝',
-    scientificName: 'Epipremnum aureum',
-    confidence: 0.95,
-    description: '绿萝是天南星科麒麟叶属植物，原产于印度尼西亚所罗门群岛的热带雨林。绿萝生命力顽强，易于养护，是最常见的室内观叶植物之一。',
-    careLevel: 1,
-    lightRequirement: '耐阴',
-    waterRequirement: '见干见湿',
-    imageUrl: '',
-    similarSpecies: [
+    const response = await axios.post(
+      `${API_BASE_URL}/api/recognition/public/plant`,
+      formData,
       {
-        id: '2',
-        name: '吊兰',
-        imageUrl: '',
-        difference: '吊兰叶片更细长，呈条状，而绿萝叶片较宽大呈心形',
-        careLevel: 1,
-        tips: '两者都适合新手，但吊兰需要更多光照，绿萝更耐阴'
-      },
-      {
-        id: '3',
-        name: '常春藤',
-        imageUrl: '',
-        difference: '常春藤叶片为掌状五裂，绿萝叶片为心形',
-        careLevel: 2,
-        tips: '常春藤喜凉爽环境，夏季需要注意降温'
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        timeout: 30000, // 30秒超时
       }
-    ]
-  };
+    );
+
+    // 转换后端响应格式
+    const data = response.data;
+    return {
+      id: data.id || '1',
+      name: data.name || '未知植物',
+      scientificName: data.scientific_name || '',
+      confidence: data.confidence || 0,
+      description: data.description || '',
+      careLevel: data.care_level || 1,
+      lightRequirement: data.light_requirement || '散光',
+      waterRequirement: data.water_requirement || '见干见湿',
+      imageUrl: data.image_url || '',
+      similarSpecies: data.similar_species || [],
+    };
+  } catch (error) {
+    console.error('识别失败:', error);
+    // 网络错误时抛出异常，让UI处理
+    throw error;
+  }
 };

@@ -13,14 +13,23 @@ import {
 import { getCart, updateCartItem, deleteCartItem, clearCart, Cart, CartItem } from '../services/storeService';
 import { colors, spacing, shadows } from '../constants/theme';
 import { NavigationProps } from '../navigation/AppNavigator';
+import { Icons } from '../components/Icon';
 
 interface CartScreenProps extends Partial<NavigationProps> {}
 
-export function CartScreen({ navigation }: CartScreenProps) {
+export function CartScreen({ navigation, onGoBack, onNavigate, isLoggedIn, onRequireLogin }: CartScreenProps) {
   const [cart, setCart] = useState<Cart | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // 检查登录状态
+  useEffect(() => {
+    if (!isLoggedIn && onRequireLogin) {
+      onRequireLogin();
+    }
+  }, [isLoggedIn, onRequireLogin]);
+
   const loadCart = useCallback(async () => {
+    if (!isLoggedIn) return;
     try {
       const data = await getCart();
       setCart(data);
@@ -131,15 +140,31 @@ export function CartScreen({ navigation }: CartScreenProps) {
     );
   }
 
+  const handleGoBack = () => {
+    if (onGoBack) {
+      onGoBack();
+    } else if (onNavigate) {
+      onNavigate('Store');
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>购物车</Text>
-        {cart && cart.items.length > 0 && (
-          <TouchableOpacity onPress={handleClearCart}>
-            <Text style={styles.clearBtn}>清空</Text>
+      {/* 头部 - 渐变背景 */}
+      <View style={styles.headerGradient}>
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backBtn} onPress={handleGoBack}>
+            <Icons.ArrowLeft size={24} color="#fff" />
           </TouchableOpacity>
-        )}
+          <Text style={styles.headerTitle}>购物车</Text>
+          {cart && cart.items.length > 0 ? (
+            <TouchableOpacity onPress={handleClearCart}>
+              <Text style={styles.clearBtn}>清空</Text>
+            </TouchableOpacity>
+          ) : (
+            <View style={styles.placeholder} />
+          )}
+        </View>
       </View>
 
       {(!cart || cart.items.length === 0) ? (
@@ -180,12 +205,18 @@ export function CartScreen({ navigation }: CartScreenProps) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
+  headerGradient: { backgroundColor: colors.primary, borderBottomLeftRadius: 24, borderBottomRightRadius: 24, overflow: 'hidden' },
   header: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    padding: spacing.md, backgroundColor: colors.white,
+    padding: spacing.lg, paddingTop: spacing.xl * 1.5, paddingBottom: spacing.lg,
   },
-  headerTitle: { fontSize: 20, fontWeight: 'bold', color: colors.text },
-  clearBtn: { color: colors.primary, fontSize: 14 },
+  backBtn: {
+    width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center', alignItems: 'center',
+  },
+  headerTitle: { fontSize: 24, fontWeight: 'bold', color: '#fff', flex: 1, textAlign: 'center', marginHorizontal: 36 },
+  clearBtn: { color: '#fff', fontSize: 14 },
+  placeholder: { width: 36 },
   listContent: { padding: spacing.md },
   cartItem: {
     flexDirection: 'row', backgroundColor: colors.white, borderRadius: 12,

@@ -6,16 +6,26 @@ import { NavigationProps } from '../navigation/AppNavigator';
 
 interface OrderDetailScreenProps extends NavigationProps {}
 
-export function OrderDetailScreen({ route, navigation }: OrderDetailScreenProps) {
+export function OrderDetailScreen({ route, navigation, isLoggedIn, onRequireLogin }: OrderDetailScreenProps) {
   const { orderId } = route.params;
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // 检查登录状态
   useEffect(() => {
-    loadOrder();
-  }, [orderId]);
+    if (!isLoggedIn && onRequireLogin) {
+      onRequireLogin();
+    }
+  }, [isLoggedIn, onRequireLogin]);
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      loadOrder();
+    }
+  }, [isLoggedIn, orderId]);
 
   const loadOrder = async () => {
+    if (!isLoggedIn) return;
     try {
       const data = await getOrderDetail(orderId);
       setOrder(data);

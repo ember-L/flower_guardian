@@ -127,14 +127,22 @@ const formatDate = (dateString: string): { date: string; label: string } => {
   };
 };
 
-export function DiaryScreen({ onGoBack, onNavigate }: DiaryScreenProps) {
+export function DiaryScreen({ onGoBack, onNavigate, isLoggedIn, onRequireLogin }: DiaryScreenProps & { isLoggedIn?: boolean; onRequireLogin?: () => void }) {
   const [selectedTab, setSelectedTab] = useState(0);
   const [diaries, setDiaries] = useState<DisplayDiary[]>([]);
   const [plants, setPlants] = useState<Plant[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
+  // 检查登录状态
+  useEffect(() => {
+    if (!isLoggedIn && onRequireLogin) {
+      onRequireLogin();
+    }
+  }, [isLoggedIn, onRequireLogin]);
+
   const loadData = useCallback(async () => {
+    if (!isLoggedIn) return;
     setLoading(true);
     try {
       const [plantsData, diariesData] = await Promise.all([

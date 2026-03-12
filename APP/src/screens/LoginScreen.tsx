@@ -10,9 +10,10 @@ interface LoginScreenProps {
   onGoBack: () => void;
   onLoginSuccess: () => void;
   onSwitchToRegister: () => void;
+  onSwitchToForgotPassword: () => void;
 }
 
-export function LoginScreen({ onGoBack, onLoginSuccess, onSwitchToRegister }: LoginScreenProps) {
+export function LoginScreen({ onGoBack, onLoginSuccess, onSwitchToRegister, onSwitchToForgotPassword }: LoginScreenProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -118,6 +119,11 @@ export function LoginScreen({ onGoBack, onLoginSuccess, onSwitchToRegister }: Lo
               <Text style={styles.loginButtonText}>
                 {isLoading ? '登录中...' : '登录'}
               </Text>
+            </TouchableOpacity>
+
+            {/* 忘记密码链接 */}
+            <TouchableOpacity onPress={onSwitchToForgotPassword} style={styles.forgotPasswordSection}>
+              <Text style={styles.forgotPasswordText}>忘记密码？</Text>
             </TouchableOpacity>
 
             {/* 注册链接 */}
@@ -231,6 +237,14 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 17,
     fontWeight: '600',
+  },
+  forgotPasswordSection: {
+    alignItems: 'center',
+    marginTop: spacing.md,
+  },
+  forgotPasswordText: {
+    color: colors.primary,
+    fontSize: 15,
   },
   registerSection: {
     flexDirection: 'row',

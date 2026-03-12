@@ -1,58 +1,26 @@
-// 认证服务 - 使用 AsyncStorage + JWT Token
+// 认证服务 - 使用后端 API + JWT Token
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { User, StoredUser, LoginForm, RegisterForm, AuthResponse } from '../types/auth';
+import { API_BASE_URL } from './config';
 
 const USERS_KEY = 'huaban_users';
 const CURRENT_USER_KEY = 'huaban_current_user';
 const TOKEN_KEY = 'huaban_token';
+const REFRESH_TOKEN_KEY = 'huaban_refresh_token';
 
-// Base64 编解码 (React Native 可用)
+// Base64 编解码 (使用内置函数)
 const base64Encode = (str: string): string => {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-  let result = '';
-  let i = 0;
-
-  while (i < str.length) {
-    const a = str.charCodeAt(i++);
-    const b = i < str.length ? str.charCodeAt(i++) : 0;
-    const c = i < str.length ? str.charCodeAt(i++) : 0;
-
-    const triplet = (a << 16) | (b << 8) | c;
-
-    result += chars[(triplet >> 18) & 0x3f];
-    result += chars[(triplet >> 12) & 0x3f];
-    result += i > str.length + 1 ? '=' : chars[(triplet >> 6) & 0x3f];
-    result += i > str.length ? '=' : chars[triplet & 0x3f];
-  }
-
-  return result;
+  return btoa(str);
 };
 
 const base64Decode = (str: string): string => {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-  let result = '';
-  let i = 0;
-
-  str = str.replace(/=/g, '');
-
-  while (i < str.length) {
-    const a = chars.indexOf(str[i++]);
-    const b = i < str.length ? chars.indexOf(str[i++]) : 0;
-    const c = i < str.length ? chars.indexOf(str[i++]) : 0;
-    const d = i < str.length ? chars.indexOf(str[i++]) : 0;
-
-    const triplet = (a << 18) | (b << 12) | (c << 6) | d;
-
-    result += String.fromCharCode((triplet >> 16) & 0xff);
-    if (c !== -1) {
-      result += String.fromCharCode((triplet >> 8) & 0xff);
-    }
-    if (d !== -1) {
-      result += String.fromCharCode(triplet & 0xff);
-    }
+  // 移除 padding
+  const cleaned = str.replace(/-/g, '+').replace(/_/g, '/').replace(/=/g, '');
+  try {
+    return atob(cleaned);
+  } catch {
+    return '';
   }
-
-  return result;
 };
 
 // 简单的密码哈希（仅用于演示）
@@ -121,8 +89,11 @@ const saveCurrentUser = async (user: User | null): Promise<void> => {
 // 获取 Token
 export const getToken = async (): Promise<string | null> => {
   try {
-    return await AsyncStorage.getItem(TOKEN_KEY);
-  } catch {
+    const token = await AsyncStorage.getItem(TOKEN_KEY);
+    console.log('[Auth] getToken:', token ? 'found' : 'not found');
+    return token;
+  } catch (e) {
+    console.error('[Auth] getToken error:', e);
     return null;
   }
 };
@@ -131,8 +102,9 @@ export const getToken = async (): Promise<string | null> => {
 const saveToken = async (token: string): Promise<void> => {
   try {
     await AsyncStorage.setItem(TOKEN_KEY, token);
+    console.log('[Auth] saveToken: success');
   } catch (e) {
-    console.error('Failed to save token:', e);
+    console.error('[Auth] saveToken error:', e);
   }
 };
 
@@ -142,6 +114,33 @@ const clearToken = async (): Promise<void> => {
     await AsyncStorage.removeItem(TOKEN_KEY);
   } catch (e) {
     console.error('Failed to clear token:', e);
+  }
+};
+
+// 保存 Refresh Token
+export const saveRefreshToken = async (token: string): Promise<void> => {
+  try {
+    await AsyncStorage.setItem(REFRESH_TOKEN_KEY, token);
+  } catch (e) {
+    console.error('Failed to save refresh token:', e);
+  }
+};
+
+// 获取 Refresh Token
+export const getRefreshToken = async (): Promise<string | null> => {
+  try {
+    return await AsyncStorage.getItem(REFRESH_TOKEN_KEY);
+  } catch {
+    return null;
+  }
+};
+
+// 清除 Refresh Token
+export const clearRefreshToken = async (): Promise<void> => {
+  try {
+    await AsyncStorage.removeItem(REFRESH_TOKEN_KEY);
+  } catch (e) {
+    console.error('Failed to clear refresh token:', e);
   }
 };
 
@@ -191,43 +190,145 @@ export const register = async (form: RegisterForm): Promise<AuthResponse> => {
   return { success: true, token, user: userWithoutPassword };
 };
 
-// 登录
+// 登录 - 使用后端 API
 export const login = async (form: LoginForm): Promise<AuthResponse> => {
-  const users = await getAllUsers();
+  try {
+    console.log('[Login] API_BASE_URL:', API_BASE_URL);
 
-  // 验证
-  if (!form.email.trim()) {
-    return { success: false, error: '请输入邮箱' };
+    // 验证
+    if (!form.email.trim()) {
+      return { success: false, error: '请输入邮箱' };
+    }
+    if (!form.password) {
+      return { success: false, error: '请输入密码' };
+    }
+
+    // 调用后端 API 使用 form-urlencoded 格式
+    const params = new URLSearchParams();
+    params.append('username', form.email.trim());
+    params.append('password', form.password);
+
+    const loginUrl = `${API_BASE_URL}/api/users/login`;
+    console.log('[Login] Request URL:', loginUrl);
+    console.log('[Login] Body:', params.toString());
+
+    const response = await fetch(loginUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: params.toString(),
+    });
+
+    console.log('[Login] Response status:', response.status);
+    const responseText = await response.text();
+    console.log('[Login] Response body:', responseText);
+
+    if (!response.ok) {
+      try {
+        const errorData = JSON.parse(responseText);
+        const errorMessage = errorData.detail || '登录失败';
+        console.log('[Login] Error:', errorMessage);
+        return { success: false, error: errorMessage };
+      } catch {
+        return { success: false, error: responseText || '登录失败' };
+      }
+    }
+
+    // 解析成功的响应
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch {
+      return { success: false, error: '解析响应失败' };
+    }
+
+    const token = data.access_token;
+    const refreshToken = data.refresh_token;
+
+    // 保存 Token
+    await saveToken(token);
+
+    // 保存 Refresh Token
+    if (refreshToken) {
+      await saveRefreshToken(refreshToken);
+    }
+
+    // 获取用户信息
+    const userResponse = await fetch(`${API_BASE_URL}/api/users/me`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (!userResponse.ok) {
+      const errorData = await userResponse.json().catch(() => ({}));
+      return { success: false, error: errorData.detail || '获取用户信息失败' };
+    }
+
+    const userData = await userResponse.json();
+
+    const user: User = {
+      id: userData.id,
+      email: userData.email,
+      username: userData.username,
+      avatar: userData.avatar_url,
+      createdAt: userData.created_at,
+    };
+
+    await saveCurrentUser(user);
+
+    return { success: true, token, user };
+  } catch (error: any) {
+    console.error('[Login] Error:', error);
+    const errorMessage = error.message || '网络错误，请检查网络连接';
+    return { success: false, error: errorMessage };
   }
-  if (!form.password) {
-    return { success: false, error: '请输入密码' };
+};
+
+// 刷新 Access Token
+export const refreshAccessToken = async (): Promise<boolean> => {
+  try {
+    const refreshToken = await getRefreshToken();
+    if (!refreshToken) {
+      console.log('[Refresh] No refresh token found');
+      return false;
+    }
+
+    console.log('[Refresh] Attempting to refresh token...');
+
+    const response = await fetch(`${API_BASE_URL}/api/users/refresh-token`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    });
+
+    if (!response.ok) {
+      console.log('[Refresh] Refresh failed, clearing tokens');
+      await logout();
+      return false;
+    }
+
+    const data = await response.json();
+    await saveToken(data.access_token);
+    if (data.refresh_token) {
+      await saveRefreshToken(data.refresh_token);
+    }
+    console.log('[Refresh] Token refreshed successfully');
+    return true;
+  } catch (error) {
+    console.error('[Refresh] Error:', error);
+    return false;
   }
-
-  // 查找用户
-  const user = users.find(u => u.email === form.email);
-  if (!user) {
-    return { success: false, error: '邮箱未注册' };
-  }
-
-  // 验证密码
-  if (user.passwordHash !== simpleHash(form.password)) {
-    return { success: false, error: '密码错误' };
-  }
-
-  // 生成 Token
-  const token = generateToken(user);
-  await saveToken(token);
-
-  const { passwordHash, ...userWithoutPassword } = user;
-  await saveCurrentUser(userWithoutPassword);
-
-  return { success: true, token, user: userWithoutPassword };
 };
 
 // 登出
 export const logout = async (): Promise<void> => {
   await saveCurrentUser(null);
   await clearToken();
+  await clearRefreshToken();
 };
 
 // 更新用户信息
@@ -270,12 +371,32 @@ export const updateUser = async (updates: Partial<User>): Promise<AuthResponse> 
 // 检查是否登录 (同步版本，用于初始检查)
 export const isAuthenticated = async (): Promise<boolean> => {
   const token = await getToken();
+  console.log('[Auth] isAuthenticated - token:', token ? 'exists' : 'null');
   if (!token) return false;
 
   try {
-    const payload = JSON.parse(base64Decode(token));
-    return payload.exp > Date.now();
-  } catch {
+    // JWT 格式: header.payload.signature，需要解码 payload 部分
+    const parts = token.split('.');
+    console.log('[Auth] JWT parts:', parts.length);
+    if (parts.length !== 3) return false;
+
+    // 解码 payload (第二部分)
+    const payloadPart = parts[1];
+    console.log('[Auth] payloadPart:', payloadPart);
+    const decodedPayload = base64Decode(payloadPart);
+    console.log('[Auth] decoded payload:', decodedPayload);
+    const payload = JSON.parse(decodedPayload);
+    console.log('[Auth] payload:', payload);
+
+    // 检查 exp 是否过期
+    if (payload.exp) {
+      const isValid = payload.exp * 1000 > Date.now();
+      console.log('[Auth] exp check:', payload.exp, '>', Date.now(), '=', isValid);
+      return isValid;
+    }
+    return true;
+  } catch (e) {
+    console.log('[Auth] isAuthenticated error:', e);
     return false;
   }
 };
@@ -284,10 +405,13 @@ export const isAuthenticated = async (): Promise<boolean> => {
 let cachedAuthState: boolean | null = null;
 
 export const checkAuthStatus = async (): Promise<boolean> => {
+  console.log('[Auth] checkAuthStatus called, cached:', cachedAuthState);
   if (cachedAuthState !== null) {
+    console.log('[Auth] checkAuthStatus returning cached:', cachedAuthState);
     return cachedAuthState;
   }
   cachedAuthState = await isAuthenticated();
+  console.log('[Auth] checkAuthStatus result:', cachedAuthState);
   return cachedAuthState;
 };
 
@@ -306,7 +430,7 @@ export const sendVerificationCode = async (email: string): Promise<{ success: bo
   // 生成6位验证码
   const code = Math.floor(100000 + Math.random() * 900000).toString();
 
-  // 存储验证码 (实际应该发送到服务器)
+  // 存储验证码
   try {
     await AsyncStorage.setItem(`verify_${email}`, code);
   } catch (e) {

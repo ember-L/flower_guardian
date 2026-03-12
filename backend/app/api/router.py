@@ -9,9 +9,12 @@ from app.api.endpoints.cart import router as cart_router
 from app.api.endpoints.payments import router as payments_router
 from app.api.endpoints.diagnoses import router as diagnoses_router
 from app.api.endpoints.recommend import router as recommend_router
+from app.api.endpoints.addresses import router as addresses_router
+from app.api.endpoints.email_verification import router as email_verification_router
 
 api_router = APIRouter()
 api_router.include_router(users.router)
+api_router.include_router(email_verification_router)
 api_router.include_router(plants.router)
 api_router.include_router(reminders.router)
 api_router.include_router(diaries.router)
@@ -29,3 +32,4 @@ api_router.include_router(cart_router)
 api_router.include_router(payments_router)
 api_router.include_router(diagnoses_router)
 api_router.include_router(recommend_router)
+api_router.include_router(addresses_router)

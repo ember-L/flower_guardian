@@ -1,27 +1,36 @@
-// 百科/发现屏幕 - 使用纯 StyleSheet
+// 百科/发现屏幕 - 现代化设计
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, Text, TextInput, ActivityIndicator, Alert } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity, Text, TextInput, ActivityIndicator, Alert, FlatList, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Icons } from '../components/Icon';
-import { colors, spacing } from '../constants/theme';
+import { colors, spacing, borderRadius, shadows, fontSize, fontWeight } from '../constants/theme';
 import { NavigationProps } from '../navigation/AppNavigator';
 import { getPlants, getPlantCategories, getPopularPlants, Plant, PlantCategory } from '../services/plantService';
 
 interface EncyclopediaScreenProps extends Partial<NavigationProps> {}
 
 const difficultyLevels = [
-  { id: '1', name: '入门级', color: colors.success, value: 1 },
+  { id: '1', name: '入门', color: colors.success, value: 1 },
   { id: '2', name: '初级', color: '#8bc34a', value: 2 },
   { id: '3', name: '中级', color: colors.warning, value: 3 },
   { id: '4', name: '高级', color: '#ff9800', value: 4 },
-  { id: '5', name: '专家级', color: colors.error, value: 5 },
+  { id: '5', name: '专家', color: colors.error, value: 5 },
 ];
 
 const pitfallsData = [
-  { id: '1', title: '浇水过多', desc: '80%的植物死于浇水过多' },
-  { id: '2', title: '光照不当', desc: '喜阳植物放室内会徒长' },
-  { id: '3', title: '施肥过度', desc: '薄肥勤施，切忌浓肥' },
+  { id: '1', title: '浇水过多', desc: '80%的植物死于浇水过多', icon: 'Droplets' },
+  { id: '2', title: '光照不当', desc: '喜阳植物放室内会徒长', icon: 'Sun' },
+  { id: '3', title: '施肥过度', desc: '薄肥勤施，切忌浓肥', icon: 'Sparkles' },
 ];
+
+const CATEGORY_ICONS: Record<string, any> = {
+  'leaf': Icons.Leaf,
+  'sprout': Icons.Sprout,
+  'flower2': Icons.Flower2,
+  'tree': Icons.Plant,
+  'cactus': Icons.Plant,
+  'default': Icons.Leaf,
+};
 
 export function EncyclopediaScreen({ onNavigate, currentTab, onTabChange }: EncyclopediaScreenProps) {
   const [plants, setPlants] = useState<Plant[]>([]);
@@ -30,6 +39,7 @@ export function EncyclopediaScreen({ onNavigate, currentTab, onTabChange }: Ency
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedDifficulty, setSelectedDifficulty] = useState<number | null>(null);
 
   useEffect(() => {
     loadAllData();
@@ -93,6 +103,7 @@ export function EncyclopediaScreen({ onNavigate, currentTab, onTabChange }: Ency
   };
 
   const handleDifficultyPress = (level?: number) => {
+    setSelectedDifficulty(level ?? null);
     if (level) {
       loadPlants({ care_level: level });
     } else {
@@ -101,9 +112,9 @@ export function EncyclopediaScreen({ onNavigate, currentTab, onTabChange }: Ency
   };
 
   const getDifficultyName = (level?: number) => {
-    if (!level) return '入门级';
+    if (!level) return '入门';
     const diff = difficultyLevels.find(d => d.value === level);
-    return diff?.name || '入门级';
+    return diff?.name || '入门';
   };
 
   const getDifficultyColor = (level?: number) => {
@@ -112,25 +123,37 @@ export function EncyclopediaScreen({ onNavigate, currentTab, onTabChange }: Ency
     return diff?.color || colors.success;
   };
 
+  const renderCategoryIcon = (iconKey?: string, isSelected?: boolean) => {
+    const IconComponent = CATEGORY_ICONS[iconKey || ''] || CATEGORY_ICONS.default;
+    return <IconComponent size={24} color={isSelected ? colors.white : colors.secondary} />;
+  };
+
   return (
     <SafeAreaView style={styles.container}>
-      {/* 头部 */}
+      {/* 头部 - 渐变背景 */}
       <View style={styles.headerGradient}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>养护百科</Text>
-          <Text style={styles.headerSubtitle}>新手进阶指南</Text>
+          <View style={styles.headerContent}>
+            <View style={styles.headerIcon}>
+              <Icons.BookOpen size={24} color={colors.white} />
+            </View>
+            <View style={styles.headerTextContainer}>
+              <Text style={styles.headerTitle}>养护百科</Text>
+              <Text style={styles.headerSubtitle}>探索植物的奇妙世界</Text>
+            </View>
+          </View>
         </View>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView showsVerticalScrollIndicator={false} style={styles.scrollView}>
         <View style={styles.content}>
-          {/* 搜索栏 */}
+          {/* 搜索栏 - 浮动卡片 */}
           <View style={styles.searchContainer}>
-            <View style={styles.searchIcon}>
-              <Icons.Search size={18} color={colors.primary} />
+            <View style={styles.searchIconWrapper}>
+              <Icons.Search size={20} color={colors.primary} />
             </View>
             <TextInput
-              placeholder="搜索植物名称或养护问题"
+              placeholder="搜索植物名称或养护问题..."
               placeholderTextColor={colors['text-tertiary']}
               style={styles.searchInput}
               value={searchText}
@@ -138,134 +161,233 @@ export function EncyclopediaScreen({ onNavigate, currentTab, onTabChange }: Ency
               onSubmitEditing={handleSearch}
               returnKeyType="search"
             />
+            {searchText.length > 0 && (
+              <TouchableOpacity onPress={() => setSearchText('')} style={styles.clearButton}>
+                <Icons.X size={18} color={colors['text-tertiary']} />
+              </TouchableOpacity>
+            )}
           </View>
 
-          {/* 难度筛选 */}
+          {/* 难度筛选 - 水平滚动 */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>难度等级</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <View style={styles.difficultyRow}>
+            <View style={styles.sectionHeaderRow}>
+              <Icons.Activity size={18} color={colors.primary} />
+              <Text style={styles.sectionTitle}>难度筛选</Text>
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.difficultyContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.difficultyChip,
+                  selectedDifficulty === null && styles.difficultyChipActive
+                ]}
+                activeOpacity={0.7}
+                onPress={() => handleDifficultyPress()}
+              >
+                <Text style={[
+                  styles.difficultyChipText,
+                  selectedDifficulty === null && styles.difficultyChipTextActive
+                ]}>全部</Text>
+              </TouchableOpacity>
+              {difficultyLevels.map((item) => (
                 <TouchableOpacity
-                  style={[styles.difficultyChip, { borderColor: colors.primary }]}
+                  key={item.id}
+                  style={[
+                    styles.difficultyChip,
+                    selectedDifficulty === item.value && { backgroundColor: item.color, borderColor: item.color }
+                  ]}
                   activeOpacity={0.7}
-                  onPress={() => handleDifficultyPress()}
+                  onPress={() => handleDifficultyPress(item.value)}
                 >
-                  <Text style={[styles.difficultyChipText, { color: colors.primary }]}>全部</Text>
+                  <View style={[styles.difficultyDot, { backgroundColor: item.color }]} />
+                  <Text style={[
+                    styles.difficultyChipText,
+                    selectedDifficulty === item.value && styles.difficultyChipTextActive
+                  ]}>{item.name}</Text>
                 </TouchableOpacity>
-                {difficultyLevels.map((item) => (
-                  <TouchableOpacity
-                    key={item.id}
-                    style={[styles.difficultyChip, { borderColor: item.color }]}
-                    activeOpacity={0.7}
-                    onPress={() => handleDifficultyPress(item.value)}
-                  >
-                    <Text style={[styles.difficultyChipText, { color: item.color }]}>{item.name}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
+              ))}
             </ScrollView>
           </View>
 
-          {/* 分类 */}
+          {/* 分类 - 网格布局 */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>植物分类</Text>
+            <View style={styles.sectionHeaderRow}>
+              <Icons.Grid size={18} color={colors.primary} />
+              <Text style={styles.sectionTitle}>植物分类</Text>
+            </View>
             <View style={styles.categoryGrid}>
               <TouchableOpacity
-                style={[styles.categoryCard, selectedCategory === null && styles.categoryCardSelected]}
-                activeOpacity={0.7}
+                style={[
+                  styles.categoryCard,
+                  selectedCategory === null && styles.categoryCardSelected
+                ]}
+                activeOpacity={0.8}
                 onPress={handleAllCategoryPress}
               >
-                <View style={styles.categoryIcon}>
-                  <Icons.Leaf size={28} color={colors.secondary} />
+                <View style={[
+                  styles.categoryIconWrapper,
+                  selectedCategory === null && styles.categoryIconWrapperActive
+                ]}>
+                  <Icons.Grid size={24} color={selectedCategory === null ? colors.white : colors.secondary} />
                 </View>
-                <Text style={styles.categoryName}>全部</Text>
+                <Text style={[
+                  styles.categoryName,
+                  selectedCategory === null && styles.categoryNameActive
+                ]}>全部</Text>
+                <Text style={styles.categoryCount}>{categories.reduce((sum, c) => sum + c.count, 0)} 种</Text>
               </TouchableOpacity>
-              {categories.map((item) => {
-                const iconMap: Record<string, any> = {
-                  'leaf': Icons.Leaf,
-                  'sprout': Icons.Leaf,
-                  'flower2': Icons.Flower2,
-                  'tree': Icons.Leaf,
-                };
-                const CategoryIcon = iconMap[item.icon] || Icons.Leaf;
-                return (
-                  <TouchableOpacity
-                    key={item.value}
-                    style={[styles.categoryCard, selectedCategory === item.value && styles.categoryCardSelected]}
-                    activeOpacity={0.7}
-                    onPress={() => handleCategoryPress(item.value)}
-                  >
-                    <View style={styles.categoryIcon}>
-                      <CategoryIcon size={28} color={colors.secondary} />
-                    </View>
-                    <Text style={styles.categoryName}>{item.name}</Text>
-                    <Text style={styles.categoryCount}>{item.count} 种</Text>
-                  </TouchableOpacity>
-                );
-              })}
+              {categories.map((item) => (
+                <TouchableOpacity
+                  key={item.value}
+                  style={[
+                    styles.categoryCard,
+                    selectedCategory === item.value && styles.categoryCardSelected
+                  ]}
+                  activeOpacity={0.8}
+                  onPress={() => handleCategoryPress(item.value)}
+                >
+                  <View style={[
+                    styles.categoryIconWrapper,
+                    selectedCategory === item.value && styles.categoryIconWrapperActive
+                  ]}>
+                    {renderCategoryIcon(item.icon, selectedCategory === item.value)}
+                  </View>
+                  <Text style={[
+                    styles.categoryName,
+                    selectedCategory === item.value && styles.categoryNameActive
+                  ]}>{item.name}</Text>
+                  <Text style={styles.categoryCount}>{item.count} 种</Text>
+                </TouchableOpacity>
+              ))}
             </View>
           </View>
 
-          {/* 热门植物 */}
+          {/* 分类植物列表 - 选择分类后显示 */}
+          {selectedCategory && plants.length > 0 && (
+            <View style={styles.section}>
+              <View style={styles.sectionHeaderRow}>
+                <Icons.Tag size={18} color={colors.primary} />
+                <Text style={styles.sectionTitle}>
+                  {categories.find(c => c.value === selectedCategory)?.name || selectedCategory}
+                </Text>
+                <Text style={styles.categoryCountText}>（共 {plants.length} 种）</Text>
+              </View>
+              <View style={styles.categoryPlantsGrid}>
+                {plants.slice(0, 12).map((plant) => (
+                  <TouchableOpacity
+                    key={plant.id}
+                    style={styles.plantCard}
+                    activeOpacity={0.8}
+                    onPress={() => handlePlantPress(plant)}
+                  >
+                    <View style={styles.plantImageContainer}>
+                      {plant.image_url ? (
+                        <Image source={{ uri: plant.image_url }} style={styles.plantImage} />
+                      ) : (
+                        <View style={styles.plantImagePlaceholder}>
+                          <Icons.Leaf size={32} color={colors.secondary} />
+                        </View>
+                      )}
+                    </View>
+                    <Text style={styles.plantName} numberOfLines={1}>{plant.name}</Text>
+                    <View style={styles.plantMetaRow}>
+                      <Text style={styles.plantCategory}>{plant.category || '室内'}</Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {/* 热门植物 - 横向滚动 */}
           <View style={styles.section}>
-            <View style={styles.sectionHeader}>
+            <View style={styles.sectionHeaderRow}>
+              <Icons.Star size={18} color={colors.accent} />
               <Text style={styles.sectionTitle}>热门植物</Text>
+              <View style={styles.hotBadge}>
+                <Icons.TrendingUp size={12} color={colors.white} />
+                <Text style={styles.hotBadgeText}>TOP 10</Text>
+              </View>
             </View>
             {loading ? (
-              <ActivityIndicator size="large" color={colors.primary} style={styles.loading} />
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color={colors.primary} />
+              </View>
             ) : popularPlants.length > 0 ? (
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                <View style={styles.plantsRow}>
-                  {popularPlants.slice(0, 10).map((plant) => (
-                    <TouchableOpacity
-                      key={plant.id}
-                      style={styles.plantCard}
-                      activeOpacity={0.7}
-                      onPress={() => handlePlantPress(plant)}
-                    >
-                      <View style={styles.plantImage}>
-                        <Icons.Leaf size={36} color={colors.secondary} />
-                      </View>
-                      <Text style={styles.plantName}>{plant.name}</Text>
-                      <View style={styles.plantMeta}>
-                        <Text style={styles.plantCategory}>{plant.category || '室内'}</Text>
-                        <View style={[styles.difficultyBadge, { backgroundColor: getDifficultyColor(plant.care_level) + '20' }]}>
-                          <Text style={[styles.difficultyText, { color: getDifficultyColor(plant.care_level) }]}>
-                            {getDifficultyName(plant.care_level)}
-                          </Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.plantsScrollContent}>
+                {popularPlants.slice(0, 10).map((plant, index) => (
+                  <TouchableOpacity
+                    key={plant.id}
+                    style={styles.plantCard}
+                    activeOpacity={0.8}
+                    onPress={() => handlePlantPress(plant)}
+                  >
+                    <View style={styles.plantCardRank}>
+                      <Text style={styles.plantRankText}>#{index + 1}</Text>
+                    </View>
+                    <View style={styles.plantImageContainer}>
+                      {plant.image_url ? (
+                        <Image source={{ uri: plant.image_url }} style={styles.plantImage} />
+                      ) : (
+                        <View style={styles.plantImagePlaceholder}>
+                          <Icons.Leaf size={32} color={colors.secondary} />
                         </View>
+                      )}
+                    </View>
+                    <Text style={styles.plantName} numberOfLines={1}>{plant.name}</Text>
+                    <View style={styles.plantMetaRow}>
+                      <Text style={styles.plantCategory}>{plant.category || '室内植物'}</Text>
+                      <View style={[styles.difficultyBadge, { backgroundColor: getDifficultyColor(plant.care_level) + '20' }]}>
+                        <Text style={[styles.difficultyText, { color: getDifficultyColor(plant.care_level) }]}>
+                          {getDifficultyName(plant.care_level)}
+                        </Text>
                       </View>
-                    </TouchableOpacity>
-                  ))}
-                </View>
+                    </View>
+                  </TouchableOpacity>
+                ))}
               </ScrollView>
             ) : (
-              <Text style={styles.emptyText}>暂无植物数据</Text>
+              <View style={styles.emptyContainer}>
+                <Icons.FileText size={48} color={colors['text-tertiary']} />
+                <Text style={styles.emptyText}>暂无植物数据</Text>
+              </View>
             )}
           </View>
 
           {/* 养护图标说明 */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>养护图标说明</Text>
+            <View style={styles.sectionHeaderRow}>
+              <Icons.Info size={18} color={colors.primary} />
+              <Text style={styles.sectionTitle}>养护图标说明</Text>
+            </View>
             <View style={styles.legendCard}>
-              <View style={styles.legendRow}>
+              <View style={styles.legendGrid}>
                 <View style={styles.legendItem}>
-                  <View style={styles.legendIcon}>
-                    <Icons.Sun size={20} color={colors.warning} />
+                  <View style={[styles.legendIcon, { backgroundColor: colors.warning + '20' }]}>
+                    <Icons.Sun size={22} color={colors.warning} />
                   </View>
-                  <Text style={styles.legendText}>喜阳</Text>
+                  <Text style={styles.legendLabel}>喜阳</Text>
+                  <Text style={styles.legendDesc}>喜充足光照</Text>
                 </View>
                 <View style={styles.legendItem}>
-                  <View style={[styles.legendIcon, { backgroundColor: colors.info + '15' }]}>
-                    <Icons.CloudRain size={20} color={colors.info} />
+                  <View style={[styles.legendIcon, { backgroundColor: colors.info + '20' }]}>
+                    <Icons.CloudRain size={22} color={colors.info} />
                   </View>
-                  <Text style={styles.legendText}>喜湿</Text>
+                  <Text style={styles.legendLabel}>喜湿</Text>
+                  <Text style={styles.legendDesc}>喜湿润环境</Text>
                 </View>
                 <View style={styles.legendItem}>
-                  <View style={[styles.legendIcon, { backgroundColor: colors.info + '15' }]}>
-                    <Icons.Snowflake size={20} color={colors.info} />
+                  <View style={[styles.legendIcon, { backgroundColor: colors.secondary + '20' }]}>
+                    <Icons.Thermometer size={22} color={colors.secondary} />
                   </View>
-                  <Text style={styles.legendText}>耐寒</Text>
+                  <Text style={styles.legendLabel}>耐寒</Text>
+                  <Text style={styles.legendDesc}>耐低温</Text>
+                </View>
+                <View style={styles.legendItem}>
+                  <View style={[styles.legendIcon, { backgroundColor: colors.error + '20' }]}>
+                    <Icons.AlertCircle size={22} color={colors.error} />
+                  </View>
+                  <Text style={styles.legendLabel}>有毒</Text>
+                  <Text style={styles.legendDesc}>需注意安全</Text>
                 </View>
               </View>
             </View>
@@ -274,20 +396,25 @@ export function EncyclopediaScreen({ onNavigate, currentTab, onTabChange }: Ency
           {/* 避坑指南 */}
           <View style={[styles.section, styles.lastSection]}>
             <View style={styles.pitfallHeader}>
-              <Icons.AlertTriangle size={18} color={colors.error} />
-              <Text style={styles.pitfallTitle}>避坑指南</Text>
+              <View style={styles.pitfallHeaderIcon}>
+                <Icons.AlertTriangle size={20} color={colors.white} />
+              </View>
+              <View>
+                <Text style={styles.pitfallTitle}>避坑指南</Text>
+                <Text style={styles.pitfallSubtitle}>新手必看，这些坑不要踩</Text>
+              </View>
             </View>
-            <Text style={styles.pitfallSubtitle}>新手必看，这些坑不要踩</Text>
             <View style={styles.pitfallsList}>
-              {pitfallsData.map((pitfall) => (
+              {pitfallsData.map((pitfall, index) => (
                 <View key={pitfall.id} style={styles.pitfallCard}>
-                  <View style={styles.pitfallIcon}>
-                    <Text style={styles.pitfallNumber}>{pitfall.id}</Text>
+                  <View style={styles.pitfallNumberBadge}>
+                    <Text style={styles.pitfallNumber}>{index + 1}</Text>
                   </View>
                   <View style={styles.pitfallContent}>
                     <Text style={styles.pitfallItemTitle}>{pitfall.title}</Text>
                     <Text style={styles.pitfallItemDesc}>{pitfall.desc}</Text>
                   </View>
+                  <Icons.ChevronRight size={18} color={colors['text-tertiary']} />
                 </View>
               ))}
             </View>
@@ -300,50 +427,385 @@ export function EncyclopediaScreen({ onNavigate, currentTab, onTabChange }: Ency
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
-  headerGradient: { backgroundColor: colors.primary, borderBottomLeftRadius: 24, borderBottomRightRadius: 24, overflow: 'hidden' },
-  header: { paddingHorizontal: spacing.lg, paddingTop: spacing.xl * 1.5, paddingBottom: spacing.lg },
-  headerTitle: { fontSize: 24, fontWeight: 'bold', color: '#fff', textShadowColor: 'rgba(0,0,0,0.15)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2 },
-  headerSubtitle: { fontSize: 14, color: 'rgba(255,255,255,0.85)', marginTop: spacing.xs, fontWeight: '500' },
-  content: { paddingHorizontal: spacing.lg, paddingTop: spacing.lg },
-  searchContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.9)', borderRadius: 24, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, marginHorizontal: spacing.lg, marginTop: -spacing.lg, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 8, elevation: 3 },
-  searchIcon: { width: 32, height: 32, borderRadius: 16, backgroundColor: colors.primary + '15', alignItems: 'center', justifyContent: 'center' },
-  searchInput: { flex: 1, marginLeft: spacing.sm, fontSize: 15, color: colors.text },
-  section: { marginTop: spacing.xl },
-  sectionTitle: { fontSize: 18, fontWeight: '600', color: colors.text, marginBottom: spacing.md },
-  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.md },
-  difficultyRow: { flexDirection: 'row', gap: spacing.sm },
-  difficultyChip: { paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderWidth: 1, borderRadius: 20 },
-  difficultyChipText: { fontSize: 14, fontWeight: '500' },
-  categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
-  categoryCard: { width: '47%', backgroundColor: colors.surface, borderRadius: 16, padding: spacing.md, alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 12, elevation: 1 },
-  categoryCardSelected: { borderWidth: 2, borderColor: colors.primary },
-  categoryIcon: { width: 56, height: 56, borderRadius: 28, backgroundColor: colors.success + '15', alignItems: 'center', justifyContent: 'center', marginBottom: spacing.sm },
-  categoryName: { fontSize: 15, fontWeight: '500', color: colors.text },
-  categoryCount: { fontSize: 13, color: colors['text-tertiary'] },
-  plantsRow: { flexDirection: 'row', gap: spacing.md },
-  plantCard: { backgroundColor: colors.surface, borderRadius: 16, padding: spacing.sm, width: 112, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 12, elevation: 1 },
-  plantImage: { width: 64, height: 64, borderRadius: 12, backgroundColor: colors.success + '15', alignItems: 'center', justifyContent: 'center' },
-  plantName: { fontSize: 15, fontWeight: '500', color: colors.text, textAlign: 'center', marginTop: spacing.sm },
-  plantMeta: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: spacing.xs },
-  plantCategory: { fontSize: 12, color: colors['text-tertiary'] },
-  difficultyBadge: { paddingHorizontal: 4, paddingVertical: 2, borderRadius: 6 },
-  difficultyText: { fontSize: 10, fontWeight: '600' },
-  loading: { padding: spacing.xl },
-  emptyText: { textAlign: 'center', color: colors['text-tertiary'], padding: spacing.xl },
-  legendCard: { backgroundColor: colors.surface, borderRadius: 16, padding: spacing.md, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 12, elevation: 1 },
-  legendRow: { flexDirection: 'row', justifyContent: 'space-around' },
-  legendItem: { alignItems: 'center' },
-  legendIcon: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.warning + '15', alignItems: 'center', justifyContent: 'center', marginBottom: spacing.sm },
-  legendText: { fontSize: 13, color: colors['text-tertiary'] },
-  pitfallHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.xs },
-  pitfallTitle: { fontSize: 18, fontWeight: '600', color: colors.error },
-  pitfallSubtitle: { fontSize: 14, color: colors['text-secondary'], marginBottom: spacing.md },
-  pitfallsList: { gap: spacing.sm },
-  pitfallCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, borderRadius: 12, padding: spacing.md, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 12, elevation: 1, borderLeftWidth: 3, borderLeftColor: colors.error },
-  pitfallIcon: { width: 28, height: 28, borderRadius: 14, backgroundColor: colors.error + '15', alignItems: 'center', justifyContent: 'center', marginRight: spacing.md },
-  pitfallNumber: { color: colors.error, fontWeight: 'bold', fontSize: 14 },
-  pitfallContent: { flex: 1 },
-  pitfallItemTitle: { fontSize: 15, fontWeight: '500', color: colors.text },
-  pitfallItemDesc: { fontSize: 13, color: colors['text-tertiary'] },
-  lastSection: { marginBottom: spacing.xxl * 2 },
+  scrollView: { flex: 1 },
+  // Header - 渐变设计
+  headerGradient: {
+    backgroundColor: colors.primary,
+    borderBottomLeftRadius: borderRadius.xxl,
+    borderBottomRightRadius: borderRadius.xxl,
+    overflow: 'hidden',
+  },
+  header: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.xl,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  headerIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: borderRadius.lg,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.md,
+  },
+  headerTextContainer: {
+    flex: 1,
+  },
+  headerTitle: {
+    fontSize: fontSize.xxl,
+    fontWeight: fontWeight.bold,
+    color: colors.white,
+  },
+  headerSubtitle: {
+    fontSize: fontSize.sm,
+    color: 'rgba(255,255,255,0.8)',
+    marginTop: spacing.xs,
+  },
+  content: { paddingTop: spacing.md, paddingBottom: spacing.xxl * 2 },
+  // 搜索栏 - 浮动卡片
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.full,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    marginHorizontal: spacing.lg,
+    marginTop: -spacing.lg,
+    ...shadows.md,
+  },
+  searchIconWrapper: {
+    width: 40,
+    height: 40,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.primary + '15',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  searchInput: {
+    flex: 1,
+    marginLeft: spacing.sm,
+    fontSize: fontSize.md,
+    color: colors.text,
+    paddingVertical: spacing.sm,
+  },
+  clearButton: {
+    padding: spacing.xs,
+  },
+  // Section
+  section: {
+    marginTop: spacing.xl,
+    paddingHorizontal: spacing.lg,
+  },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  sectionTitle: {
+    fontSize: fontSize.lg,
+    fontWeight: fontWeight.semibold,
+    color: colors.text,
+    marginLeft: spacing.sm,
+  },
+  // 难度筛选
+  difficultyContainer: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    paddingRight: spacing.lg,
+  },
+  difficultyChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    gap: spacing.xs,
+  },
+  difficultyChipActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  difficultyChipText: {
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.medium,
+    color: colors['text-secondary'],
+  },
+  difficultyChipTextActive: {
+    color: colors.white,
+  },
+  difficultyDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  // 分类网格 - 一行三列
+  categoryGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'flex-start',
+    gap: spacing.sm,
+  },
+  categoryCard: {
+    width: '31%',
+    minWidth: 90,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    padding: spacing.sm,
+    paddingVertical: spacing.md,
+    alignItems: 'center',
+    ...shadows.sm,
+  },
+  categoryCardSelected: {
+    borderWidth: 2,
+    borderColor: colors.primary,
+    backgroundColor: colors.primary + '08',
+  },
+  categoryIconWrapper: {
+    width: 52,
+    height: 52,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.secondary + '15',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.sm,
+  },
+  categoryIconWrapperActive: {
+    backgroundColor: colors.primary,
+  },
+  categoryName: {
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.medium,
+    color: colors.text,
+    textAlign: 'center',
+  },
+  categoryNameActive: {
+    color: colors.primary,
+    fontWeight: fontWeight.semibold,
+  },
+  categoryCount: {
+    fontSize: fontSize.xs,
+    color: colors['text-tertiary'],
+    marginTop: 2,
+  },
+  // 热门植物
+  plantsScrollContent: {
+    paddingRight: spacing.lg,
+    gap: spacing.md,
+  },
+  plantCard: {
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    padding: spacing.sm,
+    width: 130,
+    ...shadows.sm,
+    alignItems: 'center',
+  },
+  plantCardRank: {
+    position: 'absolute',
+    top: spacing.xs,
+    left: spacing.xs,
+    backgroundColor: colors.primary,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: borderRadius.sm,
+    zIndex: 1,
+  },
+  plantRankText: {
+    fontSize: fontSize.xs,
+    fontWeight: fontWeight.bold,
+    color: colors.white,
+  },
+  plantImageContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: borderRadius.lg,
+    overflow: 'hidden',
+    marginTop: spacing.md,
+  },
+  plantImage: {
+    width: '100%',
+    height: '100%',
+  },
+  plantImagePlaceholder: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: colors.secondary + '15',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  plantName: {
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.semibold,
+    color: colors.text,
+    textAlign: 'center',
+    marginTop: spacing.sm,
+  },
+  plantMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginTop: spacing.xs,
+    paddingHorizontal: spacing.xs,
+  },
+  plantCategory: {
+    fontSize: fontSize.xs,
+    color: colors['text-tertiary'],
+    flex: 1,
+  },
+  difficultyBadge: {
+    paddingHorizontal: spacing.xs,
+    paddingVertical: 2,
+    borderRadius: borderRadius.sm,
+  },
+  difficultyText: {
+    fontSize: 9,
+    fontWeight: fontWeight.semibold,
+  },
+  // Loading & Empty
+  loadingContainer: {
+    padding: spacing.xxl,
+    alignItems: 'center',
+  },
+  emptyContainer: {
+    padding: spacing.xxl,
+    alignItems: 'center',
+  },
+  emptyText: {
+    fontSize: fontSize.md,
+    color: colors['text-tertiary'],
+    marginTop: spacing.md,
+  },
+  hotBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.accent,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.full,
+    marginLeft: 'auto',
+    gap: 2,
+  },
+  hotBadgeText: {
+    fontSize: fontSize.xs,
+    fontWeight: fontWeight.bold,
+    color: colors.white,
+  },
+  // 分类植物列表
+  categoryCountText: {
+    fontSize: fontSize.sm,
+    color: colors['text-tertiary'],
+    marginLeft: spacing.xs,
+  },
+  categoryPlantsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  // 图标说明
+  legendCard: {
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    padding: spacing.lg,
+    ...shadows.sm,
+  },
+  legendGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  legendItem: {
+    alignItems: 'center',
+  },
+  legendIcon: {
+    width: 52,
+    height: 52,
+    borderRadius: borderRadius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.sm,
+  },
+  legendLabel: {
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.semibold,
+    color: colors.text,
+  },
+  legendDesc: {
+    fontSize: fontSize.xs,
+    color: colors['text-tertiary'],
+    marginTop: 2,
+  },
+  // 避坑指南
+  pitfallHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  pitfallHeaderIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: borderRadius.lg,
+    backgroundColor: colors.error,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.md,
+  },
+  pitfallTitle: {
+    fontSize: fontSize.lg,
+    fontWeight: fontWeight.semibold,
+    color: colors.text,
+  },
+  pitfallSubtitle: {
+    fontSize: fontSize.sm,
+    color: colors['text-tertiary'],
+  },
+  pitfallsList: {
+    gap: spacing.md,
+  },
+  pitfallCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    ...shadows.sm,
+  },
+  pitfallNumberBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.error + '15',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.md,
+  },
+  pitfallNumber: {
+    color: colors.error,
+    fontWeight: fontWeight.bold,
+    fontSize: fontSize.sm,
+  },
+  pitfallContent: {
+    flex: 1,
+  },
+  pitfallItemTitle: {
+    fontSize: fontSize.md,
+    fontWeight: fontWeight.medium,
+    color: colors.text,
+  },
+  pitfallItemDesc: {
+    fontSize: fontSize.sm,
+    color: colors['text-tertiary'],
+    marginTop: 2,
+  },
+  lastSection: {
+    marginBottom: spacing.xxl * 2,
+  },
 });

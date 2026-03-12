@@ -141,9 +141,45 @@
   },
   "hotPaths": [
     {
+      "path": "APP/src/navigation/AppNavigator.tsx",
+      "accessCount": 38,
+      "lastAccessed": 1773330537044,
+      "type": "directory"
+    },
+    {
+      "path": "APP/src/components/Icon.tsx",
+      "accessCount": 34,
+      "lastAccessed": 1773329311447,
+      "type": "file"
+    },
+    {
+      "path": "APP/src/screens/StoreDetailScreen.tsx",
+      "accessCount": 13,
+      "lastAccessed": 1773316588760,
+      "type": "file"
+    },
+    {
+      "path": "APP/src/screens/DiaryScreen.tsx",
+      "accessCount": 11,
+      "lastAccessed": 1773326164551,
+      "type": "directory"
+    },
+    {
+      "path": "APP/src/screens/ProfileScreen.tsx",
+      "accessCount": 11,
+      "lastAccessed": 1773329355526,
+      "type": "file"
+    },
+    {
       "path": "APP/src/screens/EncyclopediaScreen.tsx",
       "accessCount": 10,
       "lastAccessed": 1773293658944,
+      "type": "file"
+    },
+    {
+      "path": "APP/src/screens/OrderDetailScreen.tsx",
+      "accessCount": 10,
+      "lastAccessed": 1773326239748,
       "type": "file"
     },
     {
@@ -156,6 +192,60 @@
       "path": "APP/src/screens/DiagnosisScreen.tsx",
       "accessCount": 9,
       "lastAccessed": 1773282383975,
+      "type": "file"
+    },
+    {
+      "path": "APP/src/screens/WriteDiaryScreen.tsx",
+      "accessCount": 8,
+      "lastAccessed": 1773326178663,
+      "type": "directory"
+    },
+    {
+      "path": "APP/src/screens/AddressScreen.tsx",
+      "accessCount": 8,
+      "lastAccessed": 1773326184930,
+      "type": "file"
+    },
+    {
+      "path": "APP/src/screens/GrowthCurveScreen.tsx",
+      "accessCount": 8,
+      "lastAccessed": 1773326266322,
+      "type": "directory"
+    },
+    {
+      "path": "APP/src/screens/CartScreen.tsx",
+      "accessCount": 7,
+      "lastAccessed": 1773326197847,
+      "type": "file"
+    },
+    {
+      "path": "APP/src/screens/OrdersScreen.tsx",
+      "accessCount": 7,
+      "lastAccessed": 1773326224714,
+      "type": "file"
+    },
+    {
+      "path": "APP/src/screens/DiaryDetailScreen.tsx",
+      "accessCount": 7,
+      "lastAccessed": 1773326253788,
+      "type": "directory"
+    },
+    {
+      "path": "APP/src/services/config.ts",
+      "accessCount": 7,
+      "lastAccessed": 1773332297135,
+      "type": "file"
+    },
+    {
+      "path": "backend/app/api/router.py",
+      "accessCount": 6,
+      "lastAccessed": 1773327361997,
+      "type": "directory"
+    },
+    {
+      "path": "APP/src/screens/StoreScreen.tsx",
+      "accessCount": 5,
+      "lastAccessed": 1773298555646,
       "type": "file"
     },
     {
@@ -183,15 +273,15 @@
       "type": "directory"
     },
     {
+      "path": "APP/src/screens",
+      "accessCount": 3,
+      "lastAccessed": 1773324181206,
+      "type": "directory"
+    },
+    {
       "path": "docs/plans/2026-03-12-plant-recognition-design.md",
       "accessCount": 2,
       "lastAccessed": 1773281816755,
-      "type": "file"
-    },
-    {
-      "path": "APP/src/components/Icon.tsx",
-      "accessCount": 2,
-      "lastAccessed": 1773287383611,
       "type": "file"
     },
     {
@@ -201,10 +291,16 @@
       "type": "directory"
     },
     {
-      "path": "APP/src/screens/StoreScreen.tsx",
+      "path": "backend/app",
       "accessCount": 2,
-      "lastAccessed": 1773295535749,
-      "type": "file"
+      "lastAccessed": 1773327374950,
+      "type": "directory"
+    },
+    {
+      "path": "docker-compose.yml",
+      "accessCount": 2,
+      "lastAccessed": 1773332207562,
+      "type": "directory"
     },
     {
       "path": "backend/app/api/endpoints/recognition.py",
@@ -285,24 +381,6 @@
       "type": "file"
     },
     {
-      "path": "APP/src/services/config.ts",
-      "accessCount": 1,
-      "lastAccessed": 1773295553669,
-      "type": "file"
-    },
-    {
-      "path": "backend/app",
-      "accessCount": 1,
-      "lastAccessed": 1773295553864,
-      "type": "directory"
-    },
-    {
-      "path": "backend/app/api/router.py",
-      "accessCount": 1,
-      "lastAccessed": 1773295561039,
-      "type": "directory"
-    },
-    {
       "path": "backend/app/api/endpoints/cart.py",
       "accessCount": 1,
       "lastAccessed": 1773295581508,
@@ -315,34 +393,52 @@
       "type": "file"
     },
     {
-      "path": "APP/src/screens/OrderDetailScreen.tsx",
-      "accessCount": 1,
-      "lastAccessed": 1773296540980,
-      "type": "file"
-    },
-    {
-      "path": "APP/src/screens/StoreDetailScreen.tsx",
-      "accessCount": 1,
-      "lastAccessed": 1773296541033,
-      "type": "file"
-    },
-    {
-      "path": "APP/src/screens/CartScreen.tsx",
-      "accessCount": 1,
-      "lastAccessed": 1773296541084,
-      "type": "file"
-    },
-    {
-      "path": "APP/src/screens/OrdersScreen.tsx",
-      "accessCount": 1,
-      "lastAccessed": 1773296551896,
-      "type": "file"
-    },
-    {
       "path": "docs/plans/2026-03-12-store-api-connection-implementation.md",
       "accessCount": 1,
       "lastAccessed": 1773296610649,
       "type": "file"
+    },
+    {
+      "path": "backend/app/db/seed_plants.py",
+      "accessCount": 1,
+      "lastAccessed": 1773297156871,
+      "type": "file"
+    },
+    {
+      "path": "backend/app/db/seed_products.py",
+      "accessCount": 1,
+      "lastAccessed": 1773297198648,
+      "type": "file"
+    },
+    {
+      "path": "backend/app/schemas/address.py",
+      "accessCount": 1,
+      "lastAccessed": 1773315449474,
+      "type": "file"
+    },
+    {
+      "path": "backend/app/api/endpoints/addresses.py",
+      "accessCount": 1,
+      "lastAccessed": 1773315464089,
+      "type": "file"
+    },
+    {
+      "path": "APP/src/services/addressService.ts",
+      "accessCount": 1,
+      "lastAccessed": 1773315500994,
+      "type": "file"
+    },
+    {
+      "path": "APP/src/screens/AddressEditScreen.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1773315579033,
+      "type": "file"
+    },
+    {
+      "path": "APP/src/services/diaryService.ts",
+      "accessCount": 1,
+      "lastAccessed": 1773326126190,
+      "type": "directory"
     }
   ],
   "userDirectives": []

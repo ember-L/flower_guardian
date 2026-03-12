@@ -1,0 +1,7 @@
+{
+  "tool_name": "Bash",
+  "tool_input_preview": "{\"command\":\"npx tsc --noEmit src/screens/ForgotPasswordScreen.tsx 2>&1\",\"description\":\"Check ForgotPasswordScreen for TypeScript errors\"}",
+  "error": "Exit code 2\nnode_modules/@types/node/module.d.ts(804,13): error TS2403: Subsequent variable declarations must have the same type.  Variable 'require' must be of type 'NodeRequire', but here has type 'Require'.\nnode_modules/react-native/src/types/globals.d.ts(10,1): error TS6200: Definitions of the following identifiers conflict with those in another file: EndingType, BlobPart, BufferSource, FormData, RequestInfo, XMLHttpRequestResponseType, AbortSignal, AbortController\nnode_modules/react-native/...",
+  "timestamp": "2026-03-12T16:36:01.390Z",
+  "retry_count": 2
+}

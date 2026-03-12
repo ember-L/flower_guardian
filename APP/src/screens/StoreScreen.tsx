@@ -17,7 +17,7 @@ import { Icons } from '../components/Icon';
 
 interface StoreScreenProps extends Partial<NavigationProps> {}
 
-export function StoreScreen({ navigation, isLoggedIn, onRequireLogin }: StoreScreenProps) {
+export function StoreScreen({ navigation, onNavigate, isLoggedIn, onRequireLogin }: StoreScreenProps) {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -37,32 +37,31 @@ export function StoreScreen({ navigation, isLoggedIn, onRequireLogin }: StoreScr
     loadProducts();
   }, [loadProducts]);
 
-  useEffect(() => {
-    const unsubscribe = navigation?.addListener('focus', () => {
-      loadProducts();
-    });
-    return unsubscribe;
-  }, [navigation, loadProducts]);
-
   const filteredProducts = search
     ? products.filter((p) => p.name.includes(search))
     : products;
 
   const navigateToDetail = (productId: number) => {
-    if (navigation?.onNavigate) {
-      navigation.onNavigate('StoreDetail', { productId });
+    if (onNavigate) {
+      onNavigate('StoreDetail', { productId });
+    } else if (onRequireLogin) {
+      onRequireLogin();
     }
   };
 
   const navigateToCart = () => {
-    if (navigation?.onNavigate) {
-      navigation.onNavigate('Cart');
+    if (onNavigate) {
+      onNavigate('Cart');
+    } else if (onRequireLogin) {
+      onRequireLogin();
     }
   };
 
   const navigateToOrders = () => {
-    if (navigation?.onNavigate) {
-      navigation.onNavigate('OrderDetail', { orderId: 0 }); // This will show the orders list
+    if (onNavigate) {
+      onNavigate('Orders');
+    } else if (onRequireLogin) {
+      onRequireLogin();
     }
   };
 
@@ -206,6 +205,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     padding: spacing.xs,
+    paddingBottom: 100,
   },
   productCard: {
     flex: 1,

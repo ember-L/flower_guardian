@@ -14,8 +14,9 @@ const menuItems = [
   { id: '3', icon: Icons.History, title: '诊断历史', subtitle: '查看历史诊断记录', screen: 'DiagnosisHistory', color: colors.info },
   { id: '4', icon: Icons.Sparkles, title: '新手推荐', subtitle: '场景问答选植物', screen: 'Recommendation', color: colors.warning },
   { id: '5', icon: Icons.Bell, title: '提醒管理', subtitle: '智能提醒设置', screen: 'Reminder', color: colors.primary },
-  { id: '6', icon: Icons.Settings, title: '设置', subtitle: '偏好设置', screen: 'Settings', color: colors['text-secondary'] },
-  { id: '7', icon: Icons.HelpCircle, title: '帮助反馈', subtitle: '联系我们', screen: 'Help', color: colors['text-secondary'] },
+  { id: '6', icon: Icons.MapPin, title: '地址管理', subtitle: '收货地址管理', screen: 'Address', color: colors.success },
+  { id: '7', icon: Icons.Settings, title: '设置', subtitle: '偏好设置', screen: 'Settings', color: colors['text-secondary'] },
+  { id: '8', icon: Icons.HelpCircle, title: '帮助反馈', subtitle: '联系我们', screen: 'Help', color: colors['text-secondary'] },
 ];
 
 export function ProfileScreen({ onNavigate, currentTab, onTabChange, isLoggedIn, onRequireLogin, onLogout }: ProfileScreenProps) {
@@ -42,13 +43,14 @@ export function ProfileScreen({ onNavigate, currentTab, onTabChange, isLoggedIn,
 
   const handleMenuPress = (screen: string) => {
     if (onNavigate) {
-      const screenMap: Record<string, 'Diagnosis' | 'Recommendation' | 'Reminder' | 'EncyclopediaDetail' | 'Diary' | 'DiagnosisHistory'> = {
+      const screenMap: Record<string, 'Diagnosis' | 'Recommendation' | 'Reminder' | 'EncyclopediaDetail' | 'Diary' | 'DiagnosisHistory' | 'Address'> = {
         'Diary': 'Diary',
         'Diagnosis': 'Diagnosis',
         'DiagnosisHistory': 'DiagnosisHistory',
         'Recommendation': 'Recommendation',
         'Reminder': 'Reminder',
         'EncyclopediaDetail': 'EncyclopediaDetail',
+        'Address': 'Address',
       };
       onNavigate(screenMap[screen] || null);
     }
@@ -118,6 +120,13 @@ export function ProfileScreen({ onNavigate, currentTab, onTabChange, isLoggedIn,
           ))}
         </View>
 
+        {/* 退出登录按钮 */}
+        {isLoggedIn && (
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogoutPress} activeOpacity={0.7}>
+            <Text style={styles.logoutText}>退出登录</Text>
+          </TouchableOpacity>
+        )}
+
         {/* 版本信息 */}
         <View style={styles.footer}>
           <Text style={styles.footerText}>护花使者 v1.0.0</Text>
@@ -158,4 +167,6 @@ const styles = StyleSheet.create({
   menuSubtitle: { fontSize: 13, color: colors['text-tertiary'] },
   footer: { alignItems: 'center', paddingVertical: spacing.xl },
   footerText: { fontSize: 13, color: colors['text-tertiary'] },
+  logoutButton: { marginHorizontal: spacing.lg, marginTop: spacing.lg, backgroundColor: colors.error + '10', paddingVertical: spacing.md, borderRadius: 12, alignItems: 'center' },
+  logoutText: { color: colors.error, fontSize: 16, fontWeight: '600' },
 });

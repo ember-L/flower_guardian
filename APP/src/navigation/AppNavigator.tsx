@@ -25,10 +25,14 @@ import { RegisterScreen } from '../screens/RegisterScreen';
 import { WriteDiaryScreen } from '../screens/WriteDiaryScreen';
 import { DiaryDetailScreen } from '../screens/DiaryDetailScreen';
 import { GrowthCurveScreen } from '../screens/GrowthCurveScreen';
+import { AddressScreen } from '../screens/AddressScreen';
+import { AddressEditScreen } from '../screens/AddressEditScreen';
+import { EmailVerifyScreen } from '../screens/EmailVerifyScreen';
+import { ForgotPasswordScreen } from '../screens/ForgotPasswordScreen';
 import { getCurrentUser, isAuthenticated, logout as authLogout, checkAuthStatus } from '../services/auth';
 
 export type TabName = 'Identify' | 'Garden' | 'Encyclopedia' | 'Store' | 'Profile';
-export type SubPageName = 'Diagnosis' | 'Recommendation' | 'Reminder' | 'EncyclopediaDetail' | 'Diary' | 'StoreDetail' | 'Cart' | 'Checkout' | 'OrderDetail' | 'DiagnosisHistory' | 'DiagnosisDetail' | 'Login' | 'Register' | 'WriteDiary' | 'DiaryDetail' | 'GrowthCurve' | null;
+export type SubPageName = 'Diagnosis' | 'Recommendation' | 'Reminder' | 'EncyclopediaDetail' | 'Diary' | 'StoreDetail' | 'Cart' | 'Checkout' | 'Orders' | 'OrderDetail' | 'DiagnosisHistory' | 'DiagnosisDetail' | 'Login' | 'Register' | 'ForgotPassword' | 'WriteDiary' | 'DiaryDetail' | 'GrowthCurve' | 'Address' | 'AddressEdit' | 'EmailVerify' | null;
 
 interface TabConfig {
   name: TabName;
@@ -118,19 +122,22 @@ export function AppNavigator() {
       return <EncyclopediaDetailScreen onGoBack={handleGoBack} onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} route={navParams || {}} />;
     }
     if (currentSubPage === 'Diary') {
-      return <DiaryScreen onGoBack={handleGoBack} onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} />;
+      return <DiaryScreen onGoBack={handleGoBack} onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} isLoggedIn={isLoggedIn} onRequireLogin={() => setCurrentSubPage('Login')} />;
     }
     if (currentSubPage === 'StoreDetail') {
       return <StoreDetailScreen onGoBack={handleGoBack} onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} productId={navParams?.productId} />;
     }
     if (currentSubPage === 'Cart') {
-      return <CartScreen onGoBack={handleGoBack} onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} />;
+      return <CartScreen onGoBack={handleGoBack} onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} isLoggedIn={isLoggedIn} onRequireLogin={() => setCurrentSubPage('Login')} />;
     }
     if (currentSubPage === 'Checkout') {
-      return <CartScreen onGoBack={handleGoBack} onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} />;
+      return <CartScreen onGoBack={handleGoBack} onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} isLoggedIn={isLoggedIn} onRequireLogin={() => setCurrentSubPage('Login')} />;
+    }
+    if (currentSubPage === 'Orders') {
+      return <OrdersScreen onGoBack={handleGoBack} onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} isLoggedIn={isLoggedIn} onRequireLogin={() => setCurrentSubPage('Login')} />;
     }
     if (currentSubPage === 'OrderDetail') {
-      return <OrderDetailScreen route={navParams || {}} onGoBack={handleGoBack} onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} />;
+      return <OrderDetailScreen route={navParams || {}} onGoBack={handleGoBack} onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} isLoggedIn={isLoggedIn} onRequireLogin={() => setCurrentSubPage('Login')} />;
     }
     if (currentSubPage === 'DiagnosisHistory') {
       return <DiagnosisHistoryScreen onGoBack={handleGoBack} onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} />;
@@ -144,6 +151,7 @@ export function AppNavigator() {
           onGoBack={handleGoBack}
           onLoginSuccess={handleLoginSuccess}
           onSwitchToRegister={() => setCurrentSubPage('Register')}
+          onSwitchToForgotPassword={() => setCurrentSubPage('ForgotPassword')}
         />
       );
     }
@@ -151,19 +159,41 @@ export function AppNavigator() {
       return (
         <RegisterScreen
           onGoBack={handleGoBack}
-          onRegisterSuccess={handleLoginSuccess}
+          onRegisterSuccess={() => setCurrentSubPage('Login')}
           onSwitchToLogin={() => setCurrentSubPage('Login')}
         />
       );
     }
+    if (currentSubPage === 'EmailVerify') {
+      return (
+        <EmailVerifyScreen
+          onGoBack={() => setCurrentSubPage('Login')}
+          onVerifySuccess={handleLoginSuccess}
+        />
+      );
+    }
+    if (currentSubPage === 'ForgotPassword') {
+      return (
+        <ForgotPasswordScreen
+          onGoBack={() => setCurrentSubPage('Login')}
+          onResetSuccess={() => setCurrentSubPage('Login')}
+        />
+      );
+    }
     if (currentSubPage === 'WriteDiary') {
-      return <WriteDiaryScreen onGoBack={handleGoBack} onNavigate={handleNavigate} />;
+      return <WriteDiaryScreen onGoBack={handleGoBack} onNavigate={handleNavigate} isLoggedIn={isLoggedIn} onRequireLogin={() => setCurrentSubPage('Login')} />;
     }
     if (currentSubPage === 'DiaryDetail') {
-      return <DiaryDetailScreen onGoBack={handleGoBack} onNavigate={handleNavigate} diaryId={navParams?.diaryId} />;
+      return <DiaryDetailScreen onGoBack={handleGoBack} onNavigate={handleNavigate} diaryId={navParams?.diaryId} isLoggedIn={isLoggedIn} onRequireLogin={() => setCurrentSubPage('Login')} />;
     }
     if (currentSubPage === 'GrowthCurve') {
-      return <GrowthCurveScreen onGoBack={handleGoBack} onNavigate={handleNavigate} preselectedPlantId={navParams?.preselectedPlantId} />;
+      return <GrowthCurveScreen onGoBack={handleGoBack} onNavigate={handleNavigate} preselectedPlantId={navParams?.preselectedPlantId} isLoggedIn={isLoggedIn} onRequireLogin={() => setCurrentSubPage('Login')} />;
+    }
+    if (currentSubPage === 'Address') {
+      return <AddressScreen onGoBack={handleGoBack} onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} isLoggedIn={isLoggedIn} onRequireLogin={() => setCurrentSubPage('Login')} />;
+    }
+    if (currentSubPage === 'AddressEdit') {
+      return <AddressEditScreen onGoBack={handleGoBack} addressId={navParams?.addressId} />;
     }
 
     // 渲染主页面

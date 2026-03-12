@@ -13,16 +13,26 @@ interface DiaryDetailScreenProps extends Partial<NavigationProps> {
   diaryId: number;
 }
 
-export function DiaryDetailScreen({ onGoBack, onNavigate, diaryId }: DiaryDetailScreenProps) {
+export function DiaryDetailScreen({ onGoBack, onNavigate, diaryId, isLoggedIn, onRequireLogin }: DiaryDetailScreenProps) {
   const [diary, setDiary] = useState<Diary | null>(null);
   const [loading, setLoading] = useState(true);
   const [showComparison, setShowComparison] = useState(false);
 
+  // 检查登录状态
   useEffect(() => {
-    loadDiary();
-  }, [diaryId]);
+    if (!isLoggedIn && onRequireLogin) {
+      onRequireLogin();
+    }
+  }, [isLoggedIn, onRequireLogin]);
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      loadDiary();
+    }
+  }, [isLoggedIn, diaryId]);
 
   const loadDiary = async () => {
+    if (!isLoggedIn) return;
     try {
       const data = await getDiary(diaryId);
       setDiary(data);

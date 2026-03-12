@@ -21,6 +21,7 @@ class UserResponse(UserBase):
     id: int
     avatar_url: Optional[str] = None
     bio: Optional[str] = None
+    is_email_verified: bool = False
     role: str = "user"
     created_at: datetime
 
@@ -30,7 +31,8 @@ class UserResponse(UserBase):
 
 class Token(BaseModel):
     access_token: str
-    token_type: str
+    refresh_token: Optional[str] = None
+    token_type: str = "bearer"
 
 
 class UserUpdate(BaseModel):

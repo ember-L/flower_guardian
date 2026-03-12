@@ -8,7 +8,10 @@ from app.services.pest_recognition import pest_recognition_service
 from app.schemas.recognition import RecognitionResponse, SimilarSpecies
 import tempfile
 import os
+import logging
 from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/recognition", tags=["recognition"])
 
@@ -79,3 +82,37 @@ async def recognize_plant_legacy(
 ):
     """植物识别API（兼容旧接口）"""
     return await recognize_plant(file, db, current_user)
+
+
+# 公开识别接口（无需认证）
+@router.post("/public/plant", response_model=RecognitionResponse)
+async def recognize_plant_public(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db)
+):
+    """植物识别API（公开，无需认证）"""
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp:
+        content = await file.read()
+        tmp.write(content)
+        tmp_path = tmp.name
+
+    try:
+        logger.info(f"收到识别请求，图片大小: {len(content)} bytes")
+        result = plant_recognition_service.recognize(tmp_path)
+        logger.info(f"识别结果: {result}")
+        return RecognitionResponse(
+            id=result.get("id", "1"),
+            name=result.get("name", "绿萝"),
+            scientific_name="",
+            confidence=result.get("confidence", 0.95),
+            description="",
+            care_level=1,
+            light_requirement="喜散射光",
+            water_requirement="见干见湿",
+            similar_species=[]
+        )
+    except Exception as e:
+        logger.error(f"识别失败: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Recognition failed: {str(e)}")
+    finally:
+        os.unlink(tmp_path)

@@ -96,6 +96,8 @@ import {
   Map,
   Navigation,
   Wind,
+  ShoppingCart,
+  FileText,
   type LucideIcon as LucideIconType,
 } from 'lucide-react-native';
 
@@ -214,6 +216,8 @@ const iconMap: Record<string, React.FC<LucideProps>> = {
   map: Map,
   navigation: Navigation,
   wind: Wind,
+  'shopping-cart': ShoppingCart,
+  'file-text': FileText,
 };
 
 interface IconProps {
@@ -306,9 +310,13 @@ export const Icons = {
   Quote: (props: Omit<LucideProps, 'name'>) => <Icon name="quote" {...props} />,
   Cloud: (props: Omit<LucideProps, 'name'>) => <Icon name="cloud" {...props} />,
   Leaf: (props: Omit<LucideProps, 'name'>) => <Icon name="leaf" {...props} />,
+  Grid: (props: Omit<LucideProps, 'name'>) => <Icon name="grid" {...props} />,
+  Tag: (props: Omit<LucideProps, 'name'>) => <Icon name="tag" {...props} />,
+  Bookmark: (props: Omit<LucideProps, 'name'>) => <Icon name="bookmark" {...props} />,
   Sprout: (props: Omit<LucideProps, 'name'>) => <Icon name="sprout" {...props} />,
   Tree: (props: Omit<LucideProps, 'name'>) => <Icon name="trees" {...props} />,
   Umbrella: (props: Omit<LucideProps, 'name'>) => <Icon name="umbrella" {...props} />,
+  MapPin: (props: Omit<LucideProps, 'name'>) => <Icon name="map-pin" {...props} />,
   Moon: (props: Omit<LucideProps, 'name'>) => <Icon name="moon" {...props} />,
   Plant: (props: Omit<LucideProps, 'name'>) => <Icon name="palmtree" {...props} />,
   Wind: (props: Omit<LucideProps, 'name'>) => <Icon name="wind" {...props} />,

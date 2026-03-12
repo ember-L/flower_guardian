@@ -11,6 +11,7 @@ import {
 import { getMyOrders, Order } from '../services/storeService';
 import { colors, spacing, shadows } from '../constants/theme';
 import { NavigationProps } from '../navigation/AppNavigator';
+import { Icons } from '../components/Icon';
 
 interface OrdersScreenProps extends Partial<NavigationProps> {}
 
@@ -22,15 +23,25 @@ const statusMap: Record<string, { label: string; color: string }> = {
   cancelled: { label: '已取消', color: colors.error },
 };
 
-export function OrdersScreen({ onNavigate }: OrdersScreenProps) {
+export function OrdersScreen({ onNavigate, onGoBack, isLoggedIn, onRequireLogin }: OrdersScreenProps) {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // 检查登录状态
   useEffect(() => {
-    loadOrders();
-  }, []);
+    if (!isLoggedIn && onRequireLogin) {
+      onRequireLogin();
+    }
+  }, [isLoggedIn, onRequireLogin]);
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      loadOrders();
+    }
+  }, [isLoggedIn]);
 
   const loadOrders = async () => {
+    if (!isLoggedIn) return;
     try {
       const data = await getMyOrders();
       setOrders(data);
@@ -78,6 +89,14 @@ export function OrdersScreen({ onNavigate }: OrdersScreenProps) {
     );
   };
 
+  const handleGoBack = () => {
+    if (onGoBack) {
+      onGoBack();
+    } else if (onNavigate) {
+      onNavigate('Store');
+    }
+  };
+
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
@@ -88,8 +107,15 @@ export function OrdersScreen({ onNavigate }: OrdersScreenProps) {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>我的订单</Text>
+      {/* 头部 - 渐变背景 */}
+      <View style={styles.headerGradient}>
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backBtn} onPress={handleGoBack}>
+            <Icons.ArrowLeft size={24} color="#fff" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>我的订单</Text>
+          <View style={styles.placeholder} />
+        </View>
       </View>
 
       {orders.length === 0 ? (
@@ -114,15 +140,19 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
+  headerGradient: { backgroundColor: colors.primary, borderBottomLeftRadius: 24, borderBottomRightRadius: 24, overflow: 'hidden' },
   header: {
-    padding: spacing.md,
-    backgroundColor: colors.white,
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    padding: spacing.lg, paddingTop: spacing.xl * 1.5, paddingBottom: spacing.lg,
+  },
+  backBtn: {
+    width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center', alignItems: 'center',
   },
   headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: colors.text,
+    fontSize: 24, fontWeight: 'bold', color: '#fff', flex: 1, textAlign: 'center',
   },
+  placeholder: { width: 36 },
   listContent: {
     padding: spacing.md,
   },

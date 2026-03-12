@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy import Column, Integer, String, DateTime, Boolean
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from app.db.base import Base
@@ -13,6 +13,9 @@ class User(Base):
     password_hash = Column(String(255), nullable=False)
     avatar_url = Column(String(500), nullable=True)
     bio = Column(String(500), nullable=True)
+    is_email_verified = Column(Boolean, default=False)
+    verification_code = Column(String(6), nullable=True)
+    verification_code_expires = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     role = Column(String(20), default="user")  # admin 或 user
 

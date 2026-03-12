@@ -34,7 +34,7 @@ pip install -r requirements.txt
 
 ```bash
 # 开发模式 (热重载)
-uvicorn app.main:app --reload --port 8000
+uvicorn app.main:app --host 0.0.0.0 --reload --port 8000
 
 # 生产模式
 uvicorn app.main:app --host 0.0.0.0 --port 8000

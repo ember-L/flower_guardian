@@ -4,7 +4,9 @@ import { View, StyleSheet, TextInput, TouchableOpacity, Text, KeyboardAvoidingVi
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Icons } from '../components/Icon';
 import { colors, spacing } from '../constants/theme';
-import { register, sendVerificationCode } from '../services/auth';
+import { register } from '../services/auth';
+import axios from 'axios';
+import { API_BASE_URL } from '../services/config';
 
 interface RegisterScreenProps {
   onGoBack: () => void;
@@ -35,10 +37,11 @@ export function RegisterScreen({ onGoBack, onRegisterSuccess, onSwitchToLogin }:
     }
 
     setSendingCode(true);
-    const result = await sendVerificationCode(email);
-    setSendingCode(false);
-
-    if (result.success) {
+    try {
+      await axios.post(`${API_BASE_URL}/api/users/send-verification-code`, {
+        email: email,
+        purpose: 'register',
+      });
       setCodeSent(true);
       setCountdown(60);
       const timer = setInterval(() => {
@@ -50,9 +53,12 @@ export function RegisterScreen({ onGoBack, onRegisterSuccess, onSwitchToLogin }:
           return prev - 1;
         });
       }, 1000);
-      Alert.alert('验证码已发送', `验证码: ${result.code}`);
-    } else {
-      Alert.alert('发送失败', result.error);
+      Alert.alert('验证码已发送', '请前往邮箱查看验证码');
+    } catch (error: any) {
+      const message = error.response?.data?.detail || '发送失败，请稍后重试';
+      Alert.alert('发送失败', message);
+    } finally {
+      setSendingCode(false);
     }
   };
 
@@ -83,18 +89,28 @@ export function RegisterScreen({ onGoBack, onRegisterSuccess, onSwitchToLogin }:
     }
 
     setIsLoading(true);
-    const result = await register({
-      email,
-      username: username.trim(),
-      password,
-      confirmPassword,
-    });
-    setIsLoading(false);
+    try {
+      // 先验证邮箱验证码
+      await axios.post(`${API_BASE_URL}/api/users/verify-email`, {
+        email: email,
+        code: code,
+      });
 
-    if (result.success) {
-      onRegisterSuccess();
-    } else {
-      Alert.alert('注册失败', result.error || '请检查输入');
+      // 验证码正确后再调用后端注册API
+      await axios.post(`${API_BASE_URL}/api/users/register`, {
+        email: email,
+        username: username.trim(),
+        password: password,
+      });
+
+      Alert.alert('注册成功', '账号已创建，请登录', [
+        { text: '确定', onPress: () => onRegisterSuccess() },
+      ]);
+    } catch (error: any) {
+      const message = error.response?.data?.detail || '注册失败，请检查输入';
+      Alert.alert('注册失败', message);
+    } finally {
+      setIsLoading(false);
     }
   };
 

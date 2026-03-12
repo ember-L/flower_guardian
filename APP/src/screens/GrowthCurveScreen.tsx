@@ -21,24 +21,34 @@ const TIME_RANGES = [
   { label: '全部', value: 0 },
 ];
 
-export function GrowthCurveScreen({ onGoBack, preselectedPlantId }: GrowthCurveScreenProps) {
+export function GrowthCurveScreen({ onGoBack, preselectedPlantId, isLoggedIn, onRequireLogin }: GrowthCurveScreenProps) {
   const [plants, setPlants] = useState<Plant[]>([]);
   const [selectedPlantId, setSelectedPlantId] = useState<number | null>(preselectedPlantId || null);
   const [selectedRange, setSelectedRange] = useState(3);
   const [diaries, setDiaries] = useState<Diary[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // 检查登录状态
   useEffect(() => {
-    loadPlants();
-  }, []);
+    if (!isLoggedIn && onRequireLogin) {
+      onRequireLogin();
+    }
+  }, [isLoggedIn, onRequireLogin]);
 
   useEffect(() => {
-    if (selectedPlantId) {
+    if (isLoggedIn) {
+      loadPlants();
+    }
+  }, [isLoggedIn]);
+
+  useEffect(() => {
+    if (isLoggedIn && selectedPlantId) {
       loadDiaries();
     }
-  }, [selectedPlantId, selectedRange]);
+  }, [isLoggedIn, selectedPlantId, selectedRange]);
 
   const loadPlants = async () => {
+    if (!isLoggedIn) return;
     try {
       const data = await getMyPlants();
       setPlants(data);

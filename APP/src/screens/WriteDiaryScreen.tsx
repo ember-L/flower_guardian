@@ -15,7 +15,7 @@ interface WriteDiaryScreenProps extends Partial<NavigationProps> {
   editDiaryId?: number;
 }
 
-export function WriteDiaryScreen({ onGoBack, onNavigate, editDiaryId }: WriteDiaryScreenProps) {
+export function WriteDiaryScreen({ onGoBack, onNavigate, editDiaryId, isLoggedIn, onRequireLogin }: WriteDiaryScreenProps) {
   const [plants, setPlants] = useState<Plant[]>([]);
   const [selectedPlantId, setSelectedPlantId] = useState<number | null>(null);
   const [images, setImages] = useState<string[]>([]);
@@ -25,11 +25,21 @@ export function WriteDiaryScreen({ onGoBack, onNavigate, editDiaryId }: WriteDia
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
 
+  // 检查登录状态
   useEffect(() => {
-    loadPlants();
-  }, []);
+    if (!isLoggedIn && onRequireLogin) {
+      onRequireLogin();
+    }
+  }, [isLoggedIn]);
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      loadPlants();
+    }
+  }, [isLoggedIn]);
 
   const loadPlants = async () => {
+    if (!isLoggedIn) return;
     try {
       const data = await getMyPlants();
       setPlants(data);

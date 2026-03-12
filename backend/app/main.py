@@ -5,6 +5,9 @@ from app.core.database import engine
 from app.db.base import Base
 from contextlib import asynccontextmanager
 
+# 导入所有模型以确保表被创建
+from app.models import User, Plant, UserPlant, Reminder, Diary, Product, Order, OrderItem, CartItem, Payment, DiagnosisRecord, Address, EmailVerification
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

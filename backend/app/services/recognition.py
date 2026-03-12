@@ -1,7 +1,10 @@
 import os
 import json
+import logging
 from typing import Optional, List
 from PIL import Image
+
+logger = logging.getLogger(__name__)
 
 
 class PlantRecognitionService:
@@ -51,37 +54,48 @@ class PlantRecognitionService:
             from ultralytics import YOLO
             if os.path.exists(self.model_path):
                 self.model = YOLO(self.model_path)
+                logger.info(f"成功加载模型: {self.model_path}")
             else:
                 # 尝试从相对路径加载
                 alt_path = self.model_path.replace("backend/", "")
                 if os.path.exists(alt_path):
                     self.model = YOLO(alt_path)
+                    logger.info(f"成功加载模型(相对路径): {alt_path}")
                 else:
                     # 使用YOLOv11基础模型
                     self.model = YOLO("yolo11n.pt")
+                    logger.info("使用YOLOv11基础模型")
         except Exception as e:
-            print(f"Warning: Could not load plant model: {e}")
+            logger.error(f"加载模型失败: {e}")
             self.model = None
 
     def recognize(self, image_path: str) -> dict:
         """识别植物"""
+        logger.info(f"开始识别图片: {image_path}")
+        logger.info(f"模型是否加载: {self.model is not None}")
+
         if not self.model:
             # 返回模拟结果
+            logger.warning("模型未加载，返回模拟结果")
             return {"id": "0", "name": "绿萝", "confidence": 0.95, "care_tips": "喜阴，避免直射"}
 
         try:
             results = self.model(image_path)
             result = results[0]
+            logger.info(f"YOLO识别完成，boxes数量: {len(result.boxes) if result.boxes else 0}")
 
             if result.boxes:
                 best_idx = result.boxes.conf.argmax()
                 box = result.boxes[best_idx]
                 class_id = str(int(box.cls[0]))
+                confidence = float(box.conf[0])
+
+                logger.info(f"识别结果 - class_id: {class_id}, confidence: {confidence}")
 
                 return {
                     "id": class_id,
                     "name": self.classes.get(class_id, {}).get("name", "未知"),
-                    "confidence": float(box.conf[0]),
+                    "confidence": confidence,
                     "care_tips": self.classes.get(class_id, {}).get("care_tips", "")
                 }
         except Exception as e:

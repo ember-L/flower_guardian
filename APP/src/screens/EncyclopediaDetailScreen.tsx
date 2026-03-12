@@ -1,9 +1,9 @@
-// 养护百科详情页 - 使用纯 StyleSheet
+// 养护百科详情页 - 现代化设计
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, Text, Alert, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity, Text, Alert, ActivityIndicator, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Icons } from '../components/Icon';
-import { colors, spacing } from '../constants/theme';
+import { colors, spacing, borderRadius, shadows } from '../constants/theme';
 import { NavigationProps } from '../navigation/AppNavigator';
 import { getPlantDetail, addToMyGarden, Plant } from '../services/plantService';
 
@@ -101,35 +101,48 @@ export function EncyclopediaDetailScreen({ onGoBack, ...props }: EncyclopediaDet
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
+        {/* Hero 区域 - 大图背景 */}
         <View style={styles.heroSection}>
-          <View style={styles.navBar}>
-            <TouchableOpacity onPress={handleGoBack} style={styles.backButton}>
-              <Icons.ChevronLeft size={20} color="#fff" />
-            </TouchableOpacity>
-            <Text style={styles.navTitle}>植物详情</Text>
-            <View style={styles.placeholder} />
-          </View>
-          <View style={styles.plantInfo}>
-            <View style={styles.plantIcon}>
-              <Icons.Flower2 size={40} color="#fff" />
+          <TouchableOpacity onPress={handleGoBack} style={styles.backButton}>
+            <Icons.ChevronLeft size={22} color={colors.white} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.shareButton}>
+            <Icons.Share2 size={20} color={colors.white} />
+          </TouchableOpacity>
+
+          <View style={styles.plantInfoContainer}>
+            <View style={styles.plantImageWrapper}>
+              {plant.image_url ? (
+                <Image source={{ uri: plant.image_url }} style={styles.plantImage} />
+              ) : (
+                <View style={styles.plantImagePlaceholder}>
+                  <Icons.Flower2 size={56} color={colors.white} />
+                </View>
+              )}
             </View>
             <Text style={styles.plantName}>{plant.name}</Text>
-            <Text style={styles.plantScientific}>{plant.scientific_name || ''}</Text>
+            {plant.scientific_name && (
+              <Text style={styles.plantScientific}>{plant.scientific_name}</Text>
+            )}
             <View style={styles.tagRow}>
-              <View style={styles.tag}>
-                <Text style={styles.tagText}>{plant.category || '室内植物'}</Text>
+              <View style={styles.tagPrimary}>
+                <Icons.Tag size={12} color={colors.white} />
+                <Text style={styles.tagTextPrimary}>{plant.category || '室内植物'}</Text>
               </View>
-              <View style={styles.tag}>
-                <Text style={styles.tagText}>难度 {plant.care_level || 1}</Text>
+              <View style={styles.tagSecondary}>
+                <Icons.Activity size={12} color={colors.secondary} />
+                <Text style={styles.tagTextSecondary}>难度 {plant.care_level || 1}</Text>
               </View>
               {plant.beginner_friendly && plant.beginner_friendly >= 4 && (
-                <View style={[styles.tag, { backgroundColor: colors.success }]}>
-                  <Text style={styles.tagText}>新手友好</Text>
+                <View style={[styles.tagPrimary, { backgroundColor: colors.success }]}>
+                  <Icons.Heart size={12} color={colors.white} />
+                  <Text style={styles.tagTextPrimary}>新手友好</Text>
                 </View>
               )}
               {plant.is_toxic && (
-                <View style={[styles.tag, { backgroundColor: colors.error }]}>
-                  <Text style={styles.tagText}>有毒</Text>
+                <View style={[styles.tagPrimary, { backgroundColor: colors.error }]}>
+                  <Icons.AlertTriangle size={12} color={colors.white} />
+                  <Text style={styles.tagTextPrimary}>有毒</Text>
                 </View>
               )}
             </View>
@@ -140,77 +153,83 @@ export function EncyclopediaDetailScreen({ onGoBack, ...props }: EncyclopediaDet
           {/* 简介 */}
           {plant.description && (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>简介</Text>
+              <View style={styles.sectionHeader}>
+                <Icons.FileText size={20} color={colors.primary} />
+                <Text style={styles.sectionTitle}>植物简介</Text>
+              </View>
               <Text style={styles.description}>{plant.description}</Text>
             </View>
           )}
 
-          {/* 养护要求 */}
+          {/* 养护要求 - 图标卡片 */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>养护要求</Text>
-            <View style={styles.careList}>
-              <View style={styles.careItem}>
-                <View style={styles.careIcon}>
-                  <Icons.Sun size={20} color={colors.warning} />
+            <View style={styles.sectionHeader}>
+              <Icons.Heart size={20} color={colors.primary} />
+              <Text style={styles.sectionTitle}>养护要求</Text>
+            </View>
+            <View style={styles.careGrid}>
+              {/* 光照 */}
+              <View style={styles.careCard}>
+                <View style={[styles.careIconWrapper, { backgroundColor: colors.warning + '20' }]}>
+                  <Icons.Sun size={24} color={colors.warning} />
                 </View>
-                <View>
-                  <Text style={styles.careLabel}>光照</Text>
-                  <Text style={styles.careValue}>{getLightText(plant.light_requirement)}</Text>
-                </View>
+                <Text style={styles.careLabel}>光照需求</Text>
+                <Text style={styles.careValue}>{getLightText(plant.light_requirement)}</Text>
               </View>
-              <View style={styles.careItem}>
-                <View style={[styles.careIcon, { backgroundColor: colors.info + '15' }]}>
-                  <Icons.Droplets size={20} color={colors.info} />
+              {/* 浇水 */}
+              <View style={styles.careCard}>
+                <View style={[styles.careIconWrapper, { backgroundColor: colors.info + '20' }]}>
+                  <Icons.Droplets size={24} color={colors.info} />
                 </View>
-                <View>
-                  <Text style={styles.careLabel}>浇水</Text>
-                  <Text style={styles.careValue}>{getWaterText(plant.water_requirement)}</Text>
-                </View>
+                <Text style={styles.careLabel}>浇水频率</Text>
+                <Text style={styles.careValue}>{getWaterText(plant.water_requirement)}</Text>
               </View>
-              {plant.watering_tip && (
-                <View style={styles.careItem}>
-                  <View style={[styles.careIcon, { backgroundColor: colors.info + '15' }]}>
-                    <Icons.AlertCircle size={20} color={colors.info} />
-                  </View>
-                  <View>
-                    <Text style={styles.careLabel}>浇水提示</Text>
-                    <Text style={styles.careValue}>{plant.watering_tip}</Text>
-                  </View>
-                </View>
-              )}
+              {/* 温度 */}
               {plant.temperature_range && (
-                <View style={styles.careItem}>
-                  <View style={[styles.careIcon, { backgroundColor: colors.error + '15' }]}>
-                    <Icons.Thermometer size={20} color={colors.error} />
+                <View style={styles.careCard}>
+                  <View style={[styles.careIconWrapper, { backgroundColor: colors.error + '20' }]}>
+                    <Icons.Thermometer size={24} color={colors.error} />
                   </View>
-                  <View>
-                    <Text style={styles.careLabel}>温度</Text>
-                    <Text style={styles.careValue}>{plant.temperature_range}</Text>
-                  </View>
+                  <Text style={styles.careLabel}>适宜温度</Text>
+                  <Text style={styles.careValue}>{plant.temperature_range}</Text>
                 </View>
               )}
+              {/* 湿度 */}
               {plant.humidity_range && (
-                <View style={styles.careItem}>
-                  <View style={[styles.careIcon, { backgroundColor: colors.info + '15' }]}>
-                    <Icons.CloudRain size={20} color={colors.info} />
+                <View style={styles.careCard}>
+                  <View style={[styles.careIconWrapper, { backgroundColor: colors.secondary + '20' }]}>
+                    <Icons.CloudRain size={24} color={colors.secondary} />
                   </View>
-                  <View>
-                    <Text style={styles.careLabel}>湿度</Text>
-                    <Text style={styles.careValue}>{plant.humidity_range}</Text>
-                  </View>
+                  <Text style={styles.careLabel}>适宜湿度</Text>
+                  <Text style={styles.careValue}>{plant.humidity_range}</Text>
                 </View>
               )}
             </View>
+            {/* 浇水提示 */}
+            {plant.watering_tip && (
+              <View style={styles.tipCard}>
+                <View style={styles.tipIconWrapper}>
+                  <Icons.Lightbulb size={18} color={colors.accent} />
+                </View>
+                <View style={styles.tipContent}>
+                  <Text style={styles.tipLabel}>浇水小贴士</Text>
+                  <Text style={styles.tipText}>{plant.watering_tip}</Text>
+                </View>
+              </View>
+            )}
           </View>
 
           {/* 特点标签 */}
           {plant.features && plant.features.length > 0 && (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>特点</Text>
-              <View style={styles.featureRow}>
+              <View style={styles.sectionHeader}>
+                <Icons.Star size={20} color={colors.primary} />
+                <Text style={styles.sectionTitle}>植物特点</Text>
+              </View>
+              <View style={styles.featureGrid}>
                 {plant.features.map((feature, index) => (
                   <View key={index} style={styles.featureTag}>
-                    <Icons.Check size={14} color={colors.success} />
+                    <Icons.Check size={16} color={colors.success} />
                     <Text style={styles.featureText}>{feature}</Text>
                   </View>
                 ))}
@@ -221,21 +240,29 @@ export function EncyclopediaDetailScreen({ onGoBack, ...props }: EncyclopediaDet
           {/* 养护小贴士 */}
           {plant.care_tips && (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>养护小贴士</Text>
-              <Text style={styles.tipsText}>{plant.care_tips}</Text>
+              <View style={styles.sectionHeader}>
+                <Icons.BookOpen size={20} color={colors.primary} />
+                <Text style={styles.sectionTitle}>养护小贴士</Text>
+              </View>
+              <View style={styles.tipsCard}>
+                <Text style={styles.tipsText}>{plant.care_tips}</Text>
+              </View>
             </View>
           )}
 
-          {/* 常见问题 */}
+          {/* 常见问题/养护误区 */}
           {plant.common_mistakes && (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>常见问题</Text>
-              <View style={styles.problemCard}>
-                <View style={styles.problemHeader}>
-                  <Icons.AlertCircle size={16} color={colors.warning} />
-                  <Text style={styles.problemTitle}>养护误区</Text>
+              <View style={styles.sectionHeader}>
+                <Icons.AlertTriangle size={20} color={colors.warning} />
+                <Text style={styles.sectionTitle}>养护误区</Text>
+              </View>
+              <View style={styles.warningCard}>
+                <View style={styles.warningHeader}>
+                  <Icons.AlertCircle size={18} color={colors.warning} />
+                  <Text style={styles.warningTitle}>常见错误</Text>
                 </View>
-                <Text style={styles.problemSolution}>{plant.common_mistakes}</Text>
+                <Text style={styles.warningText}>{plant.common_mistakes}</Text>
               </View>
             </View>
           )}
@@ -244,20 +271,28 @@ export function EncyclopediaDetailScreen({ onGoBack, ...props }: EncyclopediaDet
           {plant.survival_rate && (
             <View style={styles.section}>
               <View style={styles.survivalCard}>
-                <Icons.Heart size={24} color={colors.success} />
+                <View style={styles.survivalIconWrapper}>
+                  <Icons.Heart size={28} color={colors.white} />
+                </View>
                 <View style={styles.survivalInfo}>
                   <Text style={styles.survivalLabel}>新手存活率</Text>
                   <Text style={styles.survivalValue}>{plant.survival_rate}%</Text>
                 </View>
+                <View style={styles.survivalProgress}>
+                  <View style={[styles.survivalProgressBar, { width: `${plant.survival_rate}%` }]} />
+                </View>
               </View>
             </View>
           )}
+
+          <View style={styles.bottomSpacer} />
         </View>
       </ScrollView>
 
+      {/* 底部操作按钮 */}
       <View style={styles.bottomButton}>
-        <TouchableOpacity style={styles.submitButton} onPress={handleAddToGarden}>
-          <Icons.Plus size={20} color="#fff" />
+        <TouchableOpacity style={styles.submitButton} onPress={handleAddToGarden} activeOpacity={0.8}>
+          <Icons.Plus size={20} color={colors.white} />
           <Text style={styles.submitButtonText}>添加到我的花园</Text>
         </TouchableOpacity>
       </View>
@@ -269,40 +304,334 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   emptyText: { fontSize: 16, color: colors['text-tertiary'] },
-  heroSection: { backgroundColor: colors.primary, paddingTop: spacing.xl },
-  navBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.md, paddingBottom: spacing.md },
-  backButton: { width: 32, height: 32, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
-  navTitle: { color: '#fff', fontSize: 17, fontWeight: '600' },
-  placeholder: { width: 32 },
-  plantInfo: { alignItems: 'center', paddingBottom: spacing.xl * 2 },
-  plantIcon: { width: 80, height: 80, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center', marginBottom: spacing.md },
-  plantName: { fontSize: 24, fontWeight: 'bold', color: '#fff' },
-  plantScientific: { fontSize: 14, color: 'rgba(255,255,255,0.8)', fontStyle: 'italic', marginTop: spacing.xs },
-  tagRow: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md, flexWrap: 'wrap', justifyContent: 'center' },
-  tag: { backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: spacing.sm, paddingVertical: spacing.xs, borderRadius: 10 },
-  tagText: { color: '#fff', fontSize: 12 },
-  content: { paddingHorizontal: spacing.lg, marginTop: -spacing.lg, paddingBottom: spacing.xxl * 3 },
-  section: { backgroundColor: colors.surface, borderRadius: 16, padding: spacing.md, marginBottom: spacing.md, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 12, elevation: 1 },
-  sectionTitle: { fontSize: 18, fontWeight: '600', color: colors.text, marginBottom: spacing.md },
-  description: { fontSize: 15, color: colors['text-secondary'], lineHeight: 22 },
-  careList: { gap: spacing.sm },
-  careItem: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  careIcon: { width: 40, height: 40, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  careLabel: { fontSize: 13, color: colors['text-tertiary'] },
-  careValue: { fontSize: 15, fontWeight: '500', color: colors.text, maxWidth: 250 },
-  featureRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  featureTag: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: colors.success + '15', paddingHorizontal: spacing.sm, paddingVertical: spacing.xs, borderRadius: 10 },
-  featureText: { color: colors.success, fontSize: 14 },
-  tipsText: { fontSize: 15, color: colors['text-secondary'], lineHeight: 22 },
-  problemCard: { backgroundColor: colors.background, borderRadius: 12, padding: spacing.sm },
-  problemHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginBottom: spacing.xs },
-  problemTitle: { fontSize: 15, fontWeight: '500', color: colors.text },
-  problemSolution: { fontSize: 14, color: colors['text-secondary'], marginLeft: 24 },
-  survivalCard: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, backgroundColor: colors.success + '15', padding: spacing.md, borderRadius: 12 },
-  survivalInfo: { flex: 1 },
-  survivalLabel: { fontSize: 14, color: colors['text-secondary'] },
-  survivalValue: { fontSize: 24, fontWeight: 'bold', color: colors.success },
-  bottomButton: { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: colors.surface, padding: spacing.md, borderTopWidth: 1, borderTopColor: colors.border },
-  submitButton: { backgroundColor: colors.primary, paddingVertical: spacing.md, borderRadius: 12, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: spacing.sm },
-  submitButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  // Hero 区域
+  heroSection: {
+    backgroundColor: colors.primary,
+    paddingTop: spacing.xl,
+    paddingBottom: spacing.xxl * 2,
+    borderBottomLeftRadius: borderRadius.xxl,
+    borderBottomRightRadius: borderRadius.xxl,
+    overflow: 'hidden',
+  },
+  backButton: {
+    position: 'absolute',
+    top: spacing.xl,
+    left: spacing.md,
+    width: 40,
+    height: 40,
+    borderRadius: borderRadius.full,
+    backgroundColor: 'rgba(0,0,0,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10,
+  },
+  shareButton: {
+    position: 'absolute',
+    top: spacing.xl,
+    right: spacing.md,
+    width: 40,
+    height: 40,
+    borderRadius: borderRadius.full,
+    backgroundColor: 'rgba(0,0,0,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10,
+  },
+  plantInfoContainer: {
+    alignItems: 'center',
+    paddingTop: spacing.lg,
+  },
+  plantImageWrapper: {
+    width: 120,
+    height: 120,
+    borderRadius: borderRadius.xxl,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.md,
+    overflow: 'hidden',
+    ...shadows.lg,
+  },
+  plantImage: {
+    width: '100%',
+    height: '100%',
+  },
+  plantImagePlaceholder: {
+    width: '100%',
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  plantName: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: colors.white,
+    textAlign: 'center',
+  },
+  plantScientific: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.8)',
+    fontStyle: 'italic',
+    marginTop: spacing.xs,
+    textAlign: 'center',
+  },
+  tagRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginTop: spacing.md,
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.md,
+  },
+  tagPrimary: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.25)',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.full,
+    gap: spacing.xs,
+  },
+  tagSecondary: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.white,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.full,
+    gap: spacing.xs,
+  },
+  tagTextPrimary: {
+    color: colors.white,
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  tagTextSecondary: {
+    color: colors.secondary,
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  // Content
+  content: {
+    paddingHorizontal: spacing.lg,
+    marginTop: -spacing.lg,
+    paddingBottom: spacing.xxl * 3,
+  },
+  section: {
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    padding: spacing.lg,
+    marginBottom: spacing.md,
+    ...shadows.sm,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+    gap: spacing.sm,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  description: {
+    fontSize: 15,
+    color: colors['text-secondary'],
+    lineHeight: 24,
+  },
+  // 养护卡片网格
+  careGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.md,
+  },
+  careCard: {
+    width: '47%',
+    backgroundColor: colors.background,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    alignItems: 'center',
+  },
+  careIconWrapper: {
+    width: 52,
+    height: 52,
+    borderRadius: borderRadius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.sm,
+  },
+  careLabel: {
+    fontSize: 12,
+    color: colors['text-tertiary'],
+    marginBottom: spacing.xs,
+  },
+  careValue: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: colors.text,
+    textAlign: 'center',
+  },
+  // 提示卡片
+  tipCard: {
+    flexDirection: 'row',
+    backgroundColor: colors.accent + '15',
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    marginTop: spacing.md,
+    alignItems: 'flex-start',
+  },
+  tipIconWrapper: {
+    width: 36,
+    height: 36,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.accent + '20',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.sm,
+  },
+  tipContent: {
+    flex: 1,
+  },
+  tipLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 2,
+  },
+  tipText: {
+    fontSize: 13,
+    color: colors['text-secondary'],
+    lineHeight: 20,
+  },
+  // 特点网格
+  featureGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  featureTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    backgroundColor: colors.success + '12',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.full,
+  },
+  featureText: {
+    color: colors.success,
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  // 养护小贴士
+  tipsCard: {
+    backgroundColor: colors.primary + '08',
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    borderLeftWidth: 3,
+    borderLeftColor: colors.primary,
+  },
+  tipsText: {
+    fontSize: 14,
+    color: colors['text-secondary'],
+    lineHeight: 22,
+  },
+  // 警告卡片
+  warningCard: {
+    backgroundColor: colors.warning + '10',
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    borderLeftWidth: 3,
+    borderLeftColor: colors.warning,
+  },
+  warningHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    marginBottom: spacing.sm,
+  },
+  warningTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  warningText: {
+    fontSize: 14,
+    color: colors['text-secondary'],
+    lineHeight: 22,
+  },
+  // 存活率
+  survivalCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.success + '12',
+    padding: spacing.lg,
+    borderRadius: borderRadius.lg,
+    gap: spacing.md,
+  },
+  survivalIconWrapper: {
+    width: 56,
+    height: 56,
+    borderRadius: borderRadius.lg,
+    backgroundColor: colors.success,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  survivalInfo: {
+    flex: 1,
+  },
+  survivalLabel: {
+    fontSize: 13,
+    color: colors['text-tertiary'],
+  },
+  survivalValue: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: colors.success,
+  },
+  survivalProgress: {
+    width: 80,
+    height: 6,
+    backgroundColor: colors.success + '20',
+    borderRadius: 3,
+    overflow: 'hidden',
+    alignSelf: 'center',
+  },
+  survivalProgressBar: {
+    height: '100%',
+    backgroundColor: colors.success,
+    borderRadius: 3,
+  },
+  // 底部
+  bottomSpacer: {
+    height: spacing.xxl,
+  },
+  bottomButton: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: colors.surface,
+    padding: spacing.md,
+    paddingBottom: spacing.xl,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    ...shadows.md,
+  },
+  submitButton: {
+    backgroundColor: colors.primary,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.lg,
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    ...shadows.md,
+  },
+  submitButtonText: {
+    color: colors.white,
+    fontSize: 16,
+    fontWeight: '600',
+  },
 });
