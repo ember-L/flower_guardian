@@ -275,23 +275,18 @@ export function EncyclopediaScreen({ onNavigate, currentTab, onTabChange }: Ency
                 {plants.slice(0, 12).map((plant) => (
                   <TouchableOpacity
                     key={plant.id}
-                    style={styles.plantCard}
+                    style={styles.categoryPlantCard}
                     activeOpacity={0.8}
                     onPress={() => handlePlantPress(plant)}
                   >
-                    <View style={styles.plantImageContainer}>
+                    <View style={styles.categoryPlantImageContainer}>
                       {plant.image_url ? (
-                        <Image source={{ uri: plant.image_url }} style={styles.plantImage} />
+                        <Image source={{ uri: plant.image_url }} style={styles.categoryPlantImage} />
                       ) : (
-                        <View style={styles.plantImagePlaceholder}>
-                          <Icons.Leaf size={32} color={colors.secondary} />
-                        </View>
+                        <Icons.Leaf size={28} color={colors.secondary} />
                       )}
                     </View>
-                    <Text style={styles.plantName} numberOfLines={1}>{plant.name}</Text>
-                    <View style={styles.plantMetaRow}>
-                      <Text style={styles.plantCategory}>{plant.category || '室内'}</Text>
-                    </View>
+                    <Text style={styles.categoryPlantName} numberOfLines={1}>{plant.name}</Text>
                   </TouchableOpacity>
                 ))}
               </View>
@@ -710,6 +705,34 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: spacing.sm,
+  },
+  categoryPlantCard: {
+    width: '31%',
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    padding: spacing.xs,
+    ...shadows.sm,
+    alignItems: 'center',
+  },
+  categoryPlantImageContainer: {
+    width: '100%',
+    aspectRatio: 1,
+    borderRadius: borderRadius.md,
+    overflow: 'hidden',
+    backgroundColor: colors.secondary + '15',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  categoryPlantImage: {
+    width: '100%',
+    height: '100%',
+  },
+  categoryPlantName: {
+    fontSize: fontSize.xs,
+    fontWeight: fontWeight.medium,
+    color: colors.text,
+    textAlign: 'center',
+    marginTop: spacing.xs,
   },
   // 图标说明
   legendCard: {

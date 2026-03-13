@@ -7,9 +7,9 @@ import {
   Image,
   TextInput,
   TouchableOpacity,
-  SafeAreaView,
   Alert,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { getProductDetail, Product, createOrder } from '../services/storeService';
 import { getAddresses, Address } from '../services/addressService';
 import { colors, spacing, shadows } from '../constants/theme';

@@ -1,10 +1,11 @@
 // 我的屏幕 - 使用纯 StyleSheet
-import React from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, Text, Alert } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, StyleSheet, ScrollView, TouchableOpacity, Text, Alert, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Icons } from '../components/Icon';
 import { colors, spacing } from '../constants/theme';
 import { NavigationProps } from '../navigation/AppNavigator';
+import { getCurrentUser } from '../services/auth';
 
 interface ProfileScreenProps extends Partial<NavigationProps> {}
 
@@ -19,7 +20,18 @@ const menuItems = [
   { id: '8', icon: Icons.HelpCircle, title: '帮助反馈', subtitle: '联系我们', screen: 'Help', color: colors['text-secondary'] },
 ];
 
-export function ProfileScreen({ onNavigate, currentTab, onTabChange, isLoggedIn, onRequireLogin, onLogout }: ProfileScreenProps) {
+export function ProfileScreen({ onNavigate, currentTab, onTabChange, isLoggedIn: propIsLoggedIn, onRequireLogin, onLogout }: ProfileScreenProps) {
+  const [displayUser, setDisplayUser] = useState<any>(null);
+
+  useEffect(() => {
+    if (propIsLoggedIn) {
+      getCurrentUser().then(user => setDisplayUser(user));
+    } else {
+      setDisplayUser(null);
+    }
+  }, [propIsLoggedIn]);
+
+  const isLoggedIn = propIsLoggedIn;
   const handleLoginPress = () => {
     if (onRequireLogin) {
       onRequireLogin();
@@ -62,18 +74,27 @@ export function ProfileScreen({ onNavigate, currentTab, onTabChange, isLoggedIn,
         <View style={styles.profileHeader}>
           {isLoggedIn ? (
             <>
-              <View style={styles.avatarContainer}>
-                <View style={styles.avatar}>
-                  <Icons.User size={36} color="#fff" />
+              <View style={styles.profileRow}>
+                <View style={styles.avatarContainer}>
+                  <View style={styles.avatar}>
+                    {displayUser?.avatar ? (
+                      <Image source={{ uri: displayUser.avatar }} style={styles.avatarImage} />
+                    ) : (
+                      <Icons.User size={40} color="#fff" />
+                    )}
+                  </View>
+                  <View style={styles.avatarBadge}>
+                    <Icons.Sparkles size={14} color={colors.warning} />
+                  </View>
                 </View>
-                <View style={styles.avatarBadge}>
-                  <Icons.Sparkles size={12} color={colors.warning} />
+                <View style={styles.profileInfo}>
+                  <View style={styles.nameRow}>
+                    <Text style={styles.userName}>{displayUser?.username || displayUser?.email?.split('@')[0] || '养花小白'}</Text>
+                    <View style={styles.levelBadge}><Text style={styles.levelText}>Lv.3 园丁</Text></View>
+                  
+                  <Text style={styles.plantCount}>已养护 2 盆植物</Text>
+                  </View>
                 </View>
-              </View>
-              <View style={styles.profileInfo}>
-                <Text style={styles.userName}>养花小白</Text>
-                <View style={styles.levelBadge}><Text style={styles.levelText}>Lv.3 园丁</Text></View>
-                <Text style={styles.plantCount}>已养护 2 盆植物</Text>
               </View>
             </>
           ) : (
@@ -140,16 +161,19 @@ export function ProfileScreen({ onNavigate, currentTab, onTabChange, isLoggedIn,
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   profileHeader: { backgroundColor: colors.surface, paddingHorizontal: spacing.xl, paddingTop: spacing.xl, paddingBottom: spacing.xl * 1.5 },
-  avatarContainer: { position: 'relative' },
-  avatar: { width: 72, height: 72, borderRadius: 36, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
-  avatarBadge: { position: 'absolute', bottom: -4, right: -4, width: 28, height: 28, borderRadius: 14, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: colors.surface },
+  profileRow: { flexDirection: 'row', alignItems: 'center' },
+  avatarContainer: { position: 'relative', alignItems: 'center', justifyContent: 'center' },
+  avatar: { width: 80, height: 80, borderRadius: 40, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center', shadowColor: colors.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 6, overflow: 'hidden' },
+  avatarImage: { width: 80, height: 80, borderRadius: 40 },
+  avatarBadge: { position: 'absolute', bottom: -2, right: -2, width: 28, height: 28, borderRadius: 14, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: colors.surface },
   loginButton: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: spacing.lg },
   loginButtonText: { fontSize: 20, fontWeight: 'bold', color: colors.primary, marginTop: spacing.sm },
   loginButtonSubtext: { fontSize: 14, color: colors['text-secondary'], marginTop: spacing.xs },
-  profileInfo: { marginLeft: spacing.lg, flex: 1 },
-  userName: { fontSize: 20, fontWeight: 'bold', color: colors.text },
-  levelBadge: { backgroundColor: colors.warning, paddingHorizontal: spacing.sm, paddingVertical: 2, borderRadius: 10, alignSelf: 'flex-start', marginTop: spacing.xs },
-  levelText: { color: '#fff', fontSize: 12, fontWeight: '500' },
+  profileInfo: { marginLeft: spacing.lg, alignItems: 'flex-start', flex: 1 },
+  nameRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: spacing.sm },
+  userName: { fontSize: 22, fontWeight: 'bold', color: colors.text },
+  levelBadge: { backgroundColor: colors.warning, paddingHorizontal: spacing.md, paddingVertical: 4, borderRadius: 12, alignItems: 'center', marginTop: spacing.sm },
+  levelText: { color: '#fff', fontSize: 12, fontWeight: '600' },
   plantCount: { fontSize: 14, color: colors['text-tertiary'], marginTop: spacing.xs },
   statsCard: { flexDirection: 'row', marginHorizontal: spacing.lg, marginTop: -spacing.lg, backgroundColor: colors.surface, borderRadius: 16, padding: spacing.md, shadowColor: colors.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 20, elevation: 6 },
   statItem: { flex: 1, alignItems: 'center' },

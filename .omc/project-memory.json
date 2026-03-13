@@ -142,14 +142,20 @@
   "hotPaths": [
     {
       "path": "APP/src/navigation/AppNavigator.tsx",
-      "accessCount": 38,
-      "lastAccessed": 1773330537044,
+      "accessCount": 41,
+      "lastAccessed": 1773361804916,
       "type": "directory"
     },
     {
       "path": "APP/src/components/Icon.tsx",
       "accessCount": 34,
       "lastAccessed": 1773329311447,
+      "type": "file"
+    },
+    {
+      "path": "APP/src/screens/ProfileScreen.tsx",
+      "accessCount": 27,
+      "lastAccessed": 1773361886878,
       "type": "file"
     },
     {
@@ -163,12 +169,6 @@
       "accessCount": 11,
       "lastAccessed": 1773326164551,
       "type": "directory"
-    },
-    {
-      "path": "APP/src/screens/ProfileScreen.tsx",
-      "accessCount": 11,
-      "lastAccessed": 1773329355526,
-      "type": "file"
     },
     {
       "path": "APP/src/screens/EncyclopediaScreen.tsx",

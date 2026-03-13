@@ -7,9 +7,9 @@ import {
   TouchableOpacity,
   Image,
   TextInput,
-  SafeAreaView,
   ActivityIndicator,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { getProducts, Product } from '../services/storeService';
 import { colors, spacing, shadows } from '../constants/theme';
 import { NavigationProps } from '../navigation/AppNavigator';
