@@ -22,3 +22,5 @@ class User(Base):
     user_plants = relationship("UserPlant", back_populates="user")
     reminders = relationship("Reminder", back_populates="user")
     diaries = relationship("Diary", back_populates="user")
+    conversations = relationship("Conversation", back_populates="user")
+    weather_queries = relationship("WeatherQuery", back_populates="user")

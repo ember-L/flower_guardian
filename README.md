@@ -346,6 +346,12 @@ export const API_BASE_URL = 'http://192.168.1.100:8000';
 | `POST /api/diagnosis/pest` | 病虫害识别 |
 | `POST /api/diagnosis/full` | 完整诊断（含建议） |
 
+### AI对话与天气
+| 端点 | 描述 |
+|------|------|
+| `POST /api/ai/chat` | AI 植物医生对话 |
+| `POST /api/weather/tips` | 获取天气和AI小贴士 |
+
 ### 养花日记
 | 端点 | 描述 |
 |------|------|
@@ -365,14 +371,36 @@ export const API_BASE_URL = 'http://192.168.1.100:8000';
 
 ## 环境变量
 
-后端环境变量：
+后端环境变量（位于 `backend/.env`）：
 
-| 变量 | 描述 | 默认值 |
-|------|------|--------|
-| `DATABASE_URL` | PostgreSQL 连接字符串 | - |
-| `SECRET_KEY` | JWT 密钥 | your-secret-key |
-| `ALGORITHM` | JWT 算法 | HS256 |
-| `ACCESS_TOKEN_EXPIRE_MINUTES` | Token 过期时间 | 30 |
+| 变量 | 描述 | 示例 |
+|------|------|------|
+| `DATABASE_URL` | PostgreSQL 连接字符串 | `postgresql://user:pass@localhost:5555/flower_guardian` |
+| `SECRET_KEY` | JWT 密钥 | `your-secret-key-change-this-in-production` |
+| `ALGORITHM` | JWT 算法 | `HS256` |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | Token 过期时间 | `30` |
+| `SMTP_HOST` | SMTP 服务器 | `smtp.qq.com` |
+| `SMTP_PORT` | SMTP 端口 | `587` |
+| `SMTP_USER` | SMTP 用户名 | `your-email@qq.com` |
+| `SMTP_PASSWORD` | SMTP 密码 | `your-smtp-password` |
+| `DASHSCOPE_API_KEY` | 阿里云 DashScope API Key（AI对话） | `sk-xxxxxxxx` |
+| `HEFENG_KEY` | 和风天气 API Key（首页天气） | `xxxxxxxx` |
+
+### API Key 申请
+
+#### 1. 阿里云 DashScope（AI对话、问诊）
+1. 访问 https://dashscope.console.aliyun.com/
+2. 注册/登录阿里云账号
+3. 在"API-KEY管理"创建 API Key
+4. 将 Key 添加到 `.env` 文件：`DASHSCOPE_API_KEY=sk-xxx`
+
+#### 2. 和风天气（首页天气小贴士）
+1. 访问 https://dev.qweather.com/
+2. 注册/登录
+3. 创建应用获取 API Key
+4. 将 Key 添加到 `.env` 文件：`HEFENG_KEY=xxx`
+
+> **注意**：国内免费版 API 有调用次数限制，生产环境建议购买付费版
 
 ## 管理员设置
 

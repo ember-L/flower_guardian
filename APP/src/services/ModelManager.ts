@@ -1,12 +1,12 @@
 // 模型管理器 - 用于管理本地模型下载和更新
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_BASE_URL } from './config';
 
 const MODEL_VERSION_KEY = 'model_version';
 const PLANT_MODEL_KEY = 'plant_model_downloaded';
 const PEST_MODEL_KEY = 'pest_model_downloaded';
 
 // API基础URL
-const API_BASE_URL = 'http://localhost:8000';
 
 export interface ModelInfo {
   name: string;

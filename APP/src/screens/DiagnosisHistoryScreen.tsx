@@ -7,11 +7,12 @@ import {
   FlatList,
   TouchableOpacity,
   Image,
-  SafeAreaView,
   ActivityIndicator,
   Pressable,
   Animated,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 import { getDiagnoses, DiagnosisRecord } from '../services/diagnosisService';
 import { colors, spacing, borderRadius, shadows, duration, fontSize, fontWeight, touchTarget } from '../constants/theme';
 import { Icon } from '../components/Icon';
@@ -21,6 +22,8 @@ interface DiagnosisHistoryScreenProps {
   onNavigate: (page: string, params?: any) => void;
   currentTab?: string;
   onTabChange?: (tab: string) => void;
+  isLoggedIn?: boolean;
+  onRequireLogin?: () => void;
 }
 
 interface EmptyStateProps {
@@ -83,23 +86,37 @@ const getConfidenceConfig = (confidence: number) => {
   return { label: '低置信', color: colors.error, bgColor: colors.errorLight };
 };
 
-export function DiagnosisHistoryScreen({ onGoBack, onNavigate }: DiagnosisHistoryScreenProps) {
+export function DiagnosisHistoryScreen({ onGoBack, onNavigate, isLoggedIn, onRequireLogin }: DiagnosisHistoryScreenProps) {
   const [records, setRecords] = useState<DiagnosisRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'favorite'>('all');
 
+  // 使用 useFocusEffect 每次页面获得焦点时检查登录状态
+  useFocusEffect(
+    useCallback(() => {
+      if (!isLoggedIn && onRequireLogin) {
+        onRequireLogin();
+      }
+    }, [isLoggedIn, onRequireLogin])
+  );
+
   const loadRecords = useCallback(async () => {
+    if (!isLoggedIn) return;
     setLoading(true);
     try {
       const favoriteParam = filter === 'favorite' ? true : undefined;
       const data = await getDiagnoses(favoriteParam);
       setRecords(data.items);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to load diagnoses:', error);
+      // 401 未授权，跳转到登录页面
+      if (error?.response?.status === 401 && onRequireLogin) {
+        onRequireLogin();
+      }
     } finally {
       setLoading(false);
     }
-  }, [filter]);
+  }, [filter, isLoggedIn]);
 
   useEffect(() => {
     loadRecords();

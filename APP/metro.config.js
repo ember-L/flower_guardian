@@ -1,11 +1,13 @@
-const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config');
+const { getDefaultConfig } = require('expo/metro-config');
+const path = require('path');
 
-/**
- * Metro configuration
- * https://reactnative.dev/docs/metro
- *
- * @type {import('@react-native/metro-config').MetroConfig}
- */
-const config = {};
+const config = getDefaultConfig(__dirname);
 
-module.exports = mergeConfig(getDefaultConfig(__dirname), config);
+// 配置 Metro 忽略嵌套的 node_modules
+config.resolver = {
+  ...config.resolver,
+  // 不从嵌套 node_modules 解析
+  extraNodeModules: {},
+};
+
+module.exports = config;

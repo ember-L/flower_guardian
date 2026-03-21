@@ -53,3 +53,70 @@ class UserPlantResponse(UserPlantCreate):
 class PlantListResponse(BaseModel):
     total: int
     items: List[PlantResponse]
+
+
+# 养护记录
+class CareRecordCreate(BaseModel):
+    care_type: str
+    notes: Optional[str] = None
+
+
+class CareRecordResponse(CareRecordCreate):
+    id: int
+    user_plant_id: int
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+# 生长记录
+class GrowthRecordCreate(BaseModel):
+    height: Optional[int] = None
+    leaf_count: Optional[int] = None
+    flower_count: Optional[int] = None
+    description: Optional[str] = None
+    image_url: Optional[str] = None
+
+
+class GrowthRecordResponse(GrowthRecordCreate):
+    id: int
+    user_plant_id: int
+    record_date: datetime
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+# 健康记录
+class HealthRecordCreate(BaseModel):
+    health_status: str
+    pest_info: Optional[str] = None
+    treatment: Optional[str] = None
+
+
+class HealthRecordResponse(HealthRecordCreate):
+    id: int
+    user_plant_id: int
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+# 用户植物更新
+class UserPlantUpdate(BaseModel):
+    plant_name: Optional[str] = None
+    plant_type: Optional[str] = None
+    nickname: Optional[str] = None
+    image_url: Optional[str] = None
+    location: Optional[str] = None
+    notes: Optional[str] = None
+
+
+# 提醒更新
+class ReminderUpdate(BaseModel):
+    type: str
+    interval_days: Optional[int] = 7
+    enabled: Optional[bool] = True

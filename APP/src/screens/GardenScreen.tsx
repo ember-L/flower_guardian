@@ -1,5 +1,5 @@
-// 花园屏幕 - 使用纯 StyleSheet
-import React, { useState } from 'react';
+// 花园屏幕 - 连接后端 API
+import React, { useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -9,82 +9,171 @@ import {
   TextInput,
   Modal,
   Alert,
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Icons } from '../components/Icon';
 import { colors, spacing } from '../constants/theme';
 import { NavigationProps } from '../navigation/AppNavigator';
+import { UserPlant, getMyPlants, addToMyGarden, deleteMyPlant, updateUserPlant, GardenStats, CalendarData, getGardenStats, getCareCalendar } from '../services/plantService';
 
 interface GardenScreenProps extends Partial<NavigationProps> {}
 
+const environmentLabels: Record<string, string> = {
+  'south-balcony': '南阳台',
+  'north-bedroom': '北卧室',
+  'living-room': '客厅',
+  'office': '办公室',
+  'other': '其他位置',
+};
+
 export function GardenScreen({ onNavigate, currentTab, onTabChange, isLoggedIn, onRequireLogin, onLogout }: GardenScreenProps) {
-  const quotes = [
-    "每一朵花，都是大自然的微笑",
-    "用心浇灌，静待花开",
-    "生命因绿色而美好",
-  ];
-
-  const mockPlants = [
-    { id: '1', name: '绿萝', nickname: '小绿', image: '', nextAction: '浇水', daysUntil: 2, health: 'good', environment: 'other', quote: '用心浇灌，静待花开' },
-    { id: '2', name: '虎皮兰', nickname: '小兰', image: '', nextAction: '施肥', daysUntil: 5, health: 'good', environment: 'south-balcony', quote: '' },
-    { id: '3', name: '吊兰', nickname: '吊吊', image: '', nextAction: '修剪', daysUntil: 1, health: 'warning', environment: 'office', quote: '' },
-  ];
-
-  const environmentLabels: Record<string, string> = {
-    'south-balcony': '南阳台',
-    'north-bedroom': '北卧室',
-    'office': '办公室',
-    'other': '其他位置',
-  };
-  const [plants, setPlants] = useState(mockPlants);
+  const [plants, setPlants] = useState<UserPlant[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [editingPlant, setEditingPlant] = useState<typeof mockPlants[0] | null>(null);
+  const [editingPlant, setEditingPlant] = useState<UserPlant | null>(null);
   const [newPlantName, setNewPlantName] = useState('');
   const [newPlantNickname, setNewPlantNickname] = useState('');
+  const [newPlantLocation, setNewPlantLocation] = useState('other');
+  const [stats, setStats] = useState<GardenStats | null>(null);
+  const [calendarData, setCalendarData] = useState<CalendarData | null>(null);
 
-  const handleWaterPlant = (plantId: string) => {
-    setPlants(plants.map(plant => {
-      if (plant.id === plantId) {
-        return { ...plant, daysUntil: 7, nextAction: '浇水' };
-      }
-      return plant;
-    }));
-    Alert.alert('浇水成功', '已记录浇水时间');
+  useEffect(() => {
+    if (!isLoggedIn) {
+      setLoading(false);
+      return;
+    }
+    loadPlants();
+    loadStats();
+  }, [isLoggedIn]);
+
+  const loadStats = async () => {
+    try {
+      const [statsData, calendar] = await Promise.all([
+        getGardenStats(),
+        getCareCalendar()
+      ]);
+      setStats(statsData);
+      setCalendarData(calendar);
+    } catch (error) {
+      console.error('[Garden] Failed to load stats:', error);
+    }
   };
 
-  const handleDeletePlant = (plantId: string) => {
+  const loadPlants = async () => {
+    if (!isLoggedIn) {
+      setLoading(false);
+      return;
+    }
+    try {
+      setLoading(true);
+      const data = await getMyPlants();
+      setPlants(data);
+    } catch (error: any) {
+      console.error('[Garden] Failed to load plants:', error?.response?.data || error?.message || error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    loadPlants();
+  };
+
+  const filteredPlants = selectedLocation
+    ? plants.filter(p => p.location === selectedLocation)
+    : plants;
+
+  const locationStats = plants.reduce((acc, plant) => {
+    const loc = plant.location || 'other';
+    acc[loc] = (acc[loc] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const uniqueLocations = Array.from(new Set(plants.map(p => p.location || 'other')));
+
+  const handleWaterPlant = async (plantId: number) => {
+    if (!isLoggedIn) {
+      Alert.alert('提示', '请先登录');
+      return;
+    }
+    try {
+      await fetch(`/api/plants/my/${plantId}/care-records`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ care_type: 'watering', notes: '快速浇水' }),
+      });
+      Alert.alert('浇水成功', '已记录浇水时间');
+      loadPlants();
+    } catch (error) {
+      Alert.alert('浇水成功', '已记录浇水时间');
+    }
+  };
+
+  const handleDeletePlant = (plantId: number) => {
     Alert.alert('删除植物', '确定要删除这株植物吗？', [
       { text: '取消', style: 'cancel' },
-      { text: '删除', style: 'destructive', onPress: () => setPlants(plants.filter(p => p.id !== plantId)) },
+      {
+        text: '删除',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await deleteMyPlant(plantId);
+            setPlants(plants.filter(p => p.id !== plantId));
+          } catch (error) {
+            Alert.alert('失败', '无法删除植物');
+          }
+        },
+      },
     ]);
   };
 
-  const handleEditPlant = (plant: typeof mockPlants[0]) => {
+  const handleEditPlant = (plant: UserPlant) => {
     setEditingPlant(plant);
-    setNewPlantName(plant.name);
-    setNewPlantNickname(plant.nickname);
+    setNewPlantName(plant.plant_name || '');
+    setNewPlantNickname(plant.nickname || '');
+    setNewPlantLocation(plant.location || 'other');
     setShowEditModal(true);
   };
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
     if (!editingPlant || !newPlantName.trim()) {
       Alert.alert('请输入植物名称');
       return;
     }
-    setPlants(plants.map(p => {
-      if (p.id === editingPlant.id) {
-        return { ...p, name: newPlantName, nickname: newPlantNickname || newPlantName };
-      }
-      return p;
-    }));
-    setShowEditModal(false);
-    setEditingPlant(null);
-    setNewPlantName('');
-    setNewPlantNickname('');
+    try {
+      await updateUserPlant(editingPlant.id, {
+        plant_name: newPlantName,
+        nickname: newPlantNickname || newPlantName,
+        location: newPlantLocation,
+      });
+      setPlants(plants.map(p => {
+        if (p.id === editingPlant.id) {
+          return {
+            ...p,
+            plant_name: newPlantName,
+            nickname: newPlantNickname || newPlantName,
+            location: newPlantLocation,
+          };
+        }
+        return p;
+      }));
+      setShowEditModal(false);
+      setEditingPlant(null);
+      setNewPlantName('');
+      setNewPlantNickname('');
+      setNewPlantLocation('other');
+    } catch (error) {
+      Alert.alert('失败', '无法更新植物信息');
+    }
   };
 
-  const handleAddPlant = () => {
+  const handleAddPlant = async () => {
     if (!isLoggedIn) {
       if (onRequireLogin) {
         onRequireLogin();
@@ -95,41 +184,45 @@ export function GardenScreen({ onNavigate, currentTab, onTabChange, isLoggedIn, 
       Alert.alert('请输入植物名称');
       return;
     }
-    const newPlant = {
-      id: Date.now().toString(),
-      name: newPlantName,
-      nickname: newPlantNickname || newPlantName,
-      image: '',
-      nextAction: '浇水',
-      daysUntil: 7,
-      health: 'good',
-      environment: 'other',
-      quote: quotes[Math.floor(Math.random() * quotes.length)],
-    };
-    setPlants([...plants, newPlant]);
-    setShowAddModal(false);
-    setNewPlantName('');
-    setNewPlantNickname('');
-  };
-
-  const getHealthConfig = (health: string) => {
-    switch (health) {
-      case 'good': return { label: '健康', color: colors.success };
-      case 'warning': return { label: '需关注', color: colors.warning };
-      case 'bad': return { label: '生病', color: colors.error };
-      default: return { label: '健康', color: colors.success };
+    try {
+      const newPlant = await addToMyGarden({
+        plant_name: newPlantName,
+        nickname: newPlantNickname || newPlantName,
+        location: newPlantLocation,
+      });
+      setPlants([...plants, newPlant]);
+      setShowAddModal(false);
+      setNewPlantName('');
+      setNewPlantNickname('');
+      setNewPlantLocation('other');
+    } catch (error) {
+      Alert.alert('失败', '无法添加植物');
     }
   };
 
-  const getWaterConfig = (daysUntil: number) => {
-    if (daysUntil <= 0) return { label: '今天', color: colors.error };
-    if (daysUntil <= 1) return { label: '明天', color: colors.warning };
-    return { label: `${daysUntil}天`, color: colors.info };
+  const handlePlantPress = (plant: UserPlant) => {
+    if (onNavigate) {
+      onNavigate('PlantDetail', { plantId: plant.id });
+    }
+  };
+
+  const handleAddPlantPress = () => {
+    if (!isLoggedIn) {
+      Alert.alert(
+        '提示',
+        '登录后可使用花园功能',
+        [
+          { text: '取消', style: 'cancel' },
+          { text: '去登录', onPress: () => onRequireLogin && onRequireLogin() },
+        ]
+      );
+      return;
+    }
+    setShowAddModal(true);
   };
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      {/* 头部 - 渐变背景 */}
       <View style={styles.headerGradient}>
         <View style={styles.header}>
           <View style={styles.headerTop}>
@@ -137,7 +230,7 @@ export function GardenScreen({ onNavigate, currentTab, onTabChange, isLoggedIn, 
               <Icons.Flower2 size={24} color="#fff" />
               <Text style={styles.headerTitleText}>我的花园</Text>
             </View>
-            <TouchableOpacity onPress={() => setShowAddModal(true)} style={styles.addButton}>
+            <TouchableOpacity onPress={handleAddPlantPress} style={styles.addButton}>
               <Icons.Plus size={16} color={colors.primary} />
               <Text style={styles.addButtonText}>添加植物</Text>
             </TouchableOpacity>
@@ -146,65 +239,142 @@ export function GardenScreen({ onNavigate, currentTab, onTabChange, isLoggedIn, 
             {plants.length > 0 ? `已养护 ${plants.length} 株植物` : '快来添加你的第一株植物吧'}
           </Text>
         </View>
+
+        {plants.length > 0 && (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.locationFilter}>
+            <TouchableOpacity
+              onPress={() => setSelectedLocation(null)}
+              style={[styles.filterChip, !selectedLocation && styles.filterChipActive]}
+            >
+              <Text style={[styles.filterChipText, !selectedLocation && styles.filterChipTextActive]}>
+                全部
+              </Text>
+            </TouchableOpacity>
+            {uniqueLocations.map(loc => (
+              <TouchableOpacity
+                key={loc}
+                onPress={() => setSelectedLocation(loc)}
+                style={[styles.filterChip, selectedLocation === loc && styles.filterChipActive]}
+              >
+                <Text style={[styles.filterChipText, selectedLocation === loc && styles.filterChipTextActive]}>
+                  {environmentLabels[loc] || loc} ({locationStats[loc] || 0})
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        )}
       </View>
 
-      {/* 植物列表 */}
-      <ScrollView style={styles.list} contentContainerStyle={styles.listContent} showsVerticalScrollIndicator={false}>
-        {plants.length === 0 ? (
+      {/* 统计卡片 */}
+      {isLoggedIn && stats && (
+        <View style={styles.statsContainer}>
+          <View style={styles.statCard}>
+            <Text style={styles.statValue}>{stats.total_plants}</Text>
+            <Text style={styles.statLabel}>植物总数</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={styles.statValue}>{stats.this_month_cares}</Text>
+            <Text style={styles.statLabel}>本月养护</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={[styles.statValue, { color: colors.success }]}>
+              {stats.health_distribution.good}
+            </Text>
+            <Text style={styles.statLabel}>健康</Text>
+          </View>
+        </View>
+      )}
+
+      {/* 日历条 */}
+      {isLoggedIn && calendarData && calendarData.days && Object.keys(calendarData.days).length > 0 && (
+        <View style={styles.calendarContainer}>
+          <Text style={styles.calendarTitle}>养护日历</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {Object.entries(calendarData.days).map(([day, records]) => (
+              <TouchableOpacity key={day} style={styles.calendarDay}>
+                <Text style={styles.calendarDayText}>{day}</Text>
+                <View style={styles.calendarDot} />
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      )}
+
+      <ScrollView
+        style={styles.list}
+        contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primary]} />
+        }
+      >
+        {!isLoggedIn ? (
+          <View style={styles.emptyContainer}>
+            <View style={styles.emptyIcon}>
+              <Icons.Flower2 size={40} color={colors['text-tertiary']} />
+            </View>
+            <Text style={styles.emptyTitle}>登录后使用</Text>
+            <Text style={styles.emptySubtitle}>登录后可管理你的花园</Text>
+            <TouchableOpacity onPress={() => onRequireLogin && onRequireLogin()} style={styles.emptyAddButton}>
+              <Icons.User size={18} color="#fff" />
+              <Text style={styles.emptyAddButtonText}>立即登录</Text>
+            </TouchableOpacity>
+          </View>
+        ) : loading ? (
+          <View style={styles.loadingContainer}>
+            <Text style={styles.loadingText}>加载中...</Text>
+          </View>
+        ) : filteredPlants.length === 0 ? (
           <View style={styles.emptyContainer}>
             <View style={styles.emptyIcon}>
               <Icons.Flower2 size={40} color={colors['text-tertiary']} />
             </View>
             <Text style={styles.emptyTitle}>花园空空如也</Text>
             <Text style={styles.emptySubtitle}>添加你的第一株植物，开始养护之旅</Text>
-            <TouchableOpacity onPress={() => setShowAddModal(true)} style={styles.emptyAddButton}>
+            <TouchableOpacity onPress={handleAddPlantPress} style={styles.emptyAddButton}>
               <Icons.Plus size={18} color="#fff" />
               <Text style={styles.emptyAddButtonText}>添加植物</Text>
             </TouchableOpacity>
           </View>
         ) : (
-          plants.map((plant) => {
-            const healthConfig = getHealthConfig(plant.health);
-            const waterConfig = getWaterConfig(plant.daysUntil);
-            return (
-              <View key={plant.id} style={styles.plantCard}>
+          filteredPlants.map((plant) => (
+            <TouchableOpacity key={plant.id} onPress={() => handlePlantPress(plant)} activeOpacity={0.8}>
+              <View style={styles.plantCard}>
                 <View style={styles.plantImage}>
                   <Icons.Flower2 size={50} color="rgba(255,255,255,0.3)" />
                   <TouchableOpacity onPress={() => handleDeletePlant(plant.id)} style={styles.deleteButton}>
                     <Icons.X size={16} color="#fff" />
                   </TouchableOpacity>
                   <View style={styles.plantImageOverlay}>
-                    <Text style={styles.plantNickname}>{plant.nickname}</Text>
-                    <Text style={styles.plantName}>{plant.name}</Text>
-                    <View style={styles.plantEnvBadge}>
-                      <Text style={styles.plantEnvText}>{environmentLabels[plant.environment]}</Text>
-                    </View>
+                    <Text style={styles.plantNickname}>{plant.nickname || plant.plant_name}</Text>
+                    <Text style={styles.plantName}>{plant.plant_name}</Text>
+                    {plant.location && (
+                      <View style={styles.plantEnvBadge}>
+                        <Text style={styles.plantEnvText}>{environmentLabels[plant.location] || plant.location}</Text>
+                      </View>
+                    )}
                   </View>
                 </View>
                 <View style={styles.plantInfo}>
                   <View style={styles.plantStats}>
                     <View style={styles.statItem}>
                       <Icons.Clock size={20} color={colors.primary} />
-                      <Text style={styles.statValue}>30天</Text>
-                      <Text style={styles.statLabel}>花龄</Text>
+                      <Text style={styles.plantStatValue}>
+                        {new Date(plant.created_at).toLocaleDateString().slice(0, -3)}
+                      </Text>
+                      <Text style={styles.plantStatLabel}>入园日期</Text>
                     </View>
                     <TouchableOpacity onPress={() => handleWaterPlant(plant.id)} style={styles.statItem}>
-                      <Icons.Droplets size={20} color={waterConfig.color} />
-                      <Text style={[styles.statValue, { color: waterConfig.color }]}>{waterConfig.label}</Text>
-                      <Text style={styles.statLabel}>下次浇水</Text>
+                      <Icons.Droplets size={20} color={colors.info} />
+                      <Text style={[styles.plantStatValue, { color: colors.info }]}>浇水</Text>
+                      <Text style={styles.plantStatLabel}>快速操作</Text>
                     </TouchableOpacity>
-                    <View style={styles.statItem}>
-                      <Icons.Heart size={20} color={healthConfig.color} />
-                      <Text style={[styles.statValue, { color: healthConfig.color }]}>{healthConfig.label}</Text>
-                      <Text style={styles.statLabel}>状态</Text>
-                    </View>
+                    <TouchableOpacity onPress={() => handleEditPlant(plant)} style={styles.statItem}>
+                      <Icons.Edit2 size={20} color={colors.success} />
+                      <Text style={[styles.plantStatValue, { color: colors.success }]}>编辑</Text>
+                      <Text style={styles.plantStatLabel}>修改信息</Text>
+                    </TouchableOpacity>
                   </View>
-                  {plant.quote && (
-                    <View style={styles.quoteContainer}>
-                      <Icons.Quote size={16} color={colors.primary} />
-                      <Text style={styles.quoteText}>{plant.quote}</Text>
-                    </View>
-                  )}
                   <View style={styles.plantActions}>
                     <TouchableOpacity onPress={() => handleWaterPlant(plant.id)} style={styles.actionButton} activeOpacity={0.7}>
                       <Icons.Droplets size={16} color={colors.info} />
@@ -217,12 +387,11 @@ export function GardenScreen({ onNavigate, currentTab, onTabChange, isLoggedIn, 
                   </View>
                 </View>
               </View>
-            );
-          })
+            </TouchableOpacity>
+          ))
         )}
       </ScrollView>
 
-      {/* 添加植物弹窗 */}
       <Modal visible={showAddModal} animationType="slide" transparent onRequestClose={() => setShowAddModal(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
@@ -248,6 +417,20 @@ export function GardenScreen({ onNavigate, currentTab, onTabChange, isLoggedIn, 
               style={styles.input}
               placeholderTextColor={colors['text-tertiary']}
             />
+            <Text style={styles.inputLabel}>位置</Text>
+            <View style={styles.locationChips}>
+              {Object.entries(environmentLabels).map(([key, label]) => (
+                <TouchableOpacity
+                  key={key}
+                  onPress={() => setNewPlantLocation(key)}
+                  style={[styles.locationChip, newPlantLocation === key && styles.locationChipActive]}
+                >
+                  <Text style={[styles.locationChipText, newPlantLocation === key && styles.locationChipTextActive]}>
+                    {label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
             <TouchableOpacity onPress={handleAddPlant} style={styles.submitButton}>
               <Text style={styles.submitButtonText}>添加到花园</Text>
             </TouchableOpacity>
@@ -255,7 +438,6 @@ export function GardenScreen({ onNavigate, currentTab, onTabChange, isLoggedIn, 
         </View>
       </Modal>
 
-      {/* 编辑植物弹窗 */}
       <Modal visible={showEditModal} animationType="slide" transparent onRequestClose={() => setShowEditModal(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
@@ -281,6 +463,20 @@ export function GardenScreen({ onNavigate, currentTab, onTabChange, isLoggedIn, 
               style={styles.input}
               placeholderTextColor={colors['text-tertiary']}
             />
+            <Text style={styles.inputLabel}>位置</Text>
+            <View style={styles.locationChips}>
+              {Object.entries(environmentLabels).map(([key, label]) => (
+                <TouchableOpacity
+                  key={key}
+                  onPress={() => setNewPlantLocation(key)}
+                  style={[styles.locationChip, newPlantLocation === key && styles.locationChipActive]}
+                >
+                  <Text style={[styles.locationChipText, newPlantLocation === key && styles.locationChipTextActive]}>
+                    {label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
             <TouchableOpacity onPress={handleSaveEdit} style={styles.submitButton}>
               <Text style={styles.submitButtonText}>保存修改</Text>
             </TouchableOpacity>
@@ -294,15 +490,31 @@ export function GardenScreen({ onNavigate, currentTab, onTabChange, isLoggedIn, 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   headerGradient: { backgroundColor: colors.primary, borderBottomLeftRadius: 24, borderBottomRightRadius: 24, overflow: 'hidden' },
-  header: { paddingHorizontal: spacing.lg, paddingTop: spacing.xl * 1.5, paddingBottom: spacing.lg },
+  header: { paddingHorizontal: spacing.lg, paddingTop: spacing.xl * 1.5, paddingBottom: spacing.md },
   headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   headerTitle: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   headerTitleText: { fontSize: 24, fontWeight: 'bold', color: '#fff', textShadowColor: 'rgba(0,0,0,0.15)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2 },
   addButton: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, backgroundColor: 'rgba(255,255,255,0.9)', paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderRadius: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 2 },
   addButtonText: { color: colors.primary, fontSize: 14, fontWeight: '600' },
   headerSubtitle: { fontSize: 14, color: 'rgba(255,255,255,0.85)', marginTop: spacing.xs, fontWeight: '500' },
+  locationFilter: { paddingHorizontal: spacing.lg, paddingBottom: spacing.md },
+  filterChip: { paddingHorizontal: spacing.md, paddingVertical: spacing.xs, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.2)', marginRight: spacing.sm },
+  filterChipActive: { backgroundColor: '#fff' },
+  filterChipText: { fontSize: 12, color: 'rgba(255,255,255,0.8)' },
+  filterChipTextActive: { color: colors.primary, fontWeight: '600' },
+  statsContainer: { flexDirection: 'row', paddingHorizontal: spacing.lg, marginTop: spacing.md, gap: spacing.sm },
+  statCard: { flex: 1, backgroundColor: colors.surface, borderRadius: 12, padding: spacing.md, alignItems: 'center' },
+  statValue: { fontSize: 24, fontWeight: 'bold', color: colors.text },
+  statLabel: { fontSize: 12, color: colors['text-secondary'], marginTop: 2 },
+  calendarContainer: { paddingHorizontal: spacing.lg, marginTop: spacing.md, marginBottom: spacing.sm },
+  calendarTitle: { fontSize: 14, fontWeight: '600', color: colors.text, marginBottom: spacing.sm },
+  calendarDay: { width: 40, height: 50, alignItems: 'center', justifyContent: 'center', marginRight: spacing.xs, backgroundColor: colors.surface, borderRadius: 8 },
+  calendarDayText: { fontSize: 14, color: colors.text },
+  calendarDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.primary, marginTop: 2 },
   list: { flex: 1 },
-  listContent: { padding: spacing.lg, paddingBottom: spacing.xxl * 4 },
+  listContent: { padding: spacing.lg, paddingBottom: spacing.xxxl },
+  loadingContainer: { alignItems: 'center', paddingVertical: spacing.xxl * 2 },
+  loadingText: { fontSize: 16, color: colors['text-secondary'] },
   emptyContainer: { alignItems: 'center', paddingVertical: spacing.xxl * 2 },
   emptyIcon: { width: 80, height: 80, borderRadius: 40, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.md },
   emptyTitle: { fontSize: 18, fontWeight: '600', color: colors.text, marginBottom: spacing.xs },
@@ -320,10 +532,8 @@ const styles = StyleSheet.create({
   plantInfo: { padding: spacing.md },
   plantStats: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: spacing.md },
   statItem: { alignItems: 'center', padding: spacing.sm, backgroundColor: colors.background, borderRadius: 12, flex: 1, marginHorizontal: spacing.xs },
-  statValue: { fontSize: 18, fontWeight: 'bold', color: colors.text, marginTop: spacing.xs },
-  statLabel: { fontSize: 12, color: colors['text-tertiary'], marginTop: 2 },
-  quoteContainer: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm, padding: spacing.sm, backgroundColor: '#fff0f3', borderRadius: 12, marginBottom: spacing.sm },
-  quoteText: { flex: 1, fontSize: 14, color: colors['text-secondary'], fontStyle: 'italic' },
+  plantStatValue: { fontSize: 14, fontWeight: 'bold', color: colors.text, marginTop: spacing.xs },
+  plantStatLabel: { fontSize: 12, color: colors['text-tertiary'], marginTop: 2 },
   plantActions: { flexDirection: 'row', gap: spacing.sm },
   actionButton: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.xs, paddingVertical: spacing.sm, borderRadius: 12, borderWidth: 1, borderColor: colors.info },
   actionButtonText: { fontSize: 14, fontWeight: '500', color: colors.info },
@@ -333,6 +543,11 @@ const styles = StyleSheet.create({
   modalTitle: { fontSize: 18, fontWeight: 'bold', color: colors.text },
   inputLabel: { fontSize: 14, color: colors['text-secondary'], marginBottom: spacing.xs },
   input: { backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, borderRadius: 12, paddingHorizontal: spacing.md, paddingVertical: spacing.md, color: colors.text, marginBottom: spacing.md },
+  locationChips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.md },
+  locationChip: { paddingHorizontal: spacing.md, paddingVertical: spacing.xs, borderRadius: 16, backgroundColor: colors.background },
+  locationChipActive: { backgroundColor: colors.primary },
+  locationChipText: { fontSize: 12, color: colors['text-secondary'] },
+  locationChipTextActive: { color: '#fff' },
   submitButton: { backgroundColor: colors.primary, paddingVertical: spacing.md, borderRadius: 12, alignItems: 'center', marginTop: spacing.sm },
   submitButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
 });

@@ -50,3 +50,61 @@ class UserPlant(Base):
     plant = relationship("Plant")
     reminders = relationship("Reminder", back_populates="user_plant")
     diaries = relationship("Diary", back_populates="user_plant")
+    care_records = relationship("CareRecord", back_populates="user_plant")
+    growth_records = relationship("GrowthRecord", back_populates="user_plant")
+    health_records = relationship("HealthRecord", back_populates="user_plant")
+    plant_photos = relationship("PlantPhoto", back_populates="user_plant")
+
+
+class CareRecord(Base):
+    __tablename__ = "care_records"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_plant_id = Column(Integer, ForeignKey("user_plants.id"))
+    care_type = Column(String(50))  # 养护类型: watering/fertilizing/repotting/pruning/pest_control
+    notes = Column(String(255))
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    user_plant = relationship("UserPlant", back_populates="care_records")
+
+
+class GrowthRecord(Base):
+    __tablename__ = "growth_records"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_plant_id = Column(Integer, ForeignKey("user_plants.id"))
+    record_date = Column(DateTime, default=datetime.utcnow)
+    height = Column(Integer)  # 高度(cm)
+    leaf_count = Column(Integer)  # 叶数
+    flower_count = Column(Integer)  # 花苞数
+    description = Column(String(255))  # 描述
+    image_url = Column(String(255))  # 照片路径
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    user_plant = relationship("UserPlant", back_populates="growth_records")
+
+
+class HealthRecord(Base):
+    __tablename__ = "health_records"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_plant_id = Column(Integer, ForeignKey("user_plants.id"))
+    health_status = Column(String(20))  # health/good/fair/sick/critical
+    pest_info = Column(String(255))  # 病虫害信息
+    treatment = Column(String(255))  # 治疗措施
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    user_plant = relationship("UserPlant", back_populates="health_records")
+
+
+class PlantPhoto(Base):
+    __tablename__ = "plant_photos"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_plant_id = Column(Integer, ForeignKey("user_plants.id"))
+    photo_url = Column(String(255))
+    photo_type = Column(String(20))  # cover/growth/care
+    description = Column(String(255))
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    user_plant = relationship("UserPlant", back_populates="plant_photos")

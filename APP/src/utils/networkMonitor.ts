@@ -1,7 +1,7 @@
 // 网络状态监测工具
-// 使用 React Native 内置的 NetInfo API
+// 使用 @react-native-community/netinfo API
 
-import { NetInfo, NetInfoState } from 'react-native';
+import NetInfo, { NetInfoState, NetInfoSubscription } from '@react-native-community/netinfo';
 
 export type NetworkStatus = 'connected' | 'disconnected' | 'unknown';
 
@@ -9,19 +9,25 @@ class NetworkMonitor {
   private listeners: ((isConnected: boolean) => void)[] = [];
   private currentStatus: boolean = true;
   private isInitialized: boolean = false;
+  private subscription: NetInfoSubscription | null = null;
 
   async initialize(): Promise<void> {
     if (this.isInitialized) return;
 
-    // 获取初始网络状态
-    const state = await NetInfo.fetch();
-    this.currentStatus = state.isConnected ?? false;
+    try {
+      // 获取初始网络状态
+      const state = await NetInfo.fetch();
+      this.currentStatus = state?.isConnected ?? true;
 
-    // 监听网络变化
-    NetInfo.addEventListener(this.handleNetworkChange);
+      // 监听网络变化 - 保存订阅对象用于后续移除
+      this.subscription = NetInfo.addEventListener(this.handleNetworkChange);
 
-    this.isInitialized = true;
-    console.log('[NetworkMonitor] Initialized, connected:', this.currentStatus);
+      this.isInitialized = true;
+      console.log('[NetworkMonitor] Initialized, connected:', this.currentStatus);
+    } catch (error) {
+      console.warn('[NetworkMonitor] Failed to initialize:', error);
+      this.isInitialized = true;
+    }
   }
 
   private handleNetworkChange = (state: NetInfoState) => {
@@ -46,18 +52,20 @@ class NetworkMonitor {
   // 异步检查网络状态
   async isConnected(): Promise<boolean> {
     try {
+      if (!NetInfo) return true;
       const state = await NetInfo.fetch();
-      return state.isConnected ?? false;
+      return state?.isConnected ?? true;
     } catch {
-      return false;
+      return true;
     }
   }
 
   // 获取连接类型
   async getConnectionType(): Promise<string> {
     try {
+      if (!NetInfo) return 'unknown';
       const state = await NetInfo.fetch();
-      return state.type || 'unknown';
+      return state?.type || 'unknown';
     } catch {
       return 'unknown';
     }
@@ -78,7 +86,14 @@ class NetworkMonitor {
 
   // 清理
   cleanup(): void {
-    NetInfo.removeEventListener(this.handleNetworkChange);
+    try {
+      if (this.subscription) {
+        this.subscription();
+        this.subscription = null;
+      }
+    } catch (e) {
+      console.warn('[NetworkMonitor] Failed to remove listener:', e);
+    }
     this.listeners = [];
     this.isInitialized = false;
   }

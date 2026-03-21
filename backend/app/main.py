@@ -1,9 +1,16 @@
+import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.router import api_router
 from app.core.database import engine
 from app.db.base import Base
 from contextlib import asynccontextmanager
+
+# 配置日志
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 
 # 导入所有模型以确保表被创建
 from app.models import User, Plant, UserPlant, Reminder, Diary, Product, Order, OrderItem, CartItem, Payment, DiagnosisRecord, Address, EmailVerification

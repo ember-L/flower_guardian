@@ -19,15 +19,27 @@ class PlantRecognitionService:
     def _load_classes(self) -> dict:
         """加载植物类别"""
         classes = {}
-        try:
-            with open("backend/dataset/plant_classes.json", "r", encoding="utf-8") as f:
-                data = json.load(f)
-        except FileNotFoundError:
+        # 尝试多个可能的路径
+        paths_to_try = [
+            "backend/models/dataset/plant_classes.json",
+            "dataset/plant_classes.json",
+            "models/dataset/plant_classes.json",
+            "../models/dataset/plant_classes.json",
+        ]
+
+        for path in paths_to_try:
             try:
-                with open("dataset/plant_classes.json", "r", encoding="utf-8") as f:
-                    data = json.load(f)
-            except FileNotFoundError:
-                return classes
+                if os.path.exists(path):
+                    with open(path, "r", encoding="utf-8") as f:
+                        data = json.load(f)
+                    logger.info(f"成功加载植物类别文件: {path}, 共 {len(data.get('classes', {}))} 个类别")
+                    break
+            except Exception as e:
+                logger.warning(f"尝试加载 {path} 失败: {e}")
+        else:
+            # 所有路径都失败
+            logger.error("无法找到植物类别文件")
+            return classes
 
         # 新格式：直接是键值对 {"0": {...}, "1": {...}}
         if "classes" in data:

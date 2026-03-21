@@ -34,6 +34,9 @@ yarn install
 # 启动 Metro bundler
 npm start
 
+# 离线模式（无网络时）
+npm run start:offline
+
 # 或后台运行
 npm start &
 ```
@@ -41,17 +44,20 @@ npm start &
 ### 运行 APP
 
 ```bash
-# iOS 模拟器
+# Expo Go 模式（推荐开发调试使用）
+npm start
+
+# 启动 iOS 模拟器
 npm run ios
 
-# iOS 真机
-npx react-native run-ios --device
-
-# Android 模拟器
+# 启动 Android 模拟器
 npm run android
 
-# Android 真机
-npx react-native run-android
+# 构建原生 iOS 应用
+npm run build:ios
+
+# 构建原生 Android 应用
+npm run build:android
 ```
 
 ## 📁 项目结构
@@ -88,6 +94,52 @@ APP/
 
 ## 🔧 配置说明
 
+### 修改应用图标和启动页面
+
+#### 应用图标 (App Icon)
+
+替换 `assets/` 目录下的图片文件：
+
+| 文件 | 推荐尺寸 | 用途 |
+|------|---------|------|
+| `icon.png` | 1024x1024 | 应用图标 |
+| `adaptive-icon.png` | 1024x1024 | Android 自适应图标 |
+| `favicon.png` | 48x48 | 网页图标 |
+
+#### 启动页面 (Splash Screen)
+
+编辑 `app.json` 中的 `splash` 配置：
+
+```json
+"splash": {
+  "image": "./assets/splash-icon.png",
+  "resizeMode": "contain",
+  "backgroundColor": "#f46",
+  "dark": {
+    "image": "./assets/splash-icon.png",
+    "backgroundColor": "#1a1a2e"
+  }
+}
+```
+
+配置说明：
+- `image`: 启动页中央的图片
+- `resizeMode`: 图片填充模式 (`contain` / `cover` / `native`)
+- `backgroundColor`: 背景颜色
+- `dark.backgroundColor`: 深色模式背景颜色
+
+#### 重新生成原生项目
+
+修改图标或启动页后，需要重新生成原生项目：
+
+```bash
+# 清理并重新生成
+npx expo prebuild --clean
+
+# 或仅更新
+npx expo prebuild
+```
+
 ### API 地址配置
 
 修改 `src/services/config.ts` 中的 API 地址：
@@ -103,14 +155,31 @@ export const API_BASE_URL = 'https://your-domain.com';
 ### iOS 真机调试
 
 1. 连接 iPhone 到 Mac
-2. 运行 `npx react-native run-ios --device`
+2. 运行 `npx expo run:ios --device`
 3. 首次需要配置 Apple Developer 签名
 
 ### Android 真机调试
 
 1. 开启手机开发者模式
 2. 启用 USB 调试
-3. 运行 `npx react-native run-android`
+3. 运行 `npx expo run:android`
+
+### Expo Go 模式
+
+项目支持使用 Expo Go 进行快速开发调试：
+
+```bash
+# 启动开发服务器
+npm start
+
+# 在 iOS 上打开 Expo Go，连接同一网络
+# 在 Android 上打开 Expo Go，连接同一网络
+```
+
+优点：
+- 无需等待原生构建
+- 支持热重载
+- 快速迭代
 
 ## 📦 打包发布
 

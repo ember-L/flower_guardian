@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings
 from typing import Optional
+import os
 
 
 class Settings(BaseSettings):
@@ -16,8 +17,15 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: str = ""
     SMTP_FROM: str = ""
 
+    # DashScope AI配置
+    DASHSCOPE_API_KEY: str = ""
+
+    # 和风天气API配置
+    HEFENG_KEY: str = ""
+
     class Config:
-        env_file = ".env"
+        env_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), ".env")
+        extra = "ignore"
 
 
 settings = Settings()

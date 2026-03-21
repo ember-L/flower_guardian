@@ -2,14 +2,21 @@ from datetime import datetime, timedelta
 from typing import Optional
 from jose import JWTError, jwt
 import bcrypt
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.core.database import get_db
 from app.models.user import User
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/users/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/users/login", auto_error=False)
+
+async def get_token_from_header(request: Request) -> Optional[str]:
+    """从请求头获取token，如果不存在返回None"""
+    auth_header = request.headers.get("Authorization")
+    if auth_header and auth_header.startswith("Bearer "):
+        return auth_header[7:]
+    return None
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
@@ -48,6 +55,21 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     if user is None:
         raise credentials_exception
     return user
+
+
+def get_current_user_optional(token: Optional[str] = Depends(get_token_from_header), db: Session = Depends(get_db)) -> Optional[User]:
+    """可选的认证 - 如果没有token返回None"""
+    if not token:
+        return None
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            return None
+        user = db.query(User).filter(User.username == username).first()
+        return user
+    except JWTError:
+        return None
 
 
 def create_refresh_token(data: dict) -> str:

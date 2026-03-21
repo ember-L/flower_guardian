@@ -57,6 +57,7 @@ import {
   Quote,
   Lightbulb,
   Edit2,
+  Edit3,
   Thermometer,
   Circle,
   Camera,
@@ -98,6 +99,8 @@ import {
   Wind,
   ShoppingCart,
   FileText,
+  Send,
+  Bot,
   type LucideIcon as LucideIconType,
 } from 'lucide-react-native';
 
@@ -186,7 +189,10 @@ const iconMap: Record<string, React.FC<LucideProps>> = {
   quote: Quote,
   lightbulb: Lightbulb,
   'edit-2': Edit2,
+  'edit-3': Edit3,
   circle: Circle,
+  send: Send,
+  bot: Bot,
   // 其他常用
   clipboard: ClipboardList,
   grid: Grid,
@@ -260,6 +266,9 @@ export function Icon({ name, size = 24, color = '#000' }: IconProps) {
 export const Icons = {
   Camera: (props: Omit<LucideProps, 'name'>) => <Icon name="camera" {...props} />,
   Image: (props: Omit<LucideProps, 'name'>) => <Icon name="image" {...props} />,
+  Wifi: (props: Omit<LucideProps, 'name'>) => <Icon name="wifi" {...props} />,
+  Bug: (props: Omit<LucideProps, 'name'>) => <Icon name="bug" {...props} />,
+  CheckCircle: (props: Omit<LucideProps, 'name'>) => <Icon name="check-circle" {...props} />,
   Flower2: (props: Omit<LucideProps, 'name'>) => <Icon name="flower2" {...props} />,
   Flower: (props: Omit<LucideProps, 'name'>) => <Icon name="flower" {...props} />,
   BookOpen: (props: Omit<LucideProps, 'name'>) => <Icon name="book-open" {...props} />,
@@ -304,7 +313,11 @@ export const Icons = {
   Shield: (props: Omit<LucideProps, 'name'>) => <Icon name="shield" {...props} />,
   ShieldCheck: (props: Omit<LucideProps, 'name'>) => <Icon name="shield-check" {...props} />,
   Lightbulb: (props: Omit<LucideProps, 'name'>) => <Icon name="lightbulb" {...props} />,
+  Loader: (props: Omit<LucideProps, 'name'>) => <Icon name="loader" {...props} />,
   Edit2: (props: Omit<LucideProps, 'name'>) => <Icon name="edit-2" {...props} />,
+  Edit3: (props: Omit<LucideProps, 'name'>) => <Icon name="edit-3" {...props} />,
+  Send: (props: Omit<LucideProps, 'name'>) => <Icon name="send" {...props} />,
+  Bot: (props: Omit<LucideProps, 'name'>) => <Icon name="bot" {...props} />,
   Thermometer: (props: Omit<LucideProps, 'name'>) => <Icon name="thermometer" {...props} />,
   Circle: (props: Omit<LucideProps, 'name'>) => <Icon name="circle" {...props} />,
   Quote: (props: Omit<LucideProps, 'name'>) => <Icon name="quote" {...props} />,
@@ -328,6 +341,7 @@ export const Icons = {
   Trash2: (props: Omit<LucideProps, 'name'>) => <Icon name="trash" {...props} />,
   ShieldCheck: (props: Omit<LucideProps, 'name'>) => <Icon name="shield-check" {...props} />,
   ArrowLeftRight: (props: Omit<LucideProps, 'name'>) => <Icon name="arrow-right" {...props} />,
+  ClipboardList: (props: Omit<LucideProps, 'name'>) => <Icon name="clipboard" {...props} />,
 };
 
 const styles = StyleSheet.create({

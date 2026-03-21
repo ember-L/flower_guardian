@@ -9,5 +9,12 @@ from app.models.payment import Payment
 from app.models.diagnosis import DiagnosisRecord
 from app.models.address import Address
 from app.models.email_verification import EmailVerification, VerificationPurpose
+from app.models.chat import Conversation, ChatMessage
+from app.models.weather import WeatherQuery
 
-__all__ = ["User", "Plant", "UserPlant", "Reminder", "Diary", "Product", "Order", "OrderItem", "CartItem", "Payment", "DiagnosisRecord", "Address", "EmailVerification", "VerificationPurpose"]
+__all__ = [
+    "User", "Plant", "UserPlant", "Reminder", "Diary", "Product",
+    "Order", "OrderItem", "CartItem", "Payment", "DiagnosisRecord",
+    "Address", "EmailVerification", "VerificationPurpose",
+    "Conversation", "ChatMessage", "WeatherQuery"
+]

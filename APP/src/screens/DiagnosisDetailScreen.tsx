@@ -1,6 +1,7 @@
 // 诊断详情页面 - Neumorphism 风格美化
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, ActivityIndicator, Image, Animated, Easing } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Image, Animated, Easing } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { getDiagnosis, toggleFavorite, rediagnose, DiagnosisRecord } from '../services/diagnosisService';
 import { colors, spacing, borderRadius, shadows, duration, fontSize, fontWeight, touchTarget } from '../constants/theme';
 import { NavigationProps } from '../navigation/AppNavigator';
@@ -24,11 +25,16 @@ const getConfidenceConfig = (confidence: number) => {
   return { label: '低置信度', color: colors.error, bgColor: colors.errorLight, icon: 'alert-circle' };
 };
 
-export function DiagnosisDetailScreen({ route, navigation }: DiagnosisDetailScreenProps) {
-  const { diagnosisId } = route.params;
+export function DiagnosisDetailScreen({ route, onNavigate, onGoBack }: DiagnosisDetailScreenProps) {
+  const { diagnosisId } = route?.params || {};
   const [record, setRecord] = useState<DiagnosisRecord | null>(null);
   const [loading, setLoading] = useState(true);
   const [fadeAnim] = useState(new Animated.Value(0));
+
+  const handleGoBack = () => {
+    // 重置诊断页面状态后返回
+    onGoBack?.();
+  };
 
   useEffect(() => {
     loadRecord();
@@ -69,14 +75,10 @@ export function DiagnosisDetailScreen({ route, navigation }: DiagnosisDetailScre
   const handleRediagnose = async () => {
     try {
       const newRecord = await rediagnose(diagnosisId);
-      navigation?.onNavigate?.('DiagnosisDetail', { diagnosisId: newRecord.id });
+      onNavigate?.('DiagnosisDetail', { diagnosisId: newRecord.id });
     } catch (error) {
       console.error('Failed to rediagnose:', error);
     }
-  };
-
-  const handleGoBack = () => {
-    navigation?.onGoBack?.();
   };
 
   const formatDate = (dateString: string): string => {

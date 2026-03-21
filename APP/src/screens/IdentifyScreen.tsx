@@ -18,7 +18,15 @@ import { Icons } from '../components/Icon';
 import { colors, spacing, borderRadius } from '../constants/theme';
 import { takePhoto, selectFromGallery, recognizePlant, RecognitionResult } from '../services/recognitionService';
 import { getPopularPlants, Plant } from '../services/plantService';
+import { getWeatherTips, WeatherData } from '../services/weatherService';
+import * as Location from 'expo-location';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NavigationProps } from '../navigation/AppNavigator';
+
+// 缓存键名
+const WEATHER_CACHE_KEY = 'weather_cache';
+const LOCATION_CACHE_KEY = 'location_cache';
+const CACHE_EXPIRY_HOURS = 6; // 缓存6小时
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -31,9 +39,40 @@ export function IdentifyScreen({ onNavigate, currentTab, onTabChange }: Identify
   const [plantNickname, setPlantNickname] = useState('');
   const [recommendPlants, setRecommendPlants] = useState<Plant[]>([]);
   const [capturedImageUri, setCapturedImageUri] = useState<string>('');
+  const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
+  const [weatherTip, setWeatherTip] = useState<string>('');
+  const [weatherLoading, setWeatherLoading] = useState(false);
+
+  // 加载缓存的天气数据
+  const loadCachedWeather = async () => {
+    try {
+      const cached = await AsyncStorage.getItem(WEATHER_CACHE_KEY);
+      if (cached) {
+        const { weather, tip, timestamp } = JSON.parse(cached);
+        // 检查缓存是否过期
+        const now = Date.now();
+        const cacheAge = now - timestamp;
+        const expiryMs = CACHE_EXPIRY_HOURS * 60 * 60 * 1000;
+
+        if (cacheAge < expiryMs) {
+          setWeatherData(weather);
+          setWeatherTip(tip);
+          console.log('[Weather] 加载缓存天气数据');
+          return true; // 缓存有效
+        }
+      }
+    } catch (error) {
+      console.error('加载天气缓存失败', error);
+    }
+    return false; // 缓存无效
+  };
 
   useEffect(() => {
     loadRecommendPlants();
+    // 优先加载缓存，然后检查是否需要获取新数据
+    loadCachedWeather();
+    // 首次打开时获取天气（仅当没有有效缓存时）
+    checkAndFetchWeather();
   }, []);
 
   const loadRecommendPlants = async () => {
@@ -42,6 +81,109 @@ export function IdentifyScreen({ onNavigate, currentTab, onTabChange }: Identify
       setRecommendPlants(data.items || []);
     } catch (error) {
       console.error('加载推荐植物失败', error);
+    }
+  };
+
+  // 检查并获取天气（仅当没有缓存或缓存过期时）
+  const checkAndFetchWeather = async () => {
+    try {
+      const cached = await AsyncStorage.getItem(WEATHER_CACHE_KEY);
+      if (cached) {
+        const { timestamp } = JSON.parse(cached);
+        const now = Date.now();
+        const cacheAge = now - timestamp;
+        const expiryMs = CACHE_EXPIRY_HOURS * 60 * 60 * 1000;
+
+        // 如果缓存有效，不自动获取
+        if (cacheAge < expiryMs) {
+          console.log('[Weather] 缓存有效，跳过自动获取');
+          return;
+        }
+      }
+    } catch (error) {
+      console.error('检查缓存失败', error);
+    }
+
+    // 缓存无效，获取新数据
+    fetchWeatherTip();
+  };
+
+  // 获取天气和AI小贴士
+  const fetchWeatherTip = async () => {
+    setWeatherLoading(true);
+    try {
+      // 使用 expo-location 获取GPS定位
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('权限被拒绝', '需要定位权限来获取天气');
+        setWeatherLoading(false);
+        return;
+      }
+
+      // 尝试获取缓存的位置
+      let latitude: number, longitude: number;
+      const cachedLocation = await AsyncStorage.getItem(LOCATION_CACHE_KEY);
+
+      if (cachedLocation) {
+        const { lat, lon, timestamp } = JSON.parse(cachedLocation);
+        const cacheAge = Date.now() - timestamp;
+        // 位置缓存1小时内有效
+        if (cacheAge < 60 * 60 * 1000) {
+          latitude = lat;
+          longitude = lon;
+          console.log('[Weather] 使用缓存位置:', latitude, longitude);
+        } else {
+          // 位置过期，重新获取
+          const location = await Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.High,
+          });
+          latitude = location.coords.latitude;
+          longitude = location.coords.longitude;
+          // 保存位置到缓存
+          await AsyncStorage.setItem(LOCATION_CACHE_KEY, JSON.stringify({
+            lat: latitude,
+            lon: longitude,
+            timestamp: Date.now()
+          }));
+        }
+      } else {
+        // 首次获取位置
+        const location = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.High,
+        });
+        latitude = location.coords.latitude;
+        longitude = location.coords.longitude;
+        // 保存位置到缓存
+        await AsyncStorage.setItem(LOCATION_CACHE_KEY, JSON.stringify({
+          lat: latitude,
+          lon: longitude,
+          timestamp: Date.now()
+        }));
+      }
+
+      console.log('GPS坐标:', latitude, longitude);
+
+      getWeatherTips(latitude, longitude)
+        .then(async (data) => {
+          setWeatherData(data.weather);
+          setWeatherTip(data.tip);
+          // 保存天气数据到缓存
+          await AsyncStorage.setItem(WEATHER_CACHE_KEY, JSON.stringify({
+            weather: data.weather,
+            tip: data.tip,
+            timestamp: Date.now()
+          }));
+          console.log('[Weather] 天气数据已缓存');
+        })
+        .catch((err) => {
+          console.error('获取天气失败', err);
+        })
+        .finally(() => {
+          setWeatherLoading(false);
+        });
+    } catch (error) {
+      console.error('获取天气失败', error);
+      setWeatherLoading(false);
     }
   };
 
@@ -149,14 +291,16 @@ export function IdentifyScreen({ onNavigate, currentTab, onTabChange }: Identify
     { id: 'diagnose', label: '病症诊断', icon: Icons.Stethoscope, color: '#ff9500', gradient: ['#ff9500', '#ff6b00'], desc: '植物看病', screen: 'Diagnosis' },
     { id: 'recommend', label: '新手推荐', icon: Icons.Sparkles, color: '#af52de', gradient: ['#af52de', '#8e44ad'], desc: '智能推荐', screen: 'Recommendation' },
     { id: 'reminder', label: '智能提醒', icon: Icons.Bell, color: '#ff2d55', gradient: ['#ff2d55', '#c0392b'], desc: '浇水施肥', screen: 'Reminder' },
+    { id: 'consult', label: 'AI问诊', icon: Icons.MessageCircle, color: '#34c759', gradient: ['#34c759', '#30b350'], desc: '在线问答', screen: 'ConsultationList' },
   ];
 
   const handleQuickAction = (action: typeof quickActions[0]) => {
     if (onNavigate) {
-      const screenMap: Record<string, 'Diagnosis' | 'Recommendation' | 'Reminder'> = {
+      const screenMap: Record<string, 'Diagnosis' | 'Recommendation' | 'Reminder' | 'ConsultationList'> = {
         'diagnose': 'Diagnosis',
         'recommend': 'Recommendation',
         'reminder': 'Reminder',
+        'consult': 'ConsultationList',
       };
       onNavigate(screenMap[action.id] || null);
     } else {
@@ -172,11 +316,6 @@ export function IdentifyScreen({ onNavigate, currentTab, onTabChange }: Identify
       Alert.alert(plant.name, `即将跳转到${plant.name}的详情页`);
     }
   };
-
-  const tips = [
-    { title: '今日光照提示', content: '晴天适合给喜阳植物晒太阳，注意遮阴保护耐阴植物', icon: Icons.Sun, iconColor: '#f59e0b' },
-    { title: '浇水小技巧', content: '早晨或傍晚浇水最佳，避免中午高温时段', icon: Icons.Droplets, iconColor: '#0ea5e9' },
-  ];
 
   return (
     <SafeAreaView style={styles.container}>
@@ -404,25 +543,82 @@ export function IdentifyScreen({ onNavigate, currentTab, onTabChange }: Identify
             </ScrollView>
           </View>
 
-          {/* 今日小贴士 - 渐变卡片 */}
+          {/* 今日小贴士 - 天气卡片 */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>今日小贴士</Text>
-            <View style={styles.tipsContainer}>
-              {tips.map((tip, index) => {
-                const Icon = tip.icon;
-                return (
-                  <View key={index} style={styles.tipCard}>
-                    <View style={[styles.tipIcon, { backgroundColor: tip.iconColor + '15' }]}>
-                      <Icon size={20} color={tip.iconColor} />
+            {weatherLoading ? (
+              <View style={styles.weatherLoading}>
+                <ActivityIndicator size="small" color={colors.primary} />
+                <Text style={styles.weatherLoadingText}>正在获取天气...</Text>
+              </View>
+            ) : weatherData ? (
+              <View style={styles.weatherCard}>
+                {/* 顶部渐变背景 */}
+                <View style={styles.weatherGradient}>
+                  <View style={styles.weatherMainInfo}>
+                    <View style={styles.weatherLeft}>
+                      <Text style={styles.weatherTemp}>{weatherData.temp}°</Text>
+                      <Text style={styles.weatherTempRange}>
+                        H:{weatherData.tempMax}° L:{weatherData.tempMin}°
+                      </Text>
                     </View>
-                    <View style={styles.tipContent}>
-                      <Text style={styles.tipTitle}>{tip.title}</Text>
-                      <Text style={styles.tipText}>{tip.content}</Text>
+                    <View style={styles.weatherRight}>
+                      <Text style={styles.weatherCondition}>{weatherData.condition}</Text>
+                      <View style={styles.weatherLocationRow}>
+                        <Icons.MapPin size={12} color="rgba(255,255,255,0.8)" />
+                        <Text style={styles.weatherLocation}>{weatherData.location}</Text>
+                      </View>
                     </View>
                   </View>
-                );
-              })}
-            </View>
+                </View>
+
+                {/* 天气指标 */}
+                <View style={styles.weatherMetrics}>
+                  <View style={styles.weatherMetricItem}>
+                    <Icons.Droplets size={18} color="#3B82F6" />
+                    <Text style={styles.weatherMetricValue}>{weatherData.humidity}%</Text>
+                    <Text style={styles.weatherMetricLabel}>湿度</Text>
+                  </View>
+                  <View style={styles.weatherMetricDivider} />
+                  <View style={styles.weatherMetricItem}>
+                    <Icons.Wind size={18} color="#8B5CF6" />
+                    <Text style={styles.weatherMetricValue}>{weatherData.windSpeed}</Text>
+                    <Text style={styles.weatherMetricLabel}>风速</Text>
+                  </View>
+                  <View style={styles.weatherMetricDivider} />
+                  <View style={styles.weatherMetricItem}>
+                    <Icons.Sun size={18} color="#F59E0B" />
+                    <Text style={styles.weatherMetricValue}>UV {weatherData.uvIndex}</Text>
+                    <Text style={styles.weatherMetricLabel}>紫外线</Text>
+                  </View>
+                </View>
+
+                {/* AI小贴士 */}
+                <View style={styles.weatherTipSection}>
+                  <View style={styles.weatherTipHeader}>
+                    <Icons.Lightbulb size={16} color={colors.primary} />
+                    <Text style={styles.weatherTipTitle}>今日养护建议</Text>
+                  </View>
+                  <Text style={styles.weatherTipText}>{weatherTip}</Text>
+                  <TouchableOpacity
+                    style={styles.refreshButton}
+                    onPress={fetchWeatherTip}
+                    disabled={weatherLoading}
+                  >
+                    {weatherLoading ? (
+                      <ActivityIndicator size="small" color="#fff" />
+                    ) : (
+                      <Icons.RefreshCw size={16} color="#fff" />
+                    )}
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ) : (
+              <TouchableOpacity style={styles.weatherEmpty} onPress={fetchWeatherTip}>
+                <Icons.Lightbulb size={24} color={colors.primary} />
+                <Text style={styles.weatherEmptyText}>点击获取今日小贴士</Text>
+              </TouchableOpacity>
+            )}
           </View>
 
           {/* 今日推荐植物 - 横向滚动 */}
@@ -936,6 +1132,162 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors['text-secondary'],
     lineHeight: 19,
+  },
+
+  // Weather Card - Modern Design
+  weatherLoading: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFF0F3',
+    borderRadius: 20,
+    padding: spacing.xl,
+    gap: spacing.sm,
+  },
+  weatherLoadingText: {
+    fontSize: 14,
+    color: colors.primary,
+  },
+  weatherCard: {
+    backgroundColor: '#fff',
+    borderRadius: 24,
+    overflow: 'hidden',
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    elevation: 6,
+  },
+  weatherGradient: {
+    backgroundColor: colors.primary,
+    padding: spacing.lg,
+    paddingTop: spacing.xl,
+    paddingBottom: spacing.xl + spacing.md,
+  },
+  weatherMainInfo: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  weatherLeft: {
+    marginRight: spacing.lg,
+  },
+  weatherTemp: {
+    fontSize: 52,
+    fontWeight: '200',
+    color: '#fff',
+    lineHeight: 56,
+  },
+  weatherTempRange: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.8)',
+    marginTop: 4,
+  },
+  weatherRight: {
+    flex: 1,
+    paddingTop: spacing.sm,
+  },
+  weatherCondition: {
+    fontSize: 24,
+    fontWeight: '600',
+    color: '#fff',
+    marginBottom: 6,
+  },
+  weatherLocationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  weatherLocation: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.8)',
+  },
+  weatherMetrics: {
+    flexDirection: 'row',
+    backgroundColor: '#fff',
+    marginHorizontal: spacing.lg,
+    marginTop: -spacing.xl,
+    borderRadius: 16,
+    padding: spacing.md,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  weatherMetricItem: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 4,
+  },
+  weatherMetricValue: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  weatherMetricLabel: {
+    fontSize: 11,
+    color: colors['text-tertiary'],
+    marginTop: 2,
+  },
+  weatherMetricDivider: {
+    width: 1,
+    backgroundColor: colors.border,
+    marginHorizontal: spacing.xs,
+  },
+  weatherTipSection: {
+    backgroundColor: '#FFF0F3',
+    padding: spacing.lg,
+    position: 'relative',
+  },
+  weatherTipHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.sm,
+  },
+  weatherTipTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.primary,
+  },
+  weatherTipText: {
+    fontSize: 14,
+    color: colors.text,
+    lineHeight: 22,
+    paddingRight: spacing.xl,
+  },
+  refreshButton: {
+    position: 'absolute',
+    right: spacing.md,
+    bottom: spacing.md,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  weatherEmpty: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFF0F3',
+    borderRadius: 20,
+    padding: spacing.xl,
+    borderWidth: 2,
+    borderColor: colors.primary,
+    borderStyle: 'dashed',
+    gap: spacing.sm,
+  },
+  weatherEmptyText: {
+    fontSize: 14,
+    color: colors.primary,
+    fontWeight: '500',
   },
 
   // Recommend

@@ -1,4 +1,70 @@
 {
-  "name": "FlowerGuardian",
-  "displayName": "FlowerGuardian"
+  "expo": {
+    "name": "护花使者",
+    "slug": "flower-guardian",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#f46",
+      "dark": {
+        "image": "./assets/splash-icon.png",
+        "backgroundColor": "#1a1a2e"
+      }
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.flowerguardian.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "需要获取您的位置来提供当地天气信息和植物养护建议",
+        "NSCameraUsageDescription": "护花使者需要使用相机来拍摄植物照片进行识别",
+        "NSPhotoLibraryUsageDescription": "护花使者需要访问相册来选择植物照片"
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#f46"
+      },
+      "permissions": [
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.RECORD_AUDIO"
+      ],
+      "package": "com.flowerguardian.app"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "需要获取您的位置来提供当地天气信息和植物养护建议"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "护花使者需要访问相册来选择植物照片",
+          "cameraPermission": "护花使者需要使用相机来拍摄植物照片"
+        }
+      ]
+    ]
+  }
 }

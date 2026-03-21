@@ -1,5 +1,5 @@
 // 花卉识别服务
-import { launchCamera, launchImageLibrary, ImagePickerResponse } from 'react-native-image-picker';
+import * as ImagePicker from 'expo-image-picker';
 import axios from 'axios';
 import { API_BASE_URL } from './config';
 
@@ -27,20 +27,29 @@ export interface SimilarSpecies {
 }
 
 // 拍照识别
-export const takePhoto = async (): Promise<ImagePickerResponse> => {
-  const result = await launchCamera({
-    mediaType: 'photo',
+export const takePhoto = async (): Promise<{ assets?: { uri: string }[]; canceled?: boolean }> => {
+  const { status } = await ImagePicker.requestCameraPermissionsAsync();
+  if (status !== 'granted') {
+    throw new Error('Camera permission not granted');
+  }
+  const result = await ImagePicker.launchCameraAsync({
+    mediaTypes: ImagePicker.MediaTypeOptions.Images,
     quality: 0.8,
-    saveToPhotos: false,
+    allowsEditing: false,
   });
   return result;
 };
 
 // 相册选择
-export const selectFromGallery = async (): Promise<ImagePickerResponse> => {
-  const result = await launchImageLibrary({
-    mediaType: 'photo',
+export const selectFromGallery = async (): Promise<{ assets?: { uri: string }[]; canceled?: boolean }> => {
+  const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  if (status !== 'granted') {
+    throw new Error('Gallery permission not granted');
+  }
+  const result = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ImagePicker.MediaTypeOptions.Images,
     quality: 0.8,
+    allowsEditing: false,
   });
   return result;
 };

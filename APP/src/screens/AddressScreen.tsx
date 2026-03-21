@@ -5,10 +5,10 @@ import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  SafeAreaView,
   ActivityIndicator,
   Alert,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { getAddresses, deleteAddress, setDefaultAddress, Address } from '../services/addressService';
 import { colors, spacing, shadows } from '../constants/theme';
 import { NavigationProps } from '../navigation/AppNavigator';

@@ -1,8 +1,9 @@
 // 日记服务 - API 通信层
 import axios from 'axios';
 import { getToken } from './auth';
+import { API_BASE_URL } from './config';
 
-const API_BASE = 'http://localhost:8000/api';
+const API_BASE = API_BASE_URL + '/api';
 
 export interface Diary {
   id: number;

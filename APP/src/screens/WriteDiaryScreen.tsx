@@ -5,7 +5,7 @@ import {
   TextInput, Image, Alert, ActivityIndicator
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { launchImageLibrary, launchCamera } from 'react-native-image-picker';
+import * as ImagePicker from 'expo-image-picker';
 import { Icons } from '../components/Icon';
 import { colors, spacing } from '../constants/theme';
 import { NavigationProps } from '../navigation/AppNavigator';
@@ -62,23 +62,31 @@ export function WriteDiaryScreen({ onGoBack, onNavigate, editDiaryId, isLoggedIn
     Alert.alert('添加图片', '选择图片来源', [
       {
         text: '拍照',
-        onPress: () => {
-          launchCamera({ mediaType: 'photo', quality: 0.8 }, (response) => {
-            if (response.assets && response.assets[0]?.uri) {
-              setImages([...images, response.assets[0].uri]);
-            }
-          });
+        onPress: async () => {
+          const { status } = await ImagePicker.requestCameraPermissionsAsync();
+          if (status !== 'granted') {
+            Alert.alert('权限不足', '需要相机权限');
+            return;
+          }
+          const result = await ImagePicker.launchCameraAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.8 });
+          if (result.assets && result.assets[0]?.uri) {
+            setImages([...images, result.assets[0].uri]);
+          }
         },
       },
       {
         text: '相册',
-        onPress: () => {
-          launchImageLibrary({ mediaType: 'photo', quality: 0.8, selectionLimit: 9 - images.length }, (response) => {
-            if (response.assets) {
-              const newImages = response.assets.map(a => a.uri).filter(Boolean) as string[];
-              setImages([...images, ...newImages].slice(0, 9));
-            }
-          });
+        onPress: async () => {
+          const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+          if (status !== 'granted') {
+            Alert.alert('权限不足', '需要相册权限');
+            return;
+          }
+          const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.8, allowsMultipleSelection: true, selectionLimit: 9 - images.length });
+          if (result.assets) {
+            const newImages = result.assets.map(a => a.uri).filter(Boolean) as string[];
+            setImages([...images, ...newImages].slice(0, 9));
+          }
         },
       },
       { text: '取消', style: 'cancel' },

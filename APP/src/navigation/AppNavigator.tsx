@@ -29,10 +29,15 @@ import { AddressScreen } from '../screens/AddressScreen';
 import { AddressEditScreen } from '../screens/AddressEditScreen';
 import { EmailVerifyScreen } from '../screens/EmailVerifyScreen';
 import { ForgotPasswordScreen } from '../screens/ForgotPasswordScreen';
+import { ConsultationListScreen } from '../screens/ConsultationListScreen';
+import { ConsultationScreen } from '../screens/ConsultationScreen';
+import { KnowledgeScreen } from '../screens/KnowledgeScreen';
+import { KnowledgeDetailScreen } from '../screens/KnowledgeDetailScreen';
+import { PlantDetailScreen } from '../screens/PlantDetailScreen';
 import { getCurrentUser, isAuthenticated, logout as authLogout, checkAuthStatus } from '../services/auth';
 
 export type TabName = 'Identify' | 'Garden' | 'Encyclopedia' | 'Store' | 'Profile';
-export type SubPageName = 'Diagnosis' | 'Recommendation' | 'Reminder' | 'EncyclopediaDetail' | 'Diary' | 'StoreDetail' | 'Cart' | 'Checkout' | 'Orders' | 'OrderDetail' | 'DiagnosisHistory' | 'DiagnosisDetail' | 'Login' | 'Register' | 'ForgotPassword' | 'WriteDiary' | 'DiaryDetail' | 'GrowthCurve' | 'Address' | 'AddressEdit' | 'EmailVerify' | null;
+export type SubPageName = 'Diagnosis' | 'Recommendation' | 'Reminder' | 'EncyclopediaDetail' | 'Diary' | 'StoreDetail' | 'Cart' | 'Checkout' | 'Orders' | 'OrderDetail' | 'DiagnosisHistory' | 'DiagnosisDetail' | 'Login' | 'Register' | 'ForgotPassword' | 'WriteDiary' | 'DiaryDetail' | 'GrowthCurve' | 'Address' | 'AddressEdit' | 'EmailVerify' | 'ConsultationList' | 'Consultation' | 'Knowledge' | 'KnowledgeDetail' | 'PlantDetail' | null;
 
 interface TabConfig {
   name: TabName;
@@ -103,6 +108,8 @@ export function AppNavigator() {
   };
 
   const handleGoBack = () => {
+    // 返回时切换到识别页面
+    setCurrentTab('Identify');
     setCurrentSubPage(null);
     setNavParams(null);
   };
@@ -144,6 +151,21 @@ export function AppNavigator() {
     }
     if (currentSubPage === 'DiagnosisDetail') {
       return <DiagnosisDetailScreen route={navParams || {}} onGoBack={handleGoBack} onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} />;
+    }
+    if (currentSubPage === 'ConsultationList') {
+      return <ConsultationListScreen onGoBack={handleGoBack} onNavigate={handleNavigate} />;
+    }
+    if (currentSubPage === 'Consultation') {
+      return <ConsultationScreen onGoBack={handleGoBack} conversationId={navParams?.conversationId} diagnosisContext={navParams?.diagnosisContext} />;
+    }
+    if (currentSubPage === 'Knowledge') {
+      return <KnowledgeScreen onGoBack={handleGoBack} onNavigate={handleNavigate} />;
+    }
+    if (currentSubPage === 'KnowledgeDetail') {
+      return <KnowledgeDetailScreen onGoBack={handleGoBack} article={navParams?.article || {}} />;
+    }
+    if (currentSubPage === 'PlantDetail') {
+      return <PlantDetailScreen route={{ params: navParams }} onNavigate={handleNavigate} onTabChange={handleTabChange} />;
     }
     if (currentSubPage === 'Login') {
       return (

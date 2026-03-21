@@ -1,8 +1,8 @@
 // 病虫害识别服务（边缘端+服务器端）
 import NetInfo from '@react-native-community/netinfo';
+import { API_BASE_URL } from './config';
 
 // API基础URL
-const API_BASE_URL = 'http://localhost:8000';
 
 // 病虫害识别结果类型
 export interface PestResult {

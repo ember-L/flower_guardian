@@ -12,6 +12,7 @@ import {
   FlatList,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 import { Icon } from '../components/Icon';
 import { colors, spacing, borderRadius, shadows, duration, touchTarget } from '../constants/theme';
 import { getDiaries, getMyPlants, Plant } from '../services/diaryService';
@@ -134,12 +135,14 @@ export function DiaryScreen({ onGoBack, onNavigate, isLoggedIn, onRequireLogin }
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  // 检查登录状态
-  useEffect(() => {
-    if (!isLoggedIn && onRequireLogin) {
-      onRequireLogin();
-    }
-  }, [isLoggedIn, onRequireLogin]);
+  // 使用 useFocusEffect 每次页面获得焦点时检查登录状态
+  useFocusEffect(
+    useCallback(() => {
+      if (!isLoggedIn && onRequireLogin) {
+        onRequireLogin();
+      }
+    }, [isLoggedIn, onRequireLogin])
+  );
 
   const loadData = useCallback(async () => {
     if (!isLoggedIn) return;
@@ -171,8 +174,12 @@ export function DiaryScreen({ onGoBack, onNavigate, isLoggedIn, onRequireLogin }
       } else {
         setDiaries([]);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to load diaries:', error);
+      // 401/422 未授权，跳转到登录页面
+      if ((error?.response?.status === 401 || error?.response?.status === 422) && onRequireLogin) {
+        onRequireLogin();
+      }
       setDiaries([]);
       setPlants([]);
     } finally {

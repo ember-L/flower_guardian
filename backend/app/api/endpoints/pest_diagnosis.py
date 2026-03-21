@@ -1,7 +1,7 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
 from sqlalchemy.orm import Session
 from app.core.database import get_db
-from app.core.security import get_current_user
+from app.core.security import get_current_user_optional
 from app.models.user import User
 from app.services.pest_recognition import pest_recognition_service
 import tempfile
@@ -15,7 +15,7 @@ router = APIRouter(prefix="/api/diagnosis", tags=["diagnosis"])
 async def diagnose_pest(
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: Optional[User] = Depends(get_current_user_optional)
 ):
     """病虫害识别API"""
     with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp:
@@ -36,7 +36,7 @@ async def diagnose_pest(
 async def diagnose_full(
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: Optional[User] = Depends(get_current_user_optional)
 ):
     """完整诊断API（识别病虫害并返回处理建议）"""
     with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp:
