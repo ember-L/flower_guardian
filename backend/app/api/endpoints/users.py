@@ -7,7 +7,7 @@ from app.core.database import get_db
 from app.core.security import verify_password, get_password_hash, create_access_token, create_refresh_token, get_current_user, verify_refresh_token
 from app.core.config import settings
 from app.models.user import User
-from app.schemas.user import UserCreate, UserResponse, Token, UserUpdate, PasswordChange
+from app.schemas.user import UserCreate, UserResponse, Token, UserUpdate, PasswordChange, PushTokenUpdate
 
 router = APIRouter(prefix="/api/users", tags=["users"])
 
@@ -177,3 +177,15 @@ def refresh_token(request: RefreshRequest, db: Session = Depends(get_db)):
         "refresh_token": new_refresh_token,
         "token_type": "bearer"
     }
+
+
+@router.post("/push-token")
+def update_push_token(
+    token_update: PushTokenUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """更新用户的 Expo 推送令牌"""
+    current_user.expo_push_token = token_update.expo_push_token
+    db.commit()
+    return {"message": "Push token updated successfully"}

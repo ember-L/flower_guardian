@@ -1,6 +1,8 @@
 // AI问诊服务
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_BASE_URL } from './config';
+import axios from 'axios';
+import { getToken } from './auth';
 
 export interface Message {
   id: string;
@@ -38,7 +40,7 @@ export interface DiagnosisContext {
 const STORAGE_KEY = '@consultations';
 
 // 调用后端AI代理接口
-const callAIChat = async (messages: Message[], context?: DiagnosisContext): Promise<string> => {
+export const callAIChat = async (messages: Message[], context?: DiagnosisContext): Promise<string> => {
   // 构建带上下文的系统提示
   let systemContext = '';
 
@@ -198,3 +200,61 @@ export const getWelcomeMessage = (): Message => ({
   content: '您好！我是AI植物医生助手 🌿\n\n我可以帮您：\n• 解答植物养护问题\n• 分析病虫害原因\n• 提供治疗建议\n• 制定养护计划\n\n请描述您遇到的植物问题，我会尽力帮助您！',
   timestamp: Date.now(),
 });
+
+// ==================== 后端 API ====================
+
+const api = axios.create({
+  baseURL: API_BASE_URL,
+});
+
+api.interceptors.request.use(async (config) => {
+  const token = await getToken();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// 创建对话到后端
+export const createConversationToBackend = async (title: string, diagnosisContext?: any): Promise<number> => {
+  const response = await api.post('/api/chat/conversations', {
+    title
+  });
+  return response.data.id;
+};
+
+// 获取对话列表（从后端）
+export const getConversationsFromBackend = async (): Promise<any[]> => {
+  const response = await api.get('/api/chat/conversations');
+  return response.data;
+};
+
+// 获取对话详情
+export const getConversationFromBackend = async (conversationId: number): Promise<any> => {
+  const response = await api.get(`/api/chat/conversations/${conversationId}`);
+  return response.data;
+};
+
+// 发送消息
+export const sendMessageToBackend = async (conversationId: number, role: string, content: string): Promise<void> => {
+  await api.post(`/api/chat/conversations/${conversationId}/messages`, {
+    conversation_id: conversationId,
+    role,
+    content
+  });
+};
+
+// 根据诊断ID获取关联对话
+export const getConversationByDiagnosis = async (diagnosisId: number): Promise<number | null> => {
+  try {
+    const response = await api.get(`/api/diagnoses/${diagnosisId}`);
+    return response.data.conversation_id || null;
+  } catch (error) {
+    return null;
+  }
+};
+
+// 关联诊断和对话
+export const linkDiagnosisToConversation = async (diagnosisId: number, conversationId: number): Promise<void> => {
+  await api.put(`/api/diagnoses/${diagnosisId}/conversation?conversation_id=${conversationId}`);
+};

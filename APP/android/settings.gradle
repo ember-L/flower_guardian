@@ -1,4 +1,20 @@
 pluginManagement {
+  def REPOSITORIES = [
+    'https://maven.aliyun.com/repository/google',
+    'https://maven.aliyun.com/repository/central',
+    'https://maven.aliyun.com/repository/public',
+    'https://maven.aliyun.com/repository/gradle-plugin',
+    'https://plugins.gradle.org/m2/'
+  ]
+  repositories {
+    REPOSITORIES.each { repo ->
+      maven { url repo }
+    }
+    google()
+    mavenCentral()
+    gradlePluginPortal()
+  }
+
   def reactNativeGradlePlugin = new File(
     providers.exec {
       workingDir(rootDir)
@@ -6,7 +22,7 @@ pluginManagement {
     }.standardOutput.asText.get().trim()
   ).getParentFile().absolutePath
   includeBuild(reactNativeGradlePlugin)
-  
+
   def expoPluginsPath = new File(
     providers.exec {
       workingDir(rootDir)

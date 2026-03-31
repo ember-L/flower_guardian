@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Image, Animated, Easing } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getDiagnosis, toggleFavorite, rediagnose, DiagnosisRecord } from '../services/diagnosisService';
+import { createConversationToBackend, linkDiagnosisToConversation, sendMessageToBackend, callAIChat } from '../services/consultationService';
 import { colors, spacing, borderRadius, shadows, duration, fontSize, fontWeight, touchTarget } from '../constants/theme';
 import { NavigationProps } from '../navigation/AppNavigator';
 import { Icon } from '../components/Icon';
@@ -37,7 +38,10 @@ export function DiagnosisDetailScreen({ route, onNavigate, onGoBack }: Diagnosis
   };
 
   useEffect(() => {
-    loadRecord();
+    console.log('[DiagnosisDetail] useEffect triggered, diagnosisId:', diagnosisId);
+    if (diagnosisId) {
+      loadRecord();
+    }
   }, [diagnosisId]);
 
   // 页面进入动画
@@ -54,9 +58,14 @@ export function DiagnosisDetailScreen({ route, onNavigate, onGoBack }: Diagnosis
 
   const loadRecord = async () => {
     try {
-      const data = await getDiagnosis(diagnosisId);
+      console.log('[DiagnosisDetail] diagnosisId:', diagnosisId, 'type:', typeof diagnosisId);
+      const id = typeof diagnosisId === 'string' ? parseInt(diagnosisId, 10) : diagnosisId;
+      console.log('[DiagnosisDetail] parsed id:', id);
+      const data = await getDiagnosis(id);
+      console.log('[DiagnosisDetail] Loaded data:', JSON.stringify(data));
       setRecord(data);
-    } catch (error) {
+    } catch (error: any) {
+      console.error('[DiagnosisDetail] Failed to load diagnosis:', error?.response?.data || error);
       console.error('Failed to load diagnosis:', error);
     } finally {
       setLoading(false);
@@ -65,7 +74,8 @@ export function DiagnosisDetailScreen({ route, onNavigate, onGoBack }: Diagnosis
 
   const handleToggleFavorite = async () => {
     try {
-      const result = await toggleFavorite(diagnosisId);
+      const id = typeof diagnosisId === 'string' ? parseInt(diagnosisId, 10) : diagnosisId;
+      const result = await toggleFavorite(id);
       setRecord(prev => prev ? { ...prev, is_favorite: result.is_favorite } : null);
     } catch (error) {
       console.error('Failed to toggle favorite:', error);
@@ -74,10 +84,73 @@ export function DiagnosisDetailScreen({ route, onNavigate, onGoBack }: Diagnosis
 
   const handleRediagnose = async () => {
     try {
-      const newRecord = await rediagnose(diagnosisId);
+      const id = typeof diagnosisId === 'string' ? parseInt(diagnosisId, 10) : diagnosisId;
+      const newRecord = await rediagnose(id);
       onNavigate?.('DiagnosisDetail', { diagnosisId: newRecord.id });
     } catch (error) {
       console.error('Failed to rediagnose:', error);
+    }
+  };
+
+  const handleAIConsult = async () => {
+    try {
+      console.log('[DiagnosisDetail] handleAIConsult called, record:', record);
+      const id = typeof diagnosisId === 'string' ? parseInt(diagnosisId, 10) : diagnosisId;
+
+      // 构建诊断上下文
+      const diagnosisContext = {
+        currentDiagnosis: record ? {
+          name: record.disease_name,
+          type: 'disease',
+          severity: record.confidence >= 0.8 ? 'high' : record.confidence >= 0.5 ? 'medium' : 'low',
+          confidence: record.confidence,
+        } : undefined,
+        plantType: undefined,
+      };
+
+      // 检查是否已有关联的对话
+      if (record?.conversation_id) {
+        // 已有对话，直接跳转到该对话
+        onNavigate?.('Consultation', { conversationId: record.conversation_id, diagnosisContext });
+        return;
+      }
+
+      // 创建新对话，传递诊断上下文作为标题的一部分
+      const title = `诊断咨询: ${record?.disease_name || '植物问题'}`;
+      const conversationId = await createConversationToBackend(title, diagnosisContext);
+
+      // 关联诊断记录与对话
+      await linkDiagnosisToConversation(id, conversationId);
+
+      // 构建初始诊断消息
+      const diagnosisText = `用户刚刚完成了病害诊断，结果如下：
+- 病害名称：${record?.disease_name || '未知'}
+- 置信度：${((record?.confidence || 0) * 100).toFixed(0)}%
+- 描述：${record?.description || '无'}
+- 治疗建议：${record?.treatment || '无'}
+- 预防措施：${record?.prevention || '无'}
+
+请基于以上诊断结果，提供专业的治疗建议和后续养护指导。`;
+
+      // 保存初始诊断消息到后端，并获取AI回复
+      try {
+        await sendMessageToBackend(conversationId, 'user', diagnosisText);
+
+        // 调用AI获取回复
+        const aiResponse = await callAIChat([
+          { id: '1', role: 'user', content: diagnosisText, timestamp: Date.now() }
+        ], diagnosisContext);
+
+        // 保存AI回复到后端
+        await sendMessageToBackend(conversationId, 'assistant', aiResponse);
+      } catch (msgError) {
+        console.error('Failed to save initial message:', msgError);
+      }
+
+      // 跳转到AI问诊页面，传递对话ID和诊断上下文
+      onNavigate?.('Consultation', { conversationId, diagnosisContext });
+    } catch (error) {
+      console.error('Failed to start AI consultation:', error);
     }
   };
 
@@ -125,9 +198,10 @@ export function DiagnosisDetailScreen({ route, onNavigate, onGoBack }: Diagnosis
           activeOpacity={duration.pressed}
         >
           <Icon
-            name={record.is_favorite ? 'star' : 'star-outline'}
+            name="star"
             size={24}
             color={record.is_favorite ? colors.accent : colors['text-secondary']}
+            fill={record.is_favorite ? colors.accent : 'none'}
           />
         </TouchableOpacity>
       </View>
@@ -169,7 +243,23 @@ export function DiagnosisDetailScreen({ route, onNavigate, onGoBack }: Diagnosis
           </View>
 
           {/* 病因描述 */}
-          {record.description && (
+          {record.disease_name === '未知' || !record.description ? (
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <View style={[styles.sectionIcon, { backgroundColor: colors.warningLight }]}>
+                  <Icon name="alert-circle" size={18} color={colors.warning} />
+                </View>
+                <Text style={styles.sectionTitle}>诊断说明</Text>
+              </View>
+              <View style={styles.sectionContent}>
+                <Text style={styles.sectionText}>
+                  {record.disease_name === '未知'
+                    ? '很抱歉，未能识别出植物病害。建议您：\n1. 拍摄更清晰的照片\n2. 确保光线充足\n3. 拍摄植物的患病部位特写'
+                    : record.description || '暂无描述'}
+                </Text>
+              </View>
+            </View>
+          ) : record.description && (
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <View style={[styles.sectionIcon, { backgroundColor: colors.warningLight }]}>
@@ -184,7 +274,7 @@ export function DiagnosisDetailScreen({ route, onNavigate, onGoBack }: Diagnosis
           )}
 
           {/* 治疗建议 */}
-          {record.treatment && (
+          {(record.treatment || record.disease_name === '未知') && (
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <View style={[styles.sectionIcon, { backgroundColor: colors.successLight }]}>
@@ -193,13 +283,17 @@ export function DiagnosisDetailScreen({ route, onNavigate, onGoBack }: Diagnosis
                 <Text style={styles.sectionTitle}>治疗建议</Text>
               </View>
               <View style={styles.sectionContent}>
-                <Text style={styles.sectionText}>{record.treatment}</Text>
+                <Text style={styles.sectionText}>
+                  {record.disease_name === '未知'
+                    ? '请尝试重新识别，建议拍摄：\n1. 患处清晰特写\nn2. 整体植株照片\n3. 不同角度的照片'
+                    : record.treatment || '暂无建议'}
+                </Text>
               </View>
             </View>
           )}
 
           {/* 预防措施 */}
-          {record.prevention && (
+          {(record.prevention || record.disease_name === '未知') && (
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <View style={[styles.sectionIcon, { backgroundColor: colors.primaryLight + '20' }]}>
@@ -208,7 +302,11 @@ export function DiagnosisDetailScreen({ route, onNavigate, onGoBack }: Diagnosis
                 <Text style={styles.sectionTitle}>预防措施</Text>
               </View>
               <View style={styles.sectionContent}>
-                <Text style={styles.sectionText}>{record.prevention}</Text>
+                <Text style={styles.sectionText}>
+                  {record.disease_name === '未知'
+                    ? '保持植物健康，定期检查叶片和茎干，及时发现并处理异常情况。'
+                    : record.prevention || '暂无预防措施'}
+                </Text>
               </View>
             </View>
           )}
@@ -238,13 +336,23 @@ export function DiagnosisDetailScreen({ route, onNavigate, onGoBack }: Diagnosis
           activeOpacity={duration.pressed}
         >
           <Icon
-            name={record.is_favorite ? 'star' : 'star-outline'}
+            name="star"
             size={22}
             color={record.is_favorite ? colors.accent : colors['text-secondary']}
+            fill={record.is_favorite ? colors.accent : 'none'}
           />
           <Text style={[styles.actionButtonText, record.is_favorite && styles.actionButtonTextActive]}>
             {record.is_favorite ? '已收藏' : '收藏'}
           </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.primaryButton}
+          onPress={handleAIConsult}
+          activeOpacity={duration.pressed}
+        >
+          <Icon name="message-circle" size={22} color={colors.white} />
+          <Text style={styles.primaryButtonText}>AI 问诊</Text>
         </TouchableOpacity>
 
         <TouchableOpacity

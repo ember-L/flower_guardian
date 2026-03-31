@@ -1,33 +1,230 @@
 // 智能提醒管理页面 - 使用纯 StyleSheet
-import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, Text, Switch, Alert } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, StyleSheet, ScrollView, TouchableOpacity, Text, Switch, Alert, ActivityIndicator, Modal, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 import { Icons } from '../components/Icon';
-import { colors, spacing } from '../constants/theme';
+import { colors, spacing, fontSize, fontWeight, borderRadius, shadows } from '../constants/theme';
 import { NavigationProps } from '../navigation/AppNavigator';
+import { reminderService, SmartReminder } from '../services/reminderService';
+import { getMyPlants } from '../services/plantService';
+import { notificationService } from '../services/notificationService';
+import { reminderNotificationService } from '../services/reminderNotificationService';
+
+interface UserPlant {
+  id: number;
+  plant_name: string;
+  nickname: string;
+  plant_id?: number;
+}
 
 interface ReminderScreenProps extends Partial<NavigationProps> {}
 
-const mockReminders = [
-  { id: '1', plantName: '绿萝', type: 'water', title: '浇水', interval: 7, enabled: true, nextDate: '明天' },
-  { id: '2', plantName: '绿萝', type: 'fertilize', title: '施肥', interval: 30, enabled: true, nextDate: '3天后' },
-  { id: '3', plantName: '虎皮兰', type: 'water', title: '浇水', interval: 14, enabled: true, nextDate: '5天后' },
-  { id: '4', plantName: '吊兰', type: 'prune', title: '修剪', interval: 90, enabled: false, nextDate: '已关闭' },
-];
+const reminderTypeIcons: Record<string, any> = {
+  water: Icons.Droplets,
+  fertilize: Icons.Flower2,
+  prune: Icons.Scissors
+};
+const reminderTypeColors: Record<string, string> = {
+  water: '#0891B2',
+  fertilize: '#059669',
+  prune: '#F59E0B'
+};
 
-const reminderTypeIcons: Record<string, any> = { water: Icons.Droplets, fertilize: Icons.Flower2, prune: Icons.Scissors };
-const reminderTypeColors: Record<string, string> = { water: '#0891B2', fertilize: '#059669', prune: '#F59E0B' };
+const getTypeName = (type: string) => {
+  switch (type) {
+    case 'water': return '浇水';
+    case 'fertilize': return '施肥';
+    case 'prune': return '修剪';
+    default: return type;
+  }
+};
 
-export function ReminderScreen({ onGoBack }: ReminderScreenProps) {
-  const [reminders, setReminders] = useState(mockReminders);
-  const toggleReminder = (id: string) => setReminders(prev => prev.map(r => r.id === id ? { ...r, enabled: !r.enabled } : r));
-  const handleSnooze = () => Alert.alert('延迟提醒', '选择延迟时间', [{ text: '1天后', onPress: () => {} }, { text: '3天后', onPress: () => {} }, { text: '取消', style: 'cancel' }]);
+export function ReminderScreen({ onGoBack, isLoggedIn, onRequireLogin }: ReminderScreenProps) {
+  const [reminders, setReminders] = useState<SmartReminder[]>([]);
+  const [userPlants, setUserPlants] = useState<UserPlant[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [selectedPlantId, setSelectedPlantId] = useState<number | null>(null);
+  const [selectedType, setSelectedType] = useState<'water' | 'fertilize' | 'prune'>('water');
+  const [intervalDays, setIntervalDays] = useState(7);
+
+  // 使用 useFocusEffect 每次页面获得焦点时检查登录状态
+  useFocusEffect(
+    useCallback(() => {
+      if (!isLoggedIn && onRequireLogin) {
+        onRequireLogin();
+      }
+    }, [isLoggedIn, onRequireLogin])
+  );
+
+  const loadReminders = useCallback(async () => {
+    if (!isLoggedIn) {
+      setLoading(false);
+      setReminders([]);
+      return;
+    }
+    setLoading(true);
+    try {
+      // 同时加载提醒和用户的植物
+      const [remindersData, plantsData] = await Promise.all([
+        reminderService.getSmartReminders(),
+        getMyPlants()
+      ]);
+      setReminders(remindersData);
+      setUserPlants(plantsData || []);
+
+      // 调度本地通知
+      if (remindersData && remindersData.length > 0) {
+        reminderNotificationService.scheduleAllReminders(remindersData);
+      }
+    } catch (error: any) {
+      console.error('Failed to load reminders:', error);
+      // 检查是否是认证错误或服务器错误
+      const status = error.response?.status;
+      if (status === 401) {
+        if (onRequireLogin) {
+          onRequireLogin();
+          return;
+        }
+      }
+      // 服务器错误或其他错误，设置空数组显示空状态
+      if (status === 500 || status === 0 || !status) {
+        console.log('Server error, showing empty state');
+        setReminders([]);
+        setUserPlants([]);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [isLoggedIn, onRequireLogin]);
+
+  // 添加提醒
+  const handleAddReminder = async () => {
+    if (!selectedPlantId) {
+      Alert.alert('提示', '请选择植物');
+      return;
+    }
+    try {
+      const plant = userPlants.find(p => p.id === selectedPlantId);
+      const newReminder = await reminderService.createSmartReminder({
+        user_plant_id: selectedPlantId,
+        plant_id: plant?.plant_id,
+        type: selectedType,
+        interval_days: intervalDays,
+      });
+      Alert.alert('成功', '提醒创建成功');
+      setShowAddModal(false);
+
+      // 调度本地通知
+      if (newReminder) {
+        await reminderNotificationService.scheduleReminder(newReminder);
+      }
+
+      loadReminders();
+    } catch (error: any) {
+      console.error('Failed to create reminder:', error);
+      Alert.alert('错误', '创建提醒失败');
+    }
+  };
+
+  useEffect(() => {
+    loadReminders();
+  }, [loadReminders]);
+
+  const toggleReminder = async (id: number) => {
+    const reminder = reminders.find(r => r.id === id);
+    if (!reminder) return;
+
+    try {
+      const newEnabled = !reminder.enabled;
+      await reminderService.toggleReminder(id, newEnabled);
+
+      const updatedReminder = { ...reminder, enabled: newEnabled };
+
+      setReminders(prev =>
+        prev.map(r => r.id === id ? updatedReminder : r)
+      );
+
+      // 更新本地通知
+      if (newEnabled) {
+        await reminderNotificationService.scheduleReminder(updatedReminder);
+      } else {
+        await reminderNotificationService.cancelReminder(id);
+      }
+    } catch (error) {
+      Alert.alert('错误', '更新提醒失败');
+    }
+  };
+
+  const handleComplete = async (id: number, title: string) => {
+    Alert.alert(
+      '确认完成',
+      `确定已完成 ${title} 吗？`,
+      [
+        { text: '取消', style: 'cancel' },
+        {
+          text: '确认',
+          onPress: async () => {
+            try {
+              const updated = await reminderService.completeReminder(id);
+              setReminders(prev =>
+                prev.map(r => r.id === id ? { ...r, ...updated } : r)
+              );
+
+              // 重新调度下次通知
+              await reminderNotificationService.scheduleReminder(updated);
+
+              Alert.alert('成功', '已记录完成，下次提醒已更新');
+            } catch (error) {
+              Alert.alert('错误', '操作失败');
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  const handleSnooze = (id: number) => {
+    Alert.alert('延迟提醒', '选择延迟时间', [
+      { text: '1天后', onPress: () => {} },
+      { text: '3天后', onPress: () => {} },
+      { text: '取消', style: 'cancel' }
+    ]);
+  };
+
+  const formatNextDue = (nextDue?: string) => {
+    if (!nextDue) return '未知';
+    const date = new Date(nextDue);
+    const now = new Date();
+    const diff = Math.ceil((date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+    if (diff < 0) return '已到期';
+    if (diff === 0) return '今天';
+    if (diff === 1) return '明天';
+    return `${diff}天后`;
+  };
 
   const handleGoBack = () => {
     if (onGoBack) {
       onGoBack();
     }
   };
+
+  const handleTestNotification = () => {
+    reminderNotificationService.testNotification();
+    Alert.alert('测试通知', '已发送测试通知，请在通知栏查看');
+  };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -42,9 +239,11 @@ export function ReminderScreen({ onGoBack }: ReminderScreenProps) {
               <Icons.Bell size={32} color={colors.primary} />
             </View>
             <Text style={styles.headerTitle}>智能提醒</Text>
-            <Text style={styles.headerSubtitle}>管理你的植物养护提醒</Text>
+            <Text style={styles.headerSubtitle}>根据天气智能调整浇水间隔</Text>
           </View>
-          <View style={styles.placeholder} />
+          <TouchableOpacity onPress={handleTestNotification} style={styles.testButton}>
+            <Icons.BellOff size={20} color={colors.primary} />
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -63,7 +262,13 @@ export function ReminderScreen({ onGoBack }: ReminderScreenProps) {
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
-              <Text style={[styles.statNumber, { color: colors.warning }]}>2</Text>
+              <Text style={[styles.statNumber, { color: colors.warning }]}>
+                {reminders.filter(r => {
+                  if (!r.next_due) return false;
+                  const diff = Math.ceil((new Date(r.next_due).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+                  return diff <= 0;
+                }).length}
+              </Text>
               <Text style={styles.statLabel}>今日待办</Text>
             </View>
           </View>
@@ -80,20 +285,35 @@ export function ReminderScreen({ onGoBack }: ReminderScreenProps) {
           {reminders.map((reminder) => {
             const Icon = reminderTypeIcons[reminder.type] || Icons.Bell;
             const typeColor = reminderTypeColors[reminder.type] || colors.primary;
+            const intervalText = reminder.calculated_interval && reminder.calculated_interval !== reminder.interval_days
+              ? `每 ${reminder.calculated_interval} 天（智能）`
+              : `每 ${reminder.interval_days} 天`;
+            const titleText = reminder.plant_name
+              ? `${reminder.plant_name} - ${getTypeName(reminder.type)}`
+              : getTypeName(reminder.type);
+
             return (
-              <View key={reminder.id} style={[styles.reminderCard, !reminder.enabled && styles.reminderDisabled]}>
+              <View key={reminder.id.toString()} style={[styles.reminderCard, !reminder.enabled && styles.reminderDisabled]}>
                 <View style={styles.reminderRow}>
                   <View style={[styles.reminderIcon, { backgroundColor: typeColor + '15' }]}>
                     <Icon size={26} color={typeColor} />
                   </View>
                   <View style={styles.reminderInfo}>
-                    <Text style={styles.reminderTitle}>{reminder.plantName} - {reminder.title}</Text>
+                    <Text style={styles.reminderTitle}>{titleText}</Text>
                     <View style={styles.reminderMeta}>
-                      <Text style={styles.reminderInterval}>每 {reminder.interval} 天</Text>
-                      <View style={[styles.nextDateBadge, { backgroundColor: reminder.enabled ? typeColor + '15' : colors.border }]}>
-                        <Icons.Clock size={12} color={reminder.enabled ? typeColor : colors['text-tertiary']} />
-                        <Text style={[styles.nextDateText, { color: reminder.enabled ? typeColor : colors['text-tertiary'] }]}>{reminder.nextDate}</Text>
+                      <Text style={styles.reminderInterval}>{intervalText}</Text>
+                    </View>
+                    {reminder.weather_tip && reminder.enabled && (
+                      <View style={[styles.weatherTipBadge, { backgroundColor: colors.warning + '15' }]}>
+                        <Icons.Cloud size={12} color={colors.warning} />
+                        <Text style={styles.weatherTipText}>{reminder.weather_tip}</Text>
                       </View>
+                    )}
+                    <View style={[styles.nextDateBadge, { backgroundColor: reminder.enabled ? typeColor + '15' : colors.border }]}>
+                      <Icons.Clock size={12} color={reminder.enabled ? typeColor : colors['text-tertiary']} />
+                      <Text style={[styles.nextDateText, { color: reminder.enabled ? typeColor : colors['text-tertiary'] }]}>
+                        {formatNextDue(reminder.next_due)}
+                      </Text>
                     </View>
                   </View>
                   <Switch
@@ -105,11 +325,11 @@ export function ReminderScreen({ onGoBack }: ReminderScreenProps) {
                 </View>
                 {reminder.enabled && (
                   <View style={styles.reminderActions}>
-                    <TouchableOpacity onPress={handleSnooze} style={styles.actionButton} activeOpacity={0.7}>
+                    <TouchableOpacity onPress={() => handleSnooze(reminder.id)} style={styles.actionButton} activeOpacity={0.7}>
                       <Icons.Clock size={16} color={colors['text-secondary']} />
                       <Text style={styles.actionButtonText}>延迟</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={() => Alert.alert('完成', `${reminder.title}已记录`)} style={[styles.actionButton, styles.actionButtonPrimary]} activeOpacity={0.7}>
+                    <TouchableOpacity onPress={() => handleComplete(reminder.id, getTypeName(reminder.type))} style={[styles.actionButton, styles.actionButtonPrimary]} activeOpacity={0.7}>
                       <Icons.Check size={16} color="#fff" />
                       <Text style={[styles.actionButtonText, { color: '#fff' }]}>完成</Text>
                     </TouchableOpacity>
@@ -119,24 +339,150 @@ export function ReminderScreen({ onGoBack }: ReminderScreenProps) {
             );
           })}
 
+          {/* 空状态 */}
+          {reminders.length === 0 && (
+            <View style={styles.emptyContainer}>
+              <View style={styles.emptyIconContainer}>
+                <Icons.Bell size={48} color={colors.primary} />
+              </View>
+              <Text style={styles.emptyTitle}>暂无提醒</Text>
+              <Text style={styles.emptySubtitle}>
+                {userPlants.length > 0
+                  ? '点击下方按钮添加提醒'
+                  : '在花园中添加植物后，可以创建智能浇水提醒'}
+              </Text>
+              {userPlants.length > 0 && (
+                <TouchableOpacity
+                  style={styles.emptyButton}
+                  onPress={() => setShowAddModal(true)}
+                >
+                  <Text style={styles.emptyButtonText}>添加提醒</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          )}
+
+          {/* 底部添加按钮 */}
+          {reminders.length > 0 && userPlants.length > 0 && (
+            <TouchableOpacity
+              style={styles.fabButton}
+              onPress={() => setShowAddModal(true)}
+            >
+              <Icons.Plus size={24} color={colors.white} />
+              <Text style={styles.fabText}>添加提醒</Text>
+            </TouchableOpacity>
+          )}
+
           {/* 养护小贴士 */}
           <View style={styles.tipCard}>
             <View style={styles.tipHeader}>
               <View style={styles.tipIcon}>
                 <Icons.Lightbulb size={20} color={colors.warning} />
               </View>
-              <Text style={styles.tipTitle}>养护小贴士</Text>
+              <Text style={styles.tipTitle}>智能提醒说明</Text>
             </View>
-            <Text style={styles.tipText}>不同季节浇水频率不同，夏季适当增加，冬季适当减少。观察土壤干湿情况最可靠。</Text>
+            <Text style={styles.tipText}>
+              智能提醒会根据植物种类、季节和天气自动调整浇水间隔。高温天气会提前提醒，阴雨天气会适当延迟。
+            </Text>
           </View>
         </View>
       </ScrollView>
+
+      {/* 添加提醒弹窗 */}
+      <Modal visible={showAddModal} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>添加提醒</Text>
+
+            {/* 选择植物 */}
+            <Text style={styles.modalLabel}>选择植物</Text>
+            <View style={styles.plantList}>
+              {userPlants.map((plant) => (
+                <TouchableOpacity
+                  key={plant.id}
+                  style={[
+                    styles.plantItem,
+                    selectedPlantId === plant.id && styles.plantItemSelected
+                  ]}
+                  onPress={() => setSelectedPlantId(plant.id)}
+                >
+                  <Text style={[
+                    styles.plantItemText,
+                    selectedPlantId === plant.id && styles.plantItemTextSelected
+                  ]}>
+                    {plant.nickname || plant.plant_name}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            {/* 选择类型 */}
+            <Text style={styles.modalLabel}>提醒类型</Text>
+            <View style={styles.typeList}>
+              {[
+                { key: 'water', label: '浇水', color: '#0891B2' },
+                { key: 'fertilize', label: '施肥', color: '#059669' },
+                { key: 'prune', label: '修剪', color: '#F59E0B' }
+              ].map((item) => (
+                <TouchableOpacity
+                  key={item.key}
+                  style={[
+                    styles.typeItem,
+                    selectedType === item.key && { backgroundColor: item.color + '20', borderColor: item.color }
+                  ]}
+                  onPress={() => setSelectedType(item.key as any)}
+                >
+                  <Text style={[
+                    styles.typeItemText,
+                    selectedType === item.key && { color: item.color }
+                  ]}>
+                    {item.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            {/* 间隔天数 */}
+            <Text style={styles.modalLabel}>提醒间隔（天）</Text>
+            <View style={styles.intervalRow}>
+              {[3, 7, 14, 30].map((days) => (
+                <TouchableOpacity
+                  key={days}
+                  style={[
+                    styles.intervalItem,
+                    intervalDays === days && styles.intervalItemSelected
+                  ]}
+                  onPress={() => setIntervalDays(days)}
+                >
+                  <Text style={[
+                    styles.intervalItemText,
+                    intervalDays === days && styles.intervalItemTextSelected
+                  ]}>
+                    {days}天
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            {/* 按钮 */}
+            <View style={styles.modalButtons}>
+              <TouchableOpacity style={styles.modalCancelBtn} onPress={() => setShowAddModal(false)}>
+                <Text style={styles.modalCancelText}>取消</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.modalConfirmBtn} onPress={handleAddReminder}>
+                <Text style={styles.modalConfirmText}>确定</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   // 头部包装器
   headerWrapper: {
     backgroundColor: colors.surface,
@@ -160,6 +506,18 @@ const styles = StyleSheet.create({
   backButton: {
     position: 'absolute',
     left: spacing.md,
+    top: spacing.lg,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.primary + '15',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10,
+  },
+  testButton: {
+    position: 'absolute',
+    right: spacing.md,
     top: spacing.lg,
     width: 36,
     height: 36,
@@ -219,6 +577,19 @@ const styles = StyleSheet.create({
   sectionBadge: { backgroundColor: colors.primary + '15', paddingHorizontal: spacing.sm, paddingVertical: spacing.xs, borderRadius: 10 },
   sectionBadgeText: { fontSize: 12, color: colors.primary, fontWeight: '600' },
 
+  // 天气提示
+  weatherTipBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: 8,
+    marginTop: spacing.xs,
+    alignSelf: 'flex-start',
+  },
+  weatherTipText: { fontSize: 11, color: colors.warning },
+
   // 提醒卡片
   reminderCard: {
     backgroundColor: colors.surface,
@@ -253,6 +624,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     paddingVertical: 2,
     borderRadius: 8,
+    marginTop: spacing.xs,
+    alignSelf: 'flex-start',
   },
   nextDateText: { fontSize: 12, fontWeight: '500' },
 
@@ -300,4 +673,227 @@ const styles = StyleSheet.create({
   },
   tipTitle: { fontSize: 16, fontWeight: '600', color: colors.warning },
   tipText: { fontSize: 14, color: colors['text-secondary'], lineHeight: 22 },
+
+  // 空状态
+  emptyContainer: {
+    alignItems: 'center',
+    paddingVertical: spacing.xl * 2,
+  },
+  emptyIconContainer: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: colors.primary + '15',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.md,
+  },
+  emptyTitle: {
+    fontSize: fontSize.lg,
+    fontWeight: fontWeight.semibold,
+    color: colors.text,
+    marginBottom: spacing.sm,
+  },
+  emptySubtitle: {
+    fontSize: fontSize.md,
+    color: colors['text-secondary'],
+    textAlign: 'center',
+    paddingHorizontal: spacing.xl,
+    lineHeight: 22,
+  },
+  emptyButton: {
+    marginTop: spacing.lg,
+    backgroundColor: colors.primary,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.full,
+  },
+  emptyButtonText: {
+    color: colors.white,
+    fontSize: fontSize.md,
+    fontWeight: fontWeight.semibold,
+  },
+  addButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerAddButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    backgroundColor: colors.primary + '15',
+    borderRadius: borderRadius.full,
+  },
+  headerAddText: {
+    fontSize: fontSize.sm,
+    color: colors.primary,
+    fontWeight: fontWeight.medium,
+  },
+  fabButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    backgroundColor: colors.primary,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.xl,
+    borderRadius: borderRadius.full,
+    marginTop: spacing.lg,
+    ...shadows.lg,
+  },
+  fabText: {
+    color: colors.white,
+    fontSize: fontSize.lg,
+    fontWeight: fontWeight.semibold,
+  },
+  headerAddButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    backgroundColor: colors.primary + '15',
+    borderRadius: borderRadius.full,
+  },
+  headerAddText: {
+    fontSize: fontSize.sm,
+    color: colors.primary,
+    fontWeight: fontWeight.medium,
+  },
+
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.lg,
+  },
+  modalContent: {
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.xl,
+    padding: spacing.lg,
+    width: '100%',
+    maxWidth: 400,
+  },
+  modalTitle: {
+    fontSize: fontSize.xl,
+    fontWeight: fontWeight.bold,
+    color: colors.text,
+    textAlign: 'center',
+    marginBottom: spacing.lg,
+  },
+  modalLabel: {
+    fontSize: fontSize.md,
+    fontWeight: fontWeight.semibold,
+    color: colors.text,
+    marginBottom: spacing.sm,
+    marginTop: spacing.md,
+  },
+  plantList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  plantItem: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  plantItemSelected: {
+    backgroundColor: colors.primary + '15',
+    borderColor: colors.primary,
+  },
+  plantItemText: {
+    fontSize: fontSize.md,
+    color: colors['text-secondary'],
+  },
+  plantItemTextSelected: {
+    color: colors.primary,
+    fontWeight: fontWeight.semibold,
+  },
+  typeList: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  typeItem: {
+    flex: 1,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
+  },
+  typeItemText: {
+    fontSize: fontSize.md,
+    color: colors['text-secondary'],
+  },
+  intervalRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  intervalItem: {
+    flex: 1,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
+  },
+  intervalItemSelected: {
+    backgroundColor: colors.primary + '15',
+    borderColor: colors.primary,
+  },
+  intervalItemText: {
+    fontSize: fontSize.md,
+    color: colors['text-secondary'],
+  },
+  intervalItemTextSelected: {
+    color: colors.primary,
+    fontWeight: fontWeight.semibold,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    marginTop: spacing.xl,
+  },
+  modalCancelBtn: {
+    flex: 1,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.background,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  modalCancelText: {
+    fontSize: fontSize.md,
+    color: colors['text-secondary'],
+    fontWeight: fontWeight.medium,
+  },
+  modalConfirmBtn: {
+    flex: 1,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+  },
+  modalConfirmText: {
+    fontSize: fontSize.md,
+    color: colors.white,
+    fontWeight: fontWeight.semibold,
+  },
 });

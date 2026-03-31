@@ -34,10 +34,12 @@ import { ConsultationScreen } from '../screens/ConsultationScreen';
 import { KnowledgeScreen } from '../screens/KnowledgeScreen';
 import { KnowledgeDetailScreen } from '../screens/KnowledgeDetailScreen';
 import { PlantDetailScreen } from '../screens/PlantDetailScreen';
+import { NotificationScreen } from '../screens/NotificationScreen';
 import { getCurrentUser, isAuthenticated, logout as authLogout, checkAuthStatus } from '../services/auth';
+import { jpushService } from '../services/jpushService';
 
 export type TabName = 'Identify' | 'Garden' | 'Encyclopedia' | 'Store' | 'Profile';
-export type SubPageName = 'Diagnosis' | 'Recommendation' | 'Reminder' | 'EncyclopediaDetail' | 'Diary' | 'StoreDetail' | 'Cart' | 'Checkout' | 'Orders' | 'OrderDetail' | 'DiagnosisHistory' | 'DiagnosisDetail' | 'Login' | 'Register' | 'ForgotPassword' | 'WriteDiary' | 'DiaryDetail' | 'GrowthCurve' | 'Address' | 'AddressEdit' | 'EmailVerify' | 'ConsultationList' | 'Consultation' | 'Knowledge' | 'KnowledgeDetail' | 'PlantDetail' | null;
+export type SubPageName = 'Diagnosis' | 'Recommendation' | 'Reminder' | 'EncyclopediaDetail' | 'Diary' | 'StoreDetail' | 'Cart' | 'Checkout' | 'Orders' | 'OrderDetail' | 'DiagnosisHistory' | 'DiagnosisDetail' | 'Login' | 'Register' | 'ForgotPassword' | 'WriteDiary' | 'DiaryDetail' | 'GrowthCurve' | 'Address' | 'AddressEdit' | 'EmailVerify' | 'ConsultationList' | 'Consultation' | 'Knowledge' | 'KnowledgeDetail' | 'PlantDetail' | 'Notification' | null;
 
 interface TabConfig {
   name: TabName;
@@ -57,6 +59,13 @@ export interface NavigationProps {
   route?: { params?: any };
 }
 
+// 导航历史记录类型
+interface NavHistoryItem {
+  tab: TabName;
+  page: SubPageName;
+  params?: any;
+}
+
 export function AppNavigator() {
   const insets = useSafeAreaInsets();
   const [currentTab, setCurrentTab] = useState<TabName>('Identify');
@@ -64,6 +73,7 @@ export function AppNavigator() {
   const [navParams, setNavParams] = useState<any>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
+  const [navHistory, setNavHistory] = useState<NavHistoryItem[]>([]);
 
   useEffect(() => {
     checkAuthStatus().then(setIsLoggedIn).finally(() => setAuthChecked(true));
@@ -71,13 +81,33 @@ export function AppNavigator() {
 
   const handleLoginSuccess = () => {
     setIsLoggedIn(true);
-    setCurrentSubPage(null);
+
+    // 设置 JPush 别名（用于后端推送）
+    getCurrentUser().then(user => {
+      if (user) {
+        console.log('[Navigator] 设置 JPush 别名:', user.id);
+        jpushService.setAlias(user.id.toString());
+      }
+    });
+
+    // 登录成功后返回上一个页面或清空
+    if (navHistory.length > 0) {
+      const previousState = navHistory[navHistory.length - 1];
+      setNavHistory(prev => prev.slice(0, -1));
+      setCurrentTab(previousState.tab);
+      setCurrentSubPage(previousState.page);
+      setNavParams(previousState.params);
+    } else {
+      setCurrentSubPage(null);
+    }
   };
 
   const handleLogout = async () => {
     await authLogout();
     setIsLoggedIn(false);
     setCurrentTab('Identify');
+    // 删除 JPush 别名
+    jpushService.deleteAlias();
   };
 
   const handleRequireLogin = (callback: () => void) => {
@@ -97,33 +127,53 @@ export function AppNavigator() {
   ];
 
   const handleTabChange = (tab: TabName) => {
+    // 切换 Tab 时清空历史记录
+    setNavHistory([]);
     setCurrentTab(tab);
     setCurrentSubPage(null);
     setNavParams(null);
   };
 
   const handleNavigate = (page: SubPageName, params?: any) => {
+    console.log('[Navigator] handleNavigate called:', page, 'params:', params);
+    // 保存当前页面到历史记录
+    if (currentSubPage) {
+      setNavHistory(prev => [...prev, { tab: currentTab, page: currentSubPage, params: navParams }]);
+    } else {
+      setNavHistory(prev => [...prev, { tab: currentTab, page: null, params: null }]);
+    }
     setNavParams(params);
     setCurrentSubPage(page);
   };
 
   const handleGoBack = () => {
-    // 返回时切换到识别页面
-    setCurrentTab('Identify');
-    setCurrentSubPage(null);
-    setNavParams(null);
+    console.log('[Navigator] handleGoBack called, navHistory length:', navHistory.length);
+    if (navHistory.length > 0) {
+      // 从历史记录中取出上一个页面
+      const previousState = navHistory[navHistory.length - 1];
+      console.log('[Navigator] Going back to:', previousState);
+      setNavHistory(prev => prev.slice(0, -1));
+      setCurrentTab(previousState.tab);
+      setCurrentSubPage(previousState.page);
+      setNavParams(previousState.params);
+    } else {
+      // 没有历史记录，返回到首页
+      setCurrentTab('Identify');
+      setCurrentSubPage(null);
+      setNavParams(null);
+    }
   };
 
   const renderContent = () => {
     // 渲染子页面
     if (currentSubPage === 'Diagnosis') {
-      return <DiagnosisScreen onGoBack={handleGoBack} onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} />;
+      return <DiagnosisScreen onGoBack={handleGoBack} onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} isLoggedIn={isLoggedIn} onRequireLogin={() => setCurrentSubPage('Login')} />;
     }
     if (currentSubPage === 'Recommendation') {
       return <RecommendationScreen onGoBack={handleGoBack} onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} />;
     }
     if (currentSubPage === 'Reminder') {
-      return <ReminderScreen onGoBack={handleGoBack} onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} />;
+      return <ReminderScreen onGoBack={handleGoBack} onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} isLoggedIn={isLoggedIn} onRequireLogin={() => setCurrentSubPage('Login')} />;
     }
     if (currentSubPage === 'EncyclopediaDetail') {
       return <EncyclopediaDetailScreen onGoBack={handleGoBack} onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} route={navParams || {}} />;
@@ -147,15 +197,16 @@ export function AppNavigator() {
       return <OrderDetailScreen route={navParams || {}} onGoBack={handleGoBack} onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} isLoggedIn={isLoggedIn} onRequireLogin={() => setCurrentSubPage('Login')} />;
     }
     if (currentSubPage === 'DiagnosisHistory') {
-      return <DiagnosisHistoryScreen onGoBack={handleGoBack} onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} />;
+      return <DiagnosisHistoryScreen onGoBack={handleGoBack} onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} isLoggedIn={isLoggedIn} onRequireLogin={() => setCurrentSubPage('Login')} />;
     }
     if (currentSubPage === 'DiagnosisDetail') {
-      return <DiagnosisDetailScreen route={navParams || {}} onGoBack={handleGoBack} onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} />;
+      return <DiagnosisDetailScreen route={{ params: navParams || {} }} onGoBack={handleGoBack} onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} isLoggedIn={isLoggedIn} onRequireLogin={() => setCurrentSubPage('Login')} />;
     }
     if (currentSubPage === 'ConsultationList') {
       return <ConsultationListScreen onGoBack={handleGoBack} onNavigate={handleNavigate} />;
     }
     if (currentSubPage === 'Consultation') {
+      console.log('[Navigator] Rendering ConsultationScreen, navParams:', navParams);
       return <ConsultationScreen onGoBack={handleGoBack} conversationId={navParams?.conversationId} diagnosisContext={navParams?.diagnosisContext} />;
     }
     if (currentSubPage === 'Knowledge') {
@@ -166,6 +217,9 @@ export function AppNavigator() {
     }
     if (currentSubPage === 'PlantDetail') {
       return <PlantDetailScreen route={{ params: navParams }} onNavigate={handleNavigate} onTabChange={handleTabChange} />;
+    }
+    if (currentSubPage === 'Notification') {
+      return <NotificationScreen onGoBack={handleGoBack} onNavigate={handleNavigate} />;
     }
     if (currentSubPage === 'Login') {
       return (

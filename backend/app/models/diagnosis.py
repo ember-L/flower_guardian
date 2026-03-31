@@ -17,6 +17,8 @@ class DiagnosisRecord(Base):
     prevention = Column(Text)  # 预防措施
     recommended_products = Column(Text)  # 推荐产品 (JSON)
     is_favorite = Column(Boolean, default=False)
+    conversation_id = Column(Integer, ForeignKey("conversations.id"), nullable=True)  # 关联AI对话
     created_at = Column(DateTime, default=datetime.utcnow)
 
     user = relationship("User", backref="diagnosis_records")
+    conversation = relationship("Conversation", backref="diagnosis_records")

@@ -7,11 +7,11 @@ import * as ImagePicker from 'expo-image-picker';
 import Markdown from 'react-native-markdown-display';
 import { Icons } from '../components/Icon';
 import { colors, spacing, borderRadius, shadows, fontSize, fontWeight, touchTarget } from '../constants/theme';
-import { sendMessage, createConversation, getConversation, Conversation, Message, getWelcomeMessage } from '../services/consultationService';
+import { sendMessage, createConversation, getConversation, getConversationFromBackend, sendMessageToBackend, Conversation, Message, getWelcomeMessage } from '../services/consultationService';
 
 interface Props {
   onGoBack: () => void;
-  conversationId?: string;
+  conversationId?: string | number;
   diagnosisContext?: any;
 }
 
@@ -59,6 +59,7 @@ function TypewriterText({ text, onComplete }: { text: string; onComplete?: () =>
 }
 
 export function ConsultationScreen({ onGoBack, conversationId, diagnosisContext }: Props) {
+  console.log('[Consultation] Screen rendered, conversationId:', conversationId, 'diagnosisContext:', diagnosisContext);
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -134,8 +135,88 @@ export function ConsultationScreen({ onGoBack, conversationId, diagnosisContext 
 
   // 加载或创建对话
   const loadConversation = useCallback(async () => {
+    console.log('[Consultation] loadConversation called, conversationId:', conversationId, 'hasDiagnosisContext:', !!diagnosisContext?.currentDiagnosis);
     if (conversationId) {
-      const found = await getConversation(conversationId);
+      // 优先从后端获取对话
+      const numericId = typeof conversationId === 'string' ? parseInt(conversationId, 10) : conversationId;
+      console.log('[Consultation] numericId:', numericId);
+      try {
+        const backendConv = await getConversationFromBackend(numericId);
+        console.log('[Consultation] backendConv:', JSON.stringify(backendConv));
+        if (backendConv) {
+          // 将后端对话转换为本地格式
+          const messages = backendConv.messages?.map((m: any) => ({
+            id: String(m.id),
+            role: m.role,
+            content: m.content,
+            timestamp: new Date(m.created_at).getTime(),
+          })) || [];
+
+          // 如果后端没有消息，但有诊断上下文，需要发送初始消息
+          if (messages.length === 0 && diagnosisContext?.currentDiagnosis) {
+            console.log('[Consultation] No messages in backend, sending initial message...');
+            const diagnosis = diagnosisContext.currentDiagnosis;
+            const diagnosisText = `用户刚刚完成了病害诊断，结果如下：
+- 病害名称：${diagnosis.name}
+- 病害类型：${diagnosis.type}
+- 严重程度：${diagnosis.severity}
+- 置信度：${diagnosis.confidence}%
+
+请基于以上诊断结果，提供专业的治疗建议和后续养护指导。`;
+
+            setIsLoading(true);
+            setIsTyping(true);
+
+            // 创建临时对话用于发送消息
+            const tempConv: Conversation = {
+              id: String(numericId),
+              title: backendConv.title,
+              messages: [],
+              diagnosisContext,
+              updatedAt: Date.now(),
+            };
+
+            try {
+              const updated = await sendMessage(tempConv, diagnosisText);
+
+              // 保存到后端
+              try {
+                await sendMessageToBackend(numericId, 'user', diagnosisText);
+                const aiMessage = updated.messages[updated.messages.length - 1];
+                if (aiMessage) {
+                  await sendMessageToBackend(numericId, 'assistant', aiMessage.content);
+                }
+              } catch (backendError) {
+                console.error('Save to backend error:', backendError);
+              }
+
+              setConversation(updated);
+              setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
+            } catch (sendError) {
+              console.error('Send initial message error:', sendError);
+              setIsLoading(false);
+              setIsTyping(false);
+            }
+            return;
+          }
+
+          // 有关消息，直接加载
+          const converted: Conversation = {
+            id: String(backendConv.id),
+            title: backendConv.title,
+            messages,
+            updatedAt: new Date(backendConv.updated_at).getTime(),
+          };
+          setConversation(converted);
+          setTimeout(() => flatListRef.current?.scrollToEnd(), 100);
+          return;
+        }
+      } catch (error: any) {
+        console.error('Load conversation from backend error:', error?.response?.data || error);
+      }
+
+      // 后端获取失败，从本地存储查找
+      const found = await getConversation(String(conversationId));
       if (found) {
         setConversation(found);
         setTimeout(() => flatListRef.current?.scrollToEnd(), 100);
@@ -162,6 +243,28 @@ export function ConsultationScreen({ onGoBack, conversationId, diagnosisContext 
 
       try {
         const updated = await sendMessage(newConv, diagnosisText);
+
+        // 保存初始诊断消息到后端（如果有conversationId）
+        if (conversationId) {
+          const numericId = typeof conversationId === 'string' ? parseInt(conversationId, 10) : conversationId;
+          console.log('[Consultation] Saving messages to backend, numericId:', numericId);
+          if (numericId && !isNaN(numericId)) {
+            try {
+              console.log('[Consultation] Sending user message to backend...');
+              await sendMessageToBackend(numericId, 'user', diagnosisText);
+              console.log('[Consultation] User message saved successfully');
+              const aiMessage = updated.messages[updated.messages.length - 1];
+              if (aiMessage) {
+                console.log('[Consultation] Sending AI message to backend...');
+                await sendMessageToBackend(numericId, 'assistant', aiMessage.content);
+                console.log('[Consultation] AI message saved successfully');
+              }
+            } catch (backendError: any) {
+              console.error('Save initial message to backend error:', backendError?.response?.data || backendError);
+            }
+          }
+        }
+
         const aiMessageId = updated.messages[updated.messages.length - 1].id;
         setTypingMessageId(aiMessageId);
         setConversation(updated);
@@ -218,6 +321,28 @@ export function ConsultationScreen({ onGoBack, conversationId, diagnosisContext 
     try {
       // 调用 API 发送消息
       const updated = await sendMessage(conversation, text);
+
+      // 同时保存到后端（如果有有效的对话ID）
+      const numericConversationId = typeof conversation.id === 'string' ? parseInt(conversation.id, 10) : conversation.id;
+      console.log('[Consultation] handleSend - numericConversationId:', numericConversationId);
+      if (numericConversationId && !isNaN(numericConversationId)) {
+        try {
+          console.log('[Consultation] Saving user message to backend...');
+          await sendMessageToBackend(numericConversationId, 'user', text);
+          console.log('[Consultation] User message saved');
+          // AI 响应会在 sendMessage 内部处理后保存
+          const aiMessage = updated.messages[updated.messages.length - 1];
+          if (aiMessage) {
+            console.log('[Consultation] Saving AI message to backend...');
+            await sendMessageToBackend(numericConversationId, 'assistant', aiMessage.content);
+            console.log('[Consultation] AI message saved');
+          }
+        } catch (backendError: any) {
+          console.error('Save to backend error:', backendError?.response?.data || backendError);
+        }
+      } else {
+        console.log('[Consultation] No valid conversation ID, skipping backend save');
+      }
 
       // 获取 AI 返回的消息
       const aiMessage = updated.messages[updated.messages.length - 1];

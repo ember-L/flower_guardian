@@ -33,22 +33,29 @@ export interface Plant {
 
 const getHeaders = async () => {
   const token = await getToken();
-  return {
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    'Authorization': token ? `Bearer ${token}` : '',
   };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
 };
 
 // 获取日记列表
 export const getDiaries = async (plantId?: number): Promise<Diary[]> => {
   const headers = await getHeaders();
-  const params = plantId ? `?plant_id=${plantId}` : '';
   try {
-    const response = await axios.get(`${API_BASE}/diaries${params}`, { headers });
+    const response = await axios.get(`${API_BASE}/diaries${plantId ? `?plant_id=${plantId}` : ''}`, { headers });
     return response.data;
-  } catch (error) {
+  } catch (error: any) {
+    // 401/422 未授权时返回空数组而不是抛出错误
+    if (error?.response?.status === 401 || error?.response?.status === 422) {
+      console.log('[DiaryService] 未登录或token无效，返回空日记列表');
+      return [];
+    }
     console.error('Failed to get diaries:', error);
-    return [];
+    throw error;
   }
 };
 

@@ -22,6 +22,7 @@ export interface Plant {
   name: string;
   scientific_name?: string;
   category?: string;
+  image_url?: string;
   care_level: number;
   beginner_friendly?: number;
   light_requirement?: string;

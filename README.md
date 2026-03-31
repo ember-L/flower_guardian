@@ -45,6 +45,7 @@
 - 浇水、施肥、换盆、修剪提醒
 - 环境校准（根据摆放位置自动调整浇水频率）
 - 懒人模式（自动学习用户习惯）
+- **推送通知**：多渠道推送（Expo Push / JPush / FCM / APNs）
 
 ### 4. 病症诊断
 - 拍照识别病虫害
@@ -268,6 +269,21 @@ react-native build-android --mode=debug
 react-native build-android --mode=release
 ```
 
+**简化打包命令（推荐）**
+
+```bash
+# 一键打包调试 APK（无需签名）
+cd APP && npm run android
+
+# 或使用 Expo 命令
+npx expo run:android
+
+# 打包发布版 APK（需要先配置签名）
+cd APP && npx expo run:android --variant release
+```
+
+> **提示**：Android 打包无需开发者账号，可直接在手机安装 APK 测试。
+
 **签名配置**
 
 1. 生成签名密钥：
@@ -300,6 +316,15 @@ react-native build-android --mode=release
 - Release: `APP/android/app/build/outputs/apk/release/app-release.apk`
 - AAB: `APP/android/app/build/outputs/bundle/release/app-release.aab`
 
+**安装 APK 到手机**
+
+```bash
+# 通过 USB 连接手机后安装
+adb install -r APP/android/app/build/outputs/apk/debug/app-debug.apk
+
+# 或直接将 APK 文件分享到手机安装
+```
+
 ### APP 连接后端配置
 
 APP 需要连接后端 API，修改配置文件：
@@ -323,6 +348,7 @@ export const API_BASE_URL = 'http://192.168.1.100:8000';
 | `POST /api/users/login` | 用户登录 |
 | `GET /api/users/me` | 获取当前用户 |
 | `PUT /api/users/me` | 更新用户信息 |
+| `POST /api/users/push-token` | 注册推送 Token |
 
 ### 植物管理
 | 端点 | 描述 |
@@ -385,6 +411,8 @@ export const API_BASE_URL = 'http://192.168.1.100:8000';
 | `SMTP_PASSWORD` | SMTP 密码 | `your-smtp-password` |
 | `DASHSCOPE_API_KEY` | 阿里云 DashScope API Key（AI对话） | `sk-xxxxxxxx` |
 | `HEFENG_KEY` | 和风天气 API Key（首页天气） | `xxxxxxxx` |
+| `JPUSH_APP_KEY` | 极光推送 App Key | `xxxxxxxx` |
+| `JPUSH_MASTER_SECRET` | 极光推送 Master Secret | `xxxxxxxx` |
 
 ### API Key 申请
 
@@ -401,6 +429,88 @@ export const API_BASE_URL = 'http://192.168.1.100:8000';
 4. 将 Key 添加到 `.env` 文件：`HEFENG_KEY=xxx`
 
 > **注意**：国内免费版 API 有调用次数限制，生产环境建议购买付费版
+
+#### 3. 极光推送（JPush）
+
+1. 访问 https://www.jiguang.cn/ 注册账号
+2. 创建应用获取 App Key 和 Master Secret
+3. 将凭证添加到 `.env` 文件
+
+## 推送通知
+
+### 推送方式
+
+| 方式 | 说明 | 适用场景 |
+|------|------|----------|
+| **Expo Push** | 直接向设备发送推送 | 主要方式 |
+| **JPush** | 通过极光服务推送 | 备选方式 |
+| **FCM** | Firebase Cloud Messaging | Android 设备 |
+| **APNs** | Apple Push Notification | iOS 设备 |
+
+### 推送时间
+
+| 任务 | 执行时间 | 功能 |
+|------|----------|------|
+| `send_daily_reminders` | 每日 09:00 | 发送当天到期提醒 |
+| `send_overdue_reminders` | 每3小时 | 发送已逾期提醒 |
+
+### 推送消息示例
+
+**每日提醒**:
+```
+标题: 🌱 养护提醒
+内容: 您的植物："绿萝"需要浇水，"吊兰"需要施肥，快去看看吧！
+```
+
+**逾期提醒**:
+```
+标题: ⚠️ 提醒逾期
+内容: 以下植物还未养护："绿萝"需要浇水，不要忘记哦！
+```
+
+### 手动测试推送
+
+**方式一：发送每日提醒（测试所有到期提醒）**
+
+```bash
+cd backend
+python3 -c "from app.tasks.reminder_tasks import send_daily_reminders; import asyncio; asyncio.run(send_daily_reminders())"
+```
+
+**方式二：发送逾期提醒**
+
+```bash
+cd backend
+python3 -c "from app.tasks.reminder_tasks import send_overdue_reminders; import asyncio; asyncio.run(send_overdue_reminders())"
+```
+
+**方式三：测试指定用户的推送**
+
+```python
+# 进入后端目录
+cd backend
+
+# Python shell
+python3
+
+# 执行测试
+from app.tasks.reminder_tasks import test_push
+import asyncio
+asyncio.run(test_push(user_id=1))  # user_id 替换为实际用户ID
+```
+
+**方式四：通过 API 测试**
+
+```bash
+# 先登录获取 token
+TOKEN="your_jwt_token"
+
+# 调用测试接口
+curl -X POST http://localhost:8000/api/reminders/test-push \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+> **注意**：推送需要用户已登录 App 并获取 Expo Push Token。如果未获取 Token，会显示"未注册推送 Token"。
 
 ## 管理员设置
 
@@ -452,6 +562,7 @@ python backend/train/export_onnx.py --type all
 
 ## 设计文档
 
+- [推送通知功能设计](docs/push-notification-design.md)
 - [新手推荐页面与植物百科完善设计](docs/plans/2026-03-12-recommendation-screen-design.md)
 - [新手推荐页面实施计划](docs/plans/2026-03-12-recommendation-implementation.md)
 
@@ -461,4 +572,4 @@ MIT License
 
 ---
 
-*文档最后更新：2026-03-12*
+*文档最后更新：2026-03-28*

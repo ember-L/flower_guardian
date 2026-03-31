@@ -6,6 +6,7 @@ from app.core.database import get_db
 from app.core.security import get_current_user
 from app.models.user import User
 from app.models.diagnosis import DiagnosisRecord
+from app.models.chat import Conversation
 from app.schemas.diagnosis import (
     DiagnosisRecordCreate, DiagnosisRecordResponse, DiagnosisRecordListResponse
 )
@@ -39,14 +40,17 @@ def get_diagnosis(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    print(f"[DEBUG] get_diagnosis called with diagnosis_id={diagnosis_id}, user_id={current_user.id}")
     record = db.query(DiagnosisRecord).filter(
         DiagnosisRecord.id == diagnosis_id,
         DiagnosisRecord.user_id == current_user.id
     ).first()
 
     if not record:
+        print(f"[DEBUG] Record not found for diagnosis_id={diagnosis_id}, user_id={current_user.id}")
         raise HTTPException(status_code=404, detail="Diagnosis record not found")
 
+    print(f"[DEBUG] Found diagnosis: id={record.id}, conversation_id={record.conversation_id}")
     return record
 
 
@@ -121,3 +125,57 @@ def rediagnose(
     db.refresh(new_record)
 
     return new_record
+
+
+@router.put("/{diagnosis_id}/conversation", response_model=DiagnosisRecordResponse)
+def link_conversation(
+    diagnosis_id: int,
+    conversation_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """关联诊断记录与AI对话"""
+    print(f"[DEBUG] link_conversation called: diagnosis_id={diagnosis_id}, conversation_id={conversation_id}, user_id={current_user.id}")
+    record = db.query(DiagnosisRecord).filter(
+        DiagnosisRecord.id == diagnosis_id,
+        DiagnosisRecord.user_id == current_user.id
+    ).first()
+
+    if not record:
+        raise HTTPException(status_code=404, detail="Diagnosis record not found")
+
+    # 验证对话是否存在
+    conversation = db.query(Conversation).filter(
+        Conversation.id == conversation_id,
+        Conversation.user_id == current_user.id
+    ).first()
+
+    if not conversation:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+
+    record.conversation_id = conversation_id
+    db.commit()
+    db.refresh(record)
+
+    return record
+
+
+@router.delete("/{diagnosis_id}")
+def delete_diagnosis(
+    diagnosis_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """删除诊断记录"""
+    record = db.query(DiagnosisRecord).filter(
+        DiagnosisRecord.id == diagnosis_id,
+        DiagnosisRecord.user_id == current_user.id
+    ).first()
+
+    if not record:
+        raise HTTPException(status_code=404, detail="Diagnosis record not found")
+
+    db.delete(record)
+    db.commit()
+
+    return {"message": "Diagnosis record deleted successfully"}

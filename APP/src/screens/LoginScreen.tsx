@@ -1,6 +1,6 @@
 // 登录页面
 import React, { useState } from 'react';
-import { View, StyleSheet, TextInput, TouchableOpacity, Text, KeyboardAvoidingView, Platform, Alert } from 'react-native';
+import { View, StyleSheet, TextInput, TouchableOpacity, Text, KeyboardAvoidingView, Platform, Alert, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Icons } from '../components/Icon';
 import { colors, spacing } from '../constants/theme';
@@ -58,7 +58,7 @@ export function LoginScreen({ onGoBack, onLoginSuccess, onSwitchToRegister, onSw
           {/* 标题 */}
           <View style={styles.titleSection}>
             <View style={styles.logoContainer}>
-              <Icons.Flower2 size={48} color={colors.primary} />
+              <Image source={require('../../assets/logo.png')} style={styles.logo} />
             </View>
             <Text style={styles.title}>欢迎回来</Text>
             <Text style={styles.subtitle}>登录您的账号继续</Text>
@@ -170,13 +170,19 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xxl,
   },
   logoContainer: {
-    width: 80,
-    height: 80,
+    width: 100,
+    height: 100,
     borderRadius: 24,
-    backgroundColor: colors.primary + '15',
+    backgroundColor: colors.white,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.lg,
+    overflow: 'hidden',
+  },
+  logo: {
+    width: 80,
+    height: 80,
+    resizeMode: 'contain',
   },
   title: {
     fontSize: 28,

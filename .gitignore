@@ -15,7 +15,9 @@ frontend/ios/build/
 frontend/ios/*.xcuserstate
 frontend/ios/Pods/
 frontend/ios/DerivedData/
-
+APP/.expo/web
+APP/android/app/src/main/res
+APP/ios/app/Images.xcassets
 # Android
 frontend/android/build/
 frontend/android/.gradle/

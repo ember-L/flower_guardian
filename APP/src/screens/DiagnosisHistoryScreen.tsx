@@ -10,10 +10,11 @@ import {
   ActivityIndicator,
   Pressable,
   Animated,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
-import { getDiagnoses, DiagnosisRecord } from '../services/diagnosisService';
+import { getDiagnoses, deleteDiagnosis, toggleFavorite, DiagnosisRecord } from '../services/diagnosisService';
 import { colors, spacing, borderRadius, shadows, duration, fontSize, fontWeight, touchTarget } from '../constants/theme';
 import { Icon } from '../components/Icon';
 
@@ -101,14 +102,21 @@ export function DiagnosisHistoryScreen({ onGoBack, onNavigate, isLoggedIn, onReq
   );
 
   const loadRecords = useCallback(async () => {
-    if (!isLoggedIn) return;
+    if (!isLoggedIn) {
+      console.log('[DiagnosisHistory] Not logged in');
+      setLoading(false);
+      setRecords([]);
+      return;
+    }
     setLoading(true);
     try {
+      console.log('[DiagnosisHistory] Loading records, filter:', filter);
       const favoriteParam = filter === 'favorite' ? true : undefined;
       const data = await getDiagnoses(favoriteParam);
+      console.log('[DiagnosisHistory] Loaded records:', data.items.length);
       setRecords(data.items);
     } catch (error: any) {
-      console.error('Failed to load diagnoses:', error);
+      console.error('[DiagnosisHistory] Failed to load diagnoses:', error);
       // 401 未授权，跳转到登录页面
       if (error?.response?.status === 401 && onRequireLogin) {
         onRequireLogin();
@@ -123,11 +131,44 @@ export function DiagnosisHistoryScreen({ onGoBack, onNavigate, isLoggedIn, onReq
   }, [loadRecords]);
 
   const navigateToDetail = (diagnosisId: number) => {
+    console.log('[DiagnosisHistory] Navigating to detail, id:', diagnosisId, 'type:', typeof diagnosisId);
     onNavigate('DiagnosisDetail', { diagnosisId });
   };
 
   const navigateToDiagnosis = () => {
     onNavigate('Diagnosis');
+  };
+
+  const handleToggleFavorite = async (id: number) => {
+    try {
+      const result = await toggleFavorite(id);
+      setRecords(prev => prev.map(r => r.id === id ? { ...r, is_favorite: result.is_favorite } : r));
+    } catch (error) {
+      console.error('Failed to toggle favorite:', error);
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    Alert.alert(
+      '确认删除',
+      '确定要删除这条诊断记录吗？',
+      [
+        { text: '取消', style: 'cancel' },
+        {
+          text: '删除',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteDiagnosis(id);
+              setRecords(prev => prev.filter(r => r.id !== id));
+            } catch (error) {
+              console.error('Failed to delete diagnosis:', error);
+              Alert.alert('删除失败', '无法删除诊断记录，请稍后重试');
+            }
+          },
+        },
+      ]
+    );
   };
 
   const formatDate = (dateString: string): string => {
@@ -167,11 +208,17 @@ export function DiagnosisHistoryScreen({ onGoBack, onNavigate, isLoggedIn, onReq
         android_ripple={{ color: colors.primaryLight + '20' }}
       >
         <View style={styles.cardImageContainer}>
-          <Image
-            source={{ uri: item.image_url || 'https://via.placeholder.com/80' }}
-            style={styles.cardImage}
-            resizeMode="cover"
-          />
+          {item.image_url ? (
+            <Image
+              source={{ uri: item.image_url }}
+              style={styles.cardImage}
+              resizeMode="cover"
+            />
+          ) : (
+            <View style={[styles.cardImage, styles.cardImagePlaceholder]}>
+              <Icon name="image" size={24} color={colors['text-tertiary']} />
+            </View>
+          )}
           {item.is_favorite && (
             <View style={styles.favoriteBadge}>
               <Icon name="star" size={12} color={colors.accent} fill={colors.accent} />
@@ -201,7 +248,26 @@ export function DiagnosisHistoryScreen({ onGoBack, onNavigate, isLoggedIn, onReq
           </View>
         </View>
 
-        <View style={styles.cardArrow}>
+        <View style={styles.cardActions}>
+          <TouchableOpacity
+            style={styles.favoriteButton}
+            onPress={() => handleToggleFavorite(item.id)}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Icon
+              name="star"
+              size={18}
+              color={item.is_favorite ? colors.accent : colors['text-secondary']}
+              fill={item.is_favorite ? colors.accent : 'none'}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.deleteButton}
+            onPress={() => handleDelete(item.id)}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Icon name="trash" size={18} color={colors.error} />
+          </TouchableOpacity>
           <Icon name="chevron-right" size={20} color={colors['text-light']} />
         </View>
       </Pressable>
@@ -412,6 +478,11 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.lg,
     backgroundColor: colors.background,
   },
+  cardImagePlaceholder: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+  },
   favoriteBadge: {
     position: 'absolute',
     top: -4,
@@ -463,6 +534,27 @@ const styles = StyleSheet.create({
   cardArrow: {
     justifyContent: 'center',
     paddingLeft: spacing.xs,
+  },
+  cardActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  deleteButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.errorLight + '40',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  favoriteButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.accentLight + '40',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 
   // Loading

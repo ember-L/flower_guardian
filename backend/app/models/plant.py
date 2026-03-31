@@ -11,6 +11,7 @@ class Plant(Base):
     name = Column(String(100), nullable=False, index=True)
     scientific_name = Column(String(150))
     category = Column(String(50))
+    image_url = Column(String(500))  # 植物图片URL
     yolo_class_id = Column(Integer, unique=True, index=True)  # YOLO模型类别ID (0-46)
     care_level = Column(Integer, default=1)
     beginner_friendly = Column(Integer, default=3)  # 新手友好度 1-5

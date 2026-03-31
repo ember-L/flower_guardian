@@ -13,6 +13,7 @@ import {
   Animated,
   Dimensions,
 } from 'react-native';
+import { Image as RNImage } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Icons } from '../components/Icon';
 import { colors, spacing, borderRadius } from '../constants/theme';
@@ -366,7 +367,10 @@ export function IdentifyScreen({ onNavigate, currentTab, onTabChange }: Identify
                 { transform: [{ scale: pulseAnim }] },
               ]}
             >
-              <Icons.Plant size={32} color="#fff" />
+              <RNImage
+                source={require('../../assets/logo.png')}
+                style={styles.logoImage}
+              />
             </Animated.View>
             <View style={styles.heroText}>
               <Text style={styles.heroTitle}>护花使者</Text>
@@ -735,11 +739,17 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
     borderColor: 'rgba(255,255,255,0.3)',
+    overflow: 'hidden',
+  },
+  logoImage: {
+    width: 54,
+    height: 54,
+    resizeMode: 'contain',
   },
   heroText: {
     marginLeft: spacing.md,

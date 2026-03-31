@@ -7,11 +7,12 @@ import { Icons } from '../components/Icon';
 import { colors, spacing, borderRadius, shadows, duration, fontSize, fontWeight, touchTarget } from '../constants/theme';
 import { NavigationProps } from '../navigation/AppNavigator';
 import { pestRecognitionService, DiagnosisResult } from '../services/pestRecognitionService';
+import { createDiagnosis } from '../services/diagnosisService';
 import { networkMonitor, isNetworkConnected } from '../utils/networkMonitor';
 
 interface DiagnosisScreenProps extends Partial<NavigationProps> {}
 
-export function DiagnosisScreen({ onGoBack, onNavigate }: DiagnosisScreenProps) {
+export function DiagnosisScreen({ onGoBack, onNavigate, isLoggedIn }: DiagnosisScreenProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [diagnosisResult, setDiagnosisResult] = useState<DiagnosisResult | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
@@ -62,6 +63,26 @@ export function DiagnosisScreen({ onGoBack, onNavigate }: DiagnosisScreenProps) 
   };
 
   const handleDiagnose = async (source: 'camera' | 'gallery') => {
+    // 检查登录状态
+    if (!isLoggedIn) {
+      Alert.alert(
+        '提示',
+        '登录后可保存诊断记录，是否登录？',
+        [
+          { text: '取消', style: 'cancel' },
+          { text: '登录', onPress: () => {
+            if (onRequireLogin) onRequireLogin();
+          }},
+          { text: '继续诊断', onPress: () => proceedWithDiagnosis(source) },
+        ]
+      );
+      return;
+    }
+
+    proceedWithDiagnosis(source);
+  };
+
+  const proceedWithDiagnosis = async (source: 'camera' | 'gallery') => {
     try {
       setIsLoading(true);
       setDiagnosisResult(null);
@@ -74,7 +95,7 @@ export function DiagnosisScreen({ onGoBack, onNavigate }: DiagnosisScreenProps) 
           setIsLoading(false);
           return;
         }
-        result = await ImagePicker.launchCameraAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.8 });
+        result = await ImagePicker.launchCameraAsync({ mediaTypes: 'Images', quality: 0.8 });
       } else {
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (status !== 'granted') {
@@ -82,7 +103,7 @@ export function DiagnosisScreen({ onGoBack, onNavigate }: DiagnosisScreenProps) 
           setIsLoading(false);
           return;
         }
-        result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.8 });
+        result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: 'Images', quality: 0.8 });
       }
 
       if (result.canceled || !result.assets?.length) {
@@ -92,6 +113,27 @@ export function DiagnosisScreen({ onGoBack, onNavigate }: DiagnosisScreenProps) 
 
       const imageUri = result.assets[0].uri;
       const diagnosisResult: DiagnosisResult = await pestRecognitionService.recognize(imageUri);
+
+      // 保存诊断记录到后端
+      try {
+        if (isLoggedIn) {
+          console.log('[Diagnosis] Saving record, isLoggedIn:', isLoggedIn);
+          await createDiagnosis({
+            image_url: imageUri,
+            disease_name: diagnosisResult.name,
+            confidence: diagnosisResult.confidence,
+            description: diagnosisResult.treatment, // 使用治疗建议作为描述
+            treatment: diagnosisResult.treatment,
+            prevention: diagnosisResult.prevention,
+            recommended_products: '',
+          });
+          console.log('[Diagnosis] Record saved successfully');
+        } else {
+          console.log('[Diagnosis] Not logged in, skipping save');
+        }
+      } catch (saveError: any) {
+        console.error('[Diagnosis] Failed to save record:', saveError?.response?.data || saveError);
+      }
 
       setCapturedImage(imageUri);
       setDiagnosisResult(diagnosisResult);
@@ -138,7 +180,10 @@ export function DiagnosisScreen({ onGoBack, onNavigate }: DiagnosisScreenProps) 
           </TouchableOpacity>
           <View style={styles.headerContent}>
             <View style={styles.headerIcon}>
-              <Icons.Bug size={36} color={colors.white} />
+              <Image
+                source={require('../../assets/logo.png')}
+                style={styles.logoImage}
+              />
             </View>
             <Text style={styles.headerTitle}>病症诊断</Text>
             <Text style={styles.headerSubtitle}>AI智能识别病虫害</Text>
@@ -417,10 +462,15 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 22,
-    backgroundColor: colors.white + '20',
+    backgroundColor: colors.white,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.md,
+  },
+  logoImage: {
+    width: 60,
+    height: 60,
+    resizeMode: 'contain',
   },
   headerTitle: {
     fontSize: fontSize.xxl,

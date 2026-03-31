@@ -23,6 +23,7 @@ class DiagnosisRecordResponse(BaseModel):
     prevention: str
     recommended_products: str
     is_favorite: bool
+    conversation_id: Optional[int] = None
     created_at: datetime
 
     class Config:

@@ -15,6 +15,62 @@ logging.basicConfig(
 # 导入所有模型以确保表被创建
 from app.models import User, Plant, UserPlant, Reminder, Diary, Product, Order, OrderItem, CartItem, Payment, DiagnosisRecord, Address, EmailVerification
 
+# 定时任务调度器
+scheduler = None
+
+
+def setup_scheduler():
+    """配置定时任务"""
+    global scheduler
+    try:
+        from apscheduler.schedulers.asyncio import AsyncIOScheduler
+        from apscheduler.triggers.cron import CronTrigger
+        from app.tasks.reminder_tasks import (
+            check_upcoming_reminders,
+            refresh_weather_factors,
+            send_daily_reminders,
+            send_overdue_reminders
+        )
+
+        scheduler = AsyncIOScheduler()
+
+        # 每小时检查即将到期的提醒
+        scheduler.add_job(
+            check_upcoming_reminders,
+            CronTrigger(minute=0),
+            id="check_reminders",
+            replace_existing=True
+        )
+
+        # 每日9点发送提醒
+        scheduler.add_job(
+            send_daily_reminders,
+            CronTrigger(hour=9, minute=0),
+            id="daily_reminders",
+            replace_existing=True
+        )
+
+        # 每6小时刷新天气
+        scheduler.add_job(
+            refresh_weather_factors,
+            CronTrigger(hour="*/6"),
+            id="refresh_weather",
+            replace_existing=True
+        )
+
+        # 每3小时检查逾期提醒
+        scheduler.add_job(
+            send_overdue_reminders,
+            CronTrigger(hour="*/3"),
+            id="overdue_reminders",
+            replace_existing=True
+        )
+
+        scheduler.start()
+        logging.info("定时任务调度器已启动")
+    except ImportError:
+        logging.warning("APScheduler 未安装，跳过定时任务配置")
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -26,7 +82,16 @@ async def lifespan(app: FastAPI):
         seed_plants(db)
     finally:
         db.close()
+
+    # 启动定时任务
+    setup_scheduler()
+
     yield
+
+    # 关闭定时任务
+    if scheduler:
+        scheduler.shutdown()
+        logging.info("定时任务调度器已关闭")
 
 
 app = FastAPI(title="护花使者 API", version="1.0.0", lifespan=lifespan)

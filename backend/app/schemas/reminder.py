@@ -20,6 +20,14 @@ class ReminderUpdate(BaseModel):
     last_done: Optional[datetime] = None
 
 
+class SmartReminderCreate(ReminderBase):
+    """智能提醒创建"""
+    user_plant_id: int
+    plant_id: Optional[int] = None
+    location: Optional[str] = None
+    notify_time: Optional[str] = "09:00"
+
+
 class ReminderResponse(ReminderBase):
     id: int
     user_id: int
@@ -30,3 +38,16 @@ class ReminderResponse(ReminderBase):
 
     class Config:
         from_attributes = True
+
+
+class SmartReminderResponse(ReminderResponse):
+    """智能提醒响应"""
+    plant_id: Optional[int] = None
+    base_interval: Optional[int] = None
+    weather_factor: Optional[float] = None
+    season_factor: Optional[float] = None
+    calculated_interval: Optional[int] = None
+    location: Optional[str] = None
+    notify_time: Optional[str] = None
+    plant_name: Optional[str] = None
+    weather_tip: Optional[str] = None

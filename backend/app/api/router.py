@@ -13,6 +13,7 @@ from app.api.endpoints.addresses import router as addresses_router
 from app.api.endpoints.email_verification import router as email_verification_router
 from app.api.endpoints.ai_chat import router as ai_chat_router
 from app.api.endpoints.weather import router as weather_router
+from app.api.endpoints.chat import router as chat_router
 
 api_router = APIRouter()
 api_router.include_router(users.router)
@@ -37,3 +38,4 @@ api_router.include_router(recommend_router)
 api_router.include_router(addresses_router)
 api_router.include_router(ai_chat_router)
 api_router.include_router(weather_router)
+api_router.include_router(chat_router)

@@ -16,8 +16,9 @@ const menuItems = [
   { id: '4', icon: Icons.Sparkles, title: '新手推荐', subtitle: '场景问答选植物', screen: 'Recommendation', color: colors.warning },
   { id: '5', icon: Icons.Bell, title: '提醒管理', subtitle: '智能提醒设置', screen: 'Reminder', color: colors.primary },
   { id: '6', icon: Icons.MapPin, title: '地址管理', subtitle: '收货地址管理', screen: 'Address', color: colors.success },
-  { id: '7', icon: Icons.Settings, title: '设置', subtitle: '偏好设置', screen: 'Settings', color: colors['text-secondary'] },
-  { id: '8', icon: Icons.HelpCircle, title: '帮助反馈', subtitle: '联系我们', screen: 'Help', color: colors['text-secondary'] },
+  { id: '7', icon: Icons.Bell, title: '通知中心', subtitle: '查看提醒通知', screen: 'Notification', color: colors.warning },
+  { id: '8', icon: Icons.Settings, title: '设置', subtitle: '偏好设置', screen: 'Settings', color: colors['text-secondary'] },
+  { id: '9', icon: Icons.HelpCircle, title: '帮助反馈', subtitle: '联系我们', screen: 'Help', color: colors['text-secondary'] },
 ];
 
 export function ProfileScreen({ onNavigate, currentTab, onTabChange, isLoggedIn: propIsLoggedIn, onRequireLogin, onLogout }: ProfileScreenProps) {

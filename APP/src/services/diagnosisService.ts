@@ -27,6 +27,7 @@ export interface DiagnosisRecord {
   prevention: string;
   recommended_products: string;
   is_favorite: boolean;
+  conversation_id?: number;
   created_at: string;
 }
 
@@ -58,4 +59,25 @@ export const toggleFavorite = async (id: number): Promise<{ is_favorite: boolean
 export const rediagnose = async (id: number): Promise<DiagnosisRecord> => {
   const response = await api.post(`/api/diagnoses/${id}/rediagnose`);
   return response.data;
+};
+
+// 创建诊断记录
+export interface CreateDiagnosisParams {
+  image_url: string;
+  disease_name: string;
+  confidence: number;
+  description?: string;
+  treatment?: string;
+  prevention?: string;
+  recommended_products?: string;
+}
+
+export const createDiagnosis = async (data: CreateDiagnosisParams): Promise<DiagnosisRecord> => {
+  const response = await api.post('/api/diagnoses', data);
+  return response.data;
+};
+
+// 删除诊断记录
+export const deleteDiagnosis = async (id: number): Promise<void> => {
+  await api.delete(`/api/diagnoses/${id}`);
 };

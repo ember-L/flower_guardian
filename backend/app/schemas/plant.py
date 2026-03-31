@@ -7,6 +7,7 @@ class PlantBase(BaseModel):
     name: str
     scientific_name: Optional[str] = None
     category: Optional[str] = None
+    image_url: Optional[str] = None
     yolo_class_id: Optional[int] = None
     care_level: int = 1
     beginner_friendly: Optional[int] = 3

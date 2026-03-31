@@ -24,6 +24,7 @@ class UserResponse(UserBase):
     is_email_verified: bool = False
     role: str = "user"
     created_at: datetime
+    expo_push_token: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -45,3 +46,7 @@ class UserUpdate(BaseModel):
 class PasswordChange(BaseModel):
     old_password: str
     new_password: str
+
+
+class PushTokenUpdate(BaseModel):
+    expo_push_token: Optional[str] = None

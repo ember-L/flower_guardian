@@ -230,12 +230,24 @@ interface IconProps {
   name: string;
   size?: number;
   color?: string;
+  fill?: string;
 }
 
-export function Icon({ name, size = 24, color = '#000' }: IconProps) {
+export function Icon({ name, size = 24, color = '#000', fill }: IconProps) {
   const IconComponent = iconMap[name];
 
   if (IconComponent) {
+    // 只有星星图标支持填充效果，其他图标不传 fill 参数
+    if (name === 'star' && fill) {
+      return (
+        <IconComponent
+          size={size}
+          color={color}
+          fill={fill}
+          strokeWidth={2}
+        />
+      );
+    }
     return (
       <IconComponent
         size={size}
