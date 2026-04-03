@@ -1,6 +1,7 @@
 import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from app.api.router import api_router
 from app.core.database import engine
 from app.db.base import Base
@@ -95,6 +96,9 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="护花使者 API", version="1.0.0", lifespan=lifespan)
+
+# 挂载静态文件目录（植物图片）
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Create database tables
 Base.metadata.create_all(bind=engine)

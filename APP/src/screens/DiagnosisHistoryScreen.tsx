@@ -15,6 +15,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { getDiagnoses, deleteDiagnosis, toggleFavorite, DiagnosisRecord } from '../services/diagnosisService';
+import { API_BASE_URL } from '../services/config';
 import { colors, spacing, borderRadius, shadows, duration, fontSize, fontWeight, touchTarget } from '../constants/theme';
 import { Icon } from '../components/Icon';
 
@@ -31,6 +32,30 @@ interface EmptyStateProps {
   filter: 'all' | 'favorite';
   onNavigateToDiagnosis: () => void;
 }
+
+// 获取完整的图片URL
+const getFullImageUrl = (url: string | undefined): string | undefined => {
+  if (!url || typeof url !== 'string') return undefined;
+  const trimmed = url.trim();
+  if (trimmed.length === 0) return undefined;
+
+  // 已经是完整的URL（包括 http, https, file, ph 等）
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://') ||
+      trimmed.startsWith('file://') || trimmed.startsWith('ph://') ||
+      trimmed.startsWith('asset-library://')) {
+    return trimmed;
+  }
+
+  // 已经是完整的图片服务器URL
+  if (trimmed.includes(API_BASE_URL)) {
+    return trimmed;
+  }
+
+  // 相对路径，拼接API地址
+  // 确保路径以 / 开头
+  const cleanPath = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+  return `${API_BASE_URL}${cleanPath}`;
+};
 
 const EmptyState: React.FC<EmptyStateProps> = React.memo(({ filter, onNavigateToDiagnosis }) => {
   const isEmptyState = filter === 'all';
@@ -208,9 +233,9 @@ export function DiagnosisHistoryScreen({ onGoBack, onNavigate, isLoggedIn, onReq
         android_ripple={{ color: colors.primaryLight + '20' }}
       >
         <View style={styles.cardImageContainer}>
-          {item.image_url ? (
+          {item?.image_url && typeof item.image_url === 'string' && item.image_url.trim().length > 0 ? (
             <Image
-              source={{ uri: item.image_url }}
+              source={{ uri: getFullImageUrl(item.image_url) }}
               style={styles.cardImage}
               resizeMode="cover"
             />

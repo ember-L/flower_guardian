@@ -22,7 +22,7 @@ APP/ios/app/Images.xcassets
 frontend/android/build/
 frontend/android/.gradle/
 frontend/android/local.properties
-
+backend/static
 # ===============================
 # Backend (Python)
 # ===============================

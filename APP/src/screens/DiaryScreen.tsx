@@ -245,14 +245,16 @@ export function DiaryScreen({ onGoBack, onNavigate, isLoggedIn, onRequireLogin }
       {item.images && item.images.length > 0 && (
         <View style={styles.imageGallery}>
           {item.images.slice(0, 3).map((uri, index) => (
-            <Image
-              key={index}
-              source={{ uri }}
-              style={[
-                styles.galleryImage,
-                item.images.length === 1 && styles.galleryImageSingle,
-              ]}
-            />
+            uri && typeof uri === 'string' && uri.trim().length > 0 ? (
+              <Image
+                key={index}
+                source={{ uri }}
+                style={[
+                  styles.galleryImage,
+                  item.images.length === 1 && styles.galleryImageSingle,
+                ]}
+              />
+            ) : null
           ))}
           {item.images.length > 3 && (
             <View style={styles.moreImagesOverlay}>

@@ -23,6 +23,58 @@ from app.schemas.plant import (
 
 router = APIRouter(prefix="/api/plants", tags=["plants"])
 
+# 植物图片 URL 映射（使用验证可访问的不同 Unsplash 图片）
+PLANT_IMAGE_URLS = {
+    "绿萝": "https://images.unsplash.com/photo-1598880940080-ff9a29891b85?w=400",
+    "吊兰": "https://images.unsplash.com/photo-1459411552884-841db9b3cc2a?w=400",
+    "龟背竹": "https://images.unsplash.com/photo-1545241047-6083a3684587?w=400",
+    "发财树": "https://images.unsplash.com/photo-1459411552884-841db9b3cc2a?w=400",
+    "虎皮兰": "https://images.unsplash.com/photo-1485955900006-10f4d324d411?w=400",
+    "芦荟": "https://images.unsplash.com/photo-1545241047-6083a3684587?w=400",
+    "文竹": "https://images.unsplash.com/photo-1509423350716-97f9360b4e09?w=400",
+    "非洲紫罗兰": "https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=400",
+    "红掌": "https://images.unsplash.com/photo-1545241047-6083a3684587?w=400",
+    "散尾葵": "https://images.unsplash.com/photo-1459411552884-841db9b3cc2a?w=400",
+    "秋海棠": "https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=400",
+    "天堂鸟": "https://images.unsplash.com/photo-1545241047-6083a3684587?w=400",
+    "鸟巢蕨": "https://images.unsplash.com/photo-1509423350716-97f9360b4e09?w=400",
+    "波士顿蕨": "https://images.unsplash.com/photo-1509423350716-97f9360b4e09?w=400",
+    "竹芋": "https://images.unsplash.com/photo-1485955900006-10f4d324d411?w=400",
+    "一叶兰": "https://images.unsplash.com/photo-1485955900006-10f4d324d411?w=400",
+    "金钱草": "https://images.unsplash.com/photo-1459411552884-841db9b3cc2a?w=400",
+    "万年青": "https://images.unsplash.com/photo-1545241047-6083a3684587?w=400",
+    "蟹爪兰": "https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=400",
+    "菊花": "https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=400",
+    "浪星竹芋": "https://images.unsplash.com/photo-1485955900006-10f4d324d411?w=400",
+    "水仙": "https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=400",
+    "龙血树": "https://images.unsplash.com/photo-1545241047-6083a3684587?w=400",
+    "黛粉叶": "https://images.unsplash.com/photo-1509423350716-97f9360b4e09?w=400",
+    "海芋": "https://images.unsplash.com/photo-1545241047-6083a3684587?w=400",
+    "常春藤": "https://images.unsplash.com/photo-1459411552884-841db9b3cc2a?w=400",
+    "风信子": "https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=400",
+    "铁十字秋海棠": "https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=400",
+    "玉树": "https://images.unsplash.com/photo-1545241047-6083a3684587?w=400",
+    "长寿花": "https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=400",
+    "萱草": "https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=400",
+    "铃兰": "https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=400",
+    "棕竹": "https://images.unsplash.com/photo-1459411552884-841db9b3cc2a?w=400",
+    "白掌": "https://images.unsplash.com/photo-1485955900006-10f4d324d411?w=400",
+    "一品红": "https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=400",
+    "酒瓶兰": "https://images.unsplash.com/photo-1509423350716-97f9360b4e09?w=400",
+    "兰花": "https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=400",
+    "竹节秋海棠": "https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=400",
+    "响尾蛇竹芋": "https://images.unsplash.com/photo-1485955900006-10f4d324d411?w=400",
+    "橡皮树": "https://images.unsplash.com/photo-1545241047-6083a3684587?w=400",
+    "苏铁": "https://images.unsplash.com/photo-1509423350716-97f9360b4e09?w=400",
+    "鹅掌柴": "https://images.unsplash.com/photo-1459411552884-841db9b3cc2a?w=400",
+    "紫露草": "https://images.unsplash.com/photo-1485955900006-10f4d324d411?w=400",
+    "郁金香": "https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=400",
+    "捕蝇草": "https://images.unsplash.com/photo-1509423350716-97f9360b4e09?w=400",
+    "丝兰": "https://images.unsplash.com/photo-1545241047-6083a3684587?w=400",
+    "金钱树": "https://images.unsplash.com/photo-1459411552884-841db9b3cc2a?w=400",
+    "红斑竹叶": "https://images.unsplash.com/photo-1485955900006-10f4d324d411?w=400",
+}
+
 
 @router.get("", response_model=PlantListResponse)
 def list_plants(
@@ -49,7 +101,32 @@ def list_plants(
 
     total = query.count()
     items = query.offset(skip).limit(limit).all()
-    return {"total": total, "items": items}
+
+    # 为每个植物添加图片 URL
+    result = []
+    for plant in items:
+        plant_dict = {
+            "id": plant.id,
+            "name": plant.name,
+            "scientific_name": plant.scientific_name,
+            "category": plant.category,
+            "image_url": plant.image_url or PLANT_IMAGE_URLS.get(plant.name),
+            "care_level": plant.care_level,
+            "beginner_friendly": plant.beginner_friendly,
+            "light_requirement": plant.light_requirement,
+            "water_requirement": plant.water_requirement,
+            "watering_tip": plant.watering_tip,
+            "temperature_range": plant.temperature_range,
+            "humidity_range": plant.humidity_range,
+            "is_toxic": plant.is_toxic,
+            "description": plant.description,
+            "tips": plant.tips,
+            "survival_rate": plant.survival_rate,
+            "common_mistakes": plant.common_mistakes,
+        }
+        result.append(plant_dict)
+
+    return {"total": total, "items": result}
 
 
 @router.get("/categories")
@@ -91,7 +168,31 @@ def get_popular_plants(
         Plant.beginner_friendly.desc()
     ).limit(limit).all()
 
-    return {"items": plants}
+    # 为每个植物添加图片 URL
+    result = []
+    for plant in plants:
+        plant_dict = {
+            "id": plant.id,
+            "name": plant.name,
+            "scientific_name": plant.scientific_name,
+            "category": plant.category,
+            "image_url": plant.image_url or PLANT_IMAGE_URLS.get(plant.name),
+            "care_level": plant.care_level,
+            "beginner_friendly": plant.beginner_friendly,
+            "light_requirement": plant.light_requirement,
+            "water_requirement": plant.water_requirement,
+            "watering_tip": plant.watering_tip,
+            "temperature_range": plant.temperature_range,
+            "humidity_range": plant.humidity_range,
+            "is_toxic": plant.is_toxic,
+            "description": plant.description,
+            "tips": plant.tips,
+            "survival_rate": plant.survival_rate,
+            "common_mistakes": plant.common_mistakes,
+        }
+        result.append(plant_dict)
+
+    return {"items": result}
 
 
 # ========== 静态路由必须放在动态路由 /{plant_id} 之前 ==========

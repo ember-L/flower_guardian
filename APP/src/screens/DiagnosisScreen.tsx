@@ -276,7 +276,7 @@ export function DiagnosisScreen({ onGoBack, onNavigate, isLoggedIn }: DiagnosisS
         {diagnosisResult && severityConfig && (
           <View style={styles.resultWrapper}>
             {/* 图片展示 */}
-            {capturedImage && (
+            {capturedImage && typeof capturedImage === 'string' && capturedImage.trim().length > 0 && (
               <View style={styles.imageSection}>
                 <Image source={{ uri: capturedImage }} style={styles.resultImage} />
                 <View style={styles.imageTags}>

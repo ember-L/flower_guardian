@@ -101,7 +101,7 @@ export function CartScreen({ navigation, onGoBack, onNavigate, isLoggedIn, onReq
   const renderItem = ({ item }: { item: CartItem }) => (
     <View style={styles.cartItem}>
       <Image
-        source={{ uri: item.product_image || 'https://via.placeholder.com/80' }}
+        source={{ uri: item.product_image && typeof item.product_image === 'string' && item.product_image.trim().length > 0 ? item.product_image : 'https://via.placeholder.com/80' }}
         style={styles.productImage}
       />
       <View style={styles.itemInfo}>

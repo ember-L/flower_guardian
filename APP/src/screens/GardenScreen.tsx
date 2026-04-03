@@ -15,7 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Icons } from '../components/Icon';
 import { colors, spacing } from '../constants/theme';
 import { NavigationProps } from '../navigation/AppNavigator';
-import { UserPlant, getMyPlants, addToMyGarden, deleteMyPlant, updateUserPlant, GardenStats, CalendarData, getGardenStats, getCareCalendar } from '../services/plantService';
+import { UserPlant, getMyPlants, addToMyGarden, deleteMyPlant, updateUserPlant, GardenStats, CalendarData, getGardenStats, getCareCalendar, getCareRecords, addCareRecord, CareRecord } from '../services/plantService';
 
 interface GardenScreenProps extends Partial<NavigationProps> {}
 
@@ -34,6 +34,7 @@ export function GardenScreen({ onNavigate, currentTab, onTabChange, isLoggedIn, 
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [plantCareRecords, setPlantCareRecords] = useState<Record<number, CareRecord[]>>({});
   const [editingPlant, setEditingPlant] = useState<UserPlant | null>(null);
   const [newPlantName, setNewPlantName] = useState('');
   const [newPlantNickname, setNewPlantNickname] = useState('');
@@ -72,6 +73,18 @@ export function GardenScreen({ onNavigate, currentTab, onTabChange, isLoggedIn, 
       setLoading(true);
       const data = await getMyPlants();
       setPlants(data);
+
+      // 加载每个植物的养护记录
+      const records: Record<number, CareRecord[]> = {};
+      await Promise.all(data.map(async (plant) => {
+        try {
+          const careRecords = await getCareRecords(plant.id);
+          records[plant.id] = careRecords;
+        } catch {
+          records[plant.id] = [];
+        }
+      }));
+      setPlantCareRecords(records);
     } catch (error: any) {
       console.error('[Garden] Failed to load plants:', error?.response?.data || error?.message || error);
     } finally {
@@ -103,13 +116,16 @@ export function GardenScreen({ onNavigate, currentTab, onTabChange, isLoggedIn, 
       return;
     }
     try {
-      await fetch(`/api/plants/my/${plantId}/care-records`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ care_type: 'watering', notes: '快速浇水' }),
-      });
+      await addCareRecord(plantId, { care_type: 'watering', notes: '快速浇水' });
+
+      // 更新本地养护记录
+      const newRecord = await getCareRecords(plantId);
+      setPlantCareRecords(prev => ({ ...prev, [plantId]: newRecord }));
+
+      // 刷新统计数据
+      loadStats();
+
       Alert.alert('浇水成功', '已记录浇水时间');
-      loadPlants();
     } catch (error) {
       Alert.alert('浇水成功', '已记录浇水时间');
     }
@@ -366,8 +382,26 @@ export function GardenScreen({ onNavigate, currentTab, onTabChange, isLoggedIn, 
                     </View>
                     <TouchableOpacity onPress={() => handleWaterPlant(plant.id)} style={styles.statItem}>
                       <Icons.Droplets size={20} color={colors.info} />
-                      <Text style={[styles.plantStatValue, { color: colors.info }]}>浇水</Text>
-                      <Text style={styles.plantStatLabel}>快速操作</Text>
+                      <Text style={[styles.plantStatValue, { color: colors.info }]}>
+                        {(() => {
+                          const records = plantCareRecords[plant.id] || [];
+                          const lastWatering = records.find(r => r.care_type === 'watering');
+                          if (lastWatering) {
+                            const days = Math.floor((Date.now() - new Date(lastWatering.created_at).getTime()) / (1000 * 60 * 60 * 24));
+                            if (days === 0) return '今天已浇';
+                            if (days === 1) return '昨天浇';
+                            return `${days}天前`;
+                          }
+                          return '浇水';
+                        })()}
+                      </Text>
+                      <Text style={styles.plantStatLabel}>
+                        {(() => {
+                          const records = plantCareRecords[plant.id] || [];
+                          const count = records.filter(r => r.care_type === 'watering').length;
+                          return count > 0 ? `${count}次记录` : '快速操作';
+                        })()}
+                      </Text>
                     </TouchableOpacity>
                     <TouchableOpacity onPress={() => handleEditPlant(plant)} style={styles.statItem}>
                       <Icons.Edit2 size={20} color={colors.success} />
@@ -375,7 +409,7 @@ export function GardenScreen({ onNavigate, currentTab, onTabChange, isLoggedIn, 
                       <Text style={styles.plantStatLabel}>修改信息</Text>
                     </TouchableOpacity>
                   </View>
-                  <View style={styles.plantActions}>
+                  {/* <View style={styles.plantActions}>
                     <TouchableOpacity onPress={() => handleWaterPlant(plant.id)} style={styles.actionButton} activeOpacity={0.7}>
                       <Icons.Droplets size={16} color={colors.info} />
                       <Text style={styles.actionButtonText}>已浇水</Text>
@@ -384,7 +418,7 @@ export function GardenScreen({ onNavigate, currentTab, onTabChange, isLoggedIn, 
                       <Icons.Edit2 size={16} color={colors.success} />
                       <Text style={[styles.actionButtonText, { color: colors.success }]}>编辑</Text>
                     </TouchableOpacity>
-                  </View>
+                  </View> */}
                 </View>
               </View>
             </TouchableOpacity>
@@ -512,7 +546,7 @@ const styles = StyleSheet.create({
   calendarDayText: { fontSize: 14, color: colors.text },
   calendarDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.primary, marginTop: 2 },
   list: { flex: 1 },
-  listContent: { padding: spacing.lg, paddingBottom: spacing.xxxl },
+  listContent: { padding: spacing.lg, paddingBottom: spacing.xxl * 3 },
   loadingContainer: { alignItems: 'center', paddingVertical: spacing.xxl * 2 },
   loadingText: { fontSize: 16, color: colors['text-secondary'] },
   emptyContainer: { alignItems: 'center', paddingVertical: spacing.xxl * 2 },

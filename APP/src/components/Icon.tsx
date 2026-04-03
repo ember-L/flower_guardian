@@ -101,6 +101,7 @@ import {
   FileText,
   Send,
   Bot,
+  Bug,
   type LucideIcon as LucideIconType,
 } from 'lucide-react-native';
 
@@ -298,6 +299,7 @@ export const Icons = {
   Plus: (props: Omit<LucideProps, 'name'>) => <Icon name="plus" {...props} />,
   X: (props: Omit<LucideProps, 'name'>) => <Icon name="x" {...props} />,
   Check: (props: Omit<LucideProps, 'name'>) => <Icon name="check" {...props} />,
+  BellOff: (props: Omit<LucideProps, 'name'>) => <Icon name="bell-off" {...props} />,
   ArrowLeft: (props: Omit<LucideProps, 'name'>) => <Icon name="arrow-left" {...props} />,
   ArrowRight: (props: Omit<LucideProps, 'name'>) => <Icon name="arrow-right" {...props} />,
   ChevronRight: (props: Omit<LucideProps, 'name'>) => <Icon name="chevron-right" {...props} />,

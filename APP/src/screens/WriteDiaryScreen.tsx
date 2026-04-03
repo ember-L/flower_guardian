@@ -1,19 +1,23 @@
-// 写日记页面
+// 写日记页面 - 美化版（保持原配色）
 import React, { useState, useEffect } from 'react';
 import {
   View, StyleSheet, ScrollView, TouchableOpacity, Text,
-  TextInput, Image, Alert, ActivityIndicator
+  TextInput, Image, Alert, ActivityIndicator, Dimensions
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { Icons } from '../components/Icon';
-import { colors, spacing } from '../constants/theme';
+import { colors, spacing, borderRadius, shadows, fontSize, fontWeight } from '../constants/theme';
 import { NavigationProps } from '../navigation/AppNavigator';
 import { createDiary, getMyPlants, Plant } from '../services/diaryService';
 
 interface WriteDiaryScreenProps extends Partial<NavigationProps> {
   editDiaryId?: number;
 }
+
+const SCREEN_WIDTH = Dimensions.get('window').width;
+const GRID_GAP = 12;
+const IMAGE_SIZE = (SCREEN_WIDTH - spacing.lg * 2 - GRID_GAP * 2) / 3;
 
 export function WriteDiaryScreen({ onGoBack, onNavigate, editDiaryId, isLoggedIn, onRequireLogin }: WriteDiaryScreenProps) {
   const [plants, setPlants] = useState<Plant[]>([]);
@@ -25,7 +29,6 @@ export function WriteDiaryScreen({ onGoBack, onNavigate, editDiaryId, isLoggedIn
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
 
-  // 检查登录状态
   useEffect(() => {
     if (!isLoggedIn && onRequireLogin) {
       onRequireLogin();
@@ -130,39 +133,71 @@ export function WriteDiaryScreen({ onGoBack, onNavigate, editDiaryId, isLoggedIn
   if (initialLoading) {
     return (
       <SafeAreaView style={styles.container}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
       </SafeAreaView>
     );
   }
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={onGoBack} style={styles.headerButton}>
-          <Icons.X size={24} color={colors.text} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>写日记</Text>
-        <TouchableOpacity
-          onPress={handleSave}
-          style={[styles.headerButton, styles.saveButton]}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator size="small" color="#fff" />
-          ) : (
-            <Text style={styles.saveButtonText}>保存</Text>
-          )}
-        </TouchableOpacity>
+      {/* 头部 - 渐变设计 */}
+      <View style={styles.headerGradient}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={onGoBack} style={styles.closeButton} activeOpacity={0.7}>
+            <Icons.X size={22} color={colors.white} />
+          </TouchableOpacity>
+
+          <View style={styles.headerCenter}>
+            <View style={styles.headerIconBadge}>
+              <Icons.Sprout size={18} color={colors.primary} />
+            </View>
+            <Text style={styles.headerTitle}>记录生长</Text>
+          </View>
+
+          <TouchableOpacity
+            onPress={handleSave}
+            style={styles.saveButton}
+            disabled={loading}
+            activeOpacity={0.8}
+          >
+            {loading ? (
+              <ActivityIndicator size="small" color={colors.primary} />
+            ) : (
+              <Text style={styles.saveButtonText}>保存</Text>
+            )}
+          </TouchableOpacity>
+        </View>
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.content}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.contentContainer}
+      >
         {/* 植物选择 */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>选择植物</Text>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionIconBox}>
+              <Icons.Sprout size={16} color={colors.white} />
+            </View>
+            <Text style={styles.sectionTitle}>选择植物</Text>
+          </View>
+
           {plants.length === 0 ? (
-            <Text style={styles.emptyText}>暂无植物，请先添加植物</Text>
+            <TouchableOpacity style={styles.emptyCard} onPress={() => onNavigate?.('Garden')} activeOpacity={0.7}>
+              <View style={styles.emptyIconWrap}>
+                <Icons.Plus size={24} color={colors.primary} />
+              </View>
+              <View style={styles.emptyContent}>
+                <Text style={styles.emptyTitle}>还没有植物</Text>
+                <Text style={styles.emptyDesc}>点击添加你的第一株植物</Text>
+              </View>
+              <Icons.ChevronRight size={20} color={colors['text-tertiary']} />
+            </TouchableOpacity>
           ) : (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.plantScroll}>
               {plants.map((plant) => (
                 <TouchableOpacity
                   key={plant.id}
@@ -171,12 +206,19 @@ export function WriteDiaryScreen({ onGoBack, onNavigate, editDiaryId, isLoggedIn
                     selectedPlantId === plant.id && styles.plantChipActive
                   ]}
                   onPress={() => setSelectedPlantId(plant.id)}
+                  activeOpacity={0.7}
                 >
+                  <View style={[
+                    styles.plantChipIcon,
+                    selectedPlantId === plant.id && styles.plantChipIconActive
+                  ]}>
+                    <Icons.Leaf size={12} color={selectedPlantId === plant.id ? colors.white : colors.secondary} />
+                  </View>
                   <Text style={[
                     styles.plantChipText,
                     selectedPlantId === plant.id && styles.plantChipTextActive
                   ]}>
-                    {plant.name}
+                    {plant.name || plant.nickname || '植物'}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -186,22 +228,37 @@ export function WriteDiaryScreen({ onGoBack, onNavigate, editDiaryId, isLoggedIn
 
         {/* 图片区域 */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>图片 ({images.length}/9)</Text>
+          <View style={styles.sectionHeader}>
+            <View style={[styles.sectionIconBox, { backgroundColor: colors.accent }]}>
+              <Icons.Image size={16} color={colors.white} />
+            </View>
+            <Text style={styles.sectionTitle}>拍照记录</Text>
+            <Text style={styles.imageCount}>{images.length}/9</Text>
+          </View>
+
           <View style={styles.imageGrid}>
             {images.map((uri, index) => (
-              <View key={index} style={styles.imageContainer}>
-                <Image source={{ uri }} style={styles.image} />
+              <View key={index} style={styles.imageWrapper}>
+                {uri ? (
+                  <Image source={{ uri }} style={styles.image} />
+                ) : (
+                  <View style={[styles.image, styles.imagePlaceholder]} />
+                )}
                 <TouchableOpacity
-                  style={styles.removeImageButton}
+                  style={styles.removeButton}
                   onPress={() => handleRemoveImage(index)}
+                  activeOpacity={0.7}
                 >
-                  <Icons.X size={12} color="#fff" />
+                  <Icons.X size={12} color={colors.white} />
                 </TouchableOpacity>
               </View>
             ))}
             {images.length < 9 && (
-              <TouchableOpacity style={styles.addImageButton} onPress={handleAddImage}>
-                <Icons.Plus size={24} color={colors.primary} />
+              <TouchableOpacity style={styles.addButton} onPress={handleAddImage} activeOpacity={0.7}>
+                <View style={styles.addIconWrap}>
+                  <Icons.Camera size={28} color={colors.primary} />
+                </View>
+                <Text style={styles.addText}>添加照片</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -209,94 +266,453 @@ export function WriteDiaryScreen({ onGoBack, onNavigate, editDiaryId, isLoggedIn
 
         {/* 生长数据 */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>生长数据（可选）</Text>
-          <View style={styles.growthInputs}>
-            <View style={styles.growthInput}>
-              <Text style={styles.growthLabel}>高度 (cm)</Text>
-              <TextInput
-                style={styles.input}
-                value={height}
-                onChangeText={setHeight}
-                placeholder="例如: 30"
-                keyboardType="numeric"
-              />
+          <View style={styles.sectionHeader}>
+            <View style={[styles.sectionIconBox, { backgroundColor: colors.secondary }]}>
+              <Icons.TrendingUp size={16} color={colors.white} />
             </View>
-            <View style={styles.growthInput}>
-              <Text style={styles.growthLabel}>叶片数量</Text>
-              <TextInput
-                style={styles.input}
-                value={leafCount}
-                onChangeText={setLeafCount}
-                placeholder="例如: 5"
-                keyboardType="numeric"
-              />
+            <Text style={styles.sectionTitle}>生长数据</Text>
+            <Text style={styles.optionalTag}>选填</Text>
+          </View>
+
+          <View style={styles.growthRow}>
+            <View style={styles.growthCard}>
+              <View style={styles.growthLabelRow}>
+                <View style={[styles.growthIconBox, { backgroundColor: colors.accentLight }]}>
+                  <Icons.Edit3 size={14} color={colors.accent} />
+                </View>
+                <Text style={styles.growthLabel}>株高</Text>
+              </View>
+              <View style={styles.inputRow}>
+                <TextInput
+                  style={styles.growthInput}
+                  value={height}
+                  onChangeText={setHeight}
+                  placeholder="0"
+                  placeholderTextColor={colors['text-tertiary']}
+                  keyboardType="numeric"
+                />
+                <Text style={styles.growthUnit}>cm</Text>
+              </View>
+            </View>
+
+            <View style={styles.growthCard}>
+              <View style={styles.growthLabelRow}>
+                <View style={[styles.growthIconBox, { backgroundColor: colors.secondaryLight }]}>
+                  <Icons.Leaf size={14} color={colors.secondary} />
+                </View>
+                <Text style={styles.growthLabel}>叶片数</Text>
+              </View>
+              <View style={styles.inputRow}>
+                <TextInput
+                  style={styles.growthInput}
+                  value={leafCount}
+                  onChangeText={setLeafCount}
+                  placeholder="0"
+                  placeholderTextColor={colors['text-tertiary']}
+                  keyboardType="numeric"
+                />
+                <Text style={styles.growthUnit}>片</Text>
+              </View>
             </View>
           </View>
         </View>
 
-        {/* 文字内容 */}
+        {/* 养护笔记 */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>记录文字（可选）</Text>
-          <TextInput
-            style={styles.textArea}
-            value={content}
-            onChangeText={setContent}
-            placeholder="今天植物有什么变化？"
-            multiline
-            maxLength={500}
-          />
-          <Text style={styles.charCount}>{content.length}/500</Text>
+          <View style={styles.sectionHeader}>
+            <View style={[styles.sectionIconBox, { backgroundColor: colors.primaryDark }]}>
+              <Icons.Edit3 size={16} color={colors.white} />
+            </View>
+            <Text style={styles.sectionTitle}>养护笔记</Text>
+            <Text style={styles.optionalTag}>选填</Text>
+          </View>
+
+          <View style={styles.textAreaWrap}>
+            <TextInput
+              style={styles.textArea}
+              value={content}
+              onChangeText={setContent}
+              placeholder="记录今天的养护心得、观察发现..."
+              placeholderTextColor={colors['text-tertiary']}
+              multiline
+              maxLength={500}
+              textAlignVertical="top"
+            />
+            <View style={styles.charCountWrap}>
+              <View style={styles.charCountLeft}>
+                <Icons.MessageCircle size={12} color={colors['text-tertiary']} />
+                <Text style={styles.charCount}>{content.length}/500</Text>
+              </View>
+            </View>
+          </View>
         </View>
+
+        {/* 底部装饰 */}
+        <View style={styles.decoration}>
+          <View style={styles.decorationLine} />
+          <View style={styles.decorationIcon}>
+            <Icons.Flower2 size={18} color={colors.primary} />
+          </View>
+          <View style={styles.decorationLine} />
+        </View>
+
+        <View style={styles.bottomSpacer} />
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  // 头部 - 渐变设计
+  headerGradient: {
+    backgroundColor: colors.primary,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
+    overflow: 'hidden',
+    ...shadows.md,
+  },
   header: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingHorizontal: spacing.lg, paddingVertical: spacing.md, borderBottomWidth: 1,
-    borderBottomColor: colors.border, backgroundColor: colors.surface,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    paddingTop: spacing.xs,
   },
-  headerButton: { padding: spacing.sm },
-  headerTitle: { fontSize: 18, fontWeight: '600', color: colors.text },
-  saveButton: { backgroundColor: colors.primary, borderRadius: 8, paddingHorizontal: spacing.md },
-  saveButtonText: { color: '#fff', fontWeight: '600' },
-  content: { flex: 1, padding: spacing.lg },
-  section: { marginBottom: spacing.xl },
-  sectionTitle: { fontSize: 15, fontWeight: '600', color: colors.text, marginBottom: spacing.sm },
-  emptyText: { color: colors['text-tertiary'], fontSize: 14 },
-  plantChip: {
-    paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderRadius: 20,
-    backgroundColor: colors.surface, marginRight: spacing.sm, borderWidth: 1,
+  closeButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerCenter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  headerIconBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: colors.white,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.sm,
+    ...shadows.sm,
+  },
+  headerTitle: {
+    fontSize: fontSize.xl,
+    fontWeight: fontWeight.bold,
+    color: colors.white,
+  },
+  saveButton: {
+    backgroundColor: colors.white,
+    borderRadius: borderRadius.full,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    minWidth: 64,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...shadows.sm,
+  },
+  saveButtonText: {
+    color: colors.primary,
+    fontWeight: fontWeight.bold,
+    fontSize: fontSize.sm,
+  },
+
+  // 内容区
+  content: {
+    flex: 1,
+  },
+  contentContainer: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.xl,
+  },
+  section: {
+    marginBottom: spacing.xl,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  sectionIconBox: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...shadows.sm,
+  },
+  sectionTitle: {
+    fontSize: fontSize.lg,
+    fontWeight: fontWeight.semibold,
+    color: colors.text,
+    marginLeft: spacing.sm,
+  },
+  optionalTag: {
+    fontSize: fontSize.xs,
+    color: colors['text-tertiary'],
+    marginLeft: spacing.sm,
+  },
+  imageCount: {
+    fontSize: fontSize.xs,
+    color: colors['text-tertiary'],
+    marginLeft: 'auto',
+  },
+
+  // 植物选择
+  emptyCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    padding: spacing.lg,
+    borderWidth: 1.5,
     borderColor: colors.border,
+    ...shadows.sm,
   },
-  plantChipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
-  plantChipText: { fontSize: 14, color: colors.text },
-  plantChipTextActive: { color: '#fff' },
-  imageGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  imageContainer: { width: 100, height: 100, borderRadius: 12, overflow: 'hidden' },
-  image: { width: '100%', height: '100%' },
-  removeImageButton: {
-    position: 'absolute', top: 4, right: 4, width: 20, height: 20,
-    borderRadius: 10, backgroundColor: 'rgba(0,0,0,0.5)', alignItems: 'center', justifyContent: 'center',
+  emptyIconWrap: {
+    width: 48,
+    height: 48,
+    borderRadius: borderRadius.lg,
+    backgroundColor: colors.primaryLight + '30',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  addImageButton: {
-    width: 100, height: 100, borderRadius: 12, borderWidth: 1, borderColor: colors.primary,
-    borderStyle: 'dashed', alignItems: 'center', justifyContent: 'center',
+  emptyContent: {
+    flex: 1,
+    marginLeft: spacing.md,
   },
-  growthInputs: { flexDirection: 'row', gap: spacing.md },
-  growthInput: { flex: 1 },
-  growthLabel: { fontSize: 14, color: colors['text-secondary'], marginBottom: spacing.xs },
-  input: {
-    backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm, fontSize: 16, borderWidth: 1, borderColor: colors.border,
+  emptyTitle: {
+    fontSize: fontSize.md,
+    fontWeight: fontWeight.semibold,
+    color: colors.text,
+  },
+  emptyDesc: {
+    fontSize: fontSize.sm,
+    color: colors['text-tertiary'],
+    marginTop: 2,
+  },
+  plantScroll: {
+    paddingRight: spacing.lg,
+  },
+  plantChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.surface,
+    marginRight: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...shadows.sm,
+  },
+  plantChipActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  plantChipIcon: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: colors.secondaryLight + '60',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.xs,
+  },
+  plantChipIconActive: {
+    backgroundColor: 'rgba(255,255,255,0.25)',
+  },
+  plantChipText: {
+    fontSize: fontSize.sm,
+    color: colors.text,
+  },
+  plantChipTextActive: {
+    color: colors.white,
+    fontWeight: fontWeight.medium,
+  },
+
+  // 图片网格
+  imageGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginRight: -GRID_GAP,
+  },
+  imageWrapper: {
+    width: IMAGE_SIZE,
+    height: IMAGE_SIZE,
+    marginRight: GRID_GAP,
+    marginBottom: GRID_GAP,
+    borderRadius: borderRadius.lg,
+    overflow: 'hidden',
+    ...shadows.md,
+  },
+  image: {
+    width: '100%',
+    height: '100%',
+  },
+  imagePlaceholder: {
+    backgroundColor: colors.background,
+  },
+  removeButton: {
+    position: 'absolute',
+    top: spacing.xs,
+    right: spacing.xs,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  addButton: {
+    width: IMAGE_SIZE,
+    height: IMAGE_SIZE,
+    borderRadius: borderRadius.lg,
+    borderWidth: 2,
+    borderColor: colors.primary,
+    borderStyle: 'dashed',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.surface,
+  },
+  addIconWrap: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: colors.primaryLight + '30',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.xs,
+  },
+  addText: {
+    fontSize: fontSize.sm,
+    color: colors.primary,
+    fontWeight: fontWeight.medium,
+  },
+
+  // 生长数据
+  growthRow: {
+    flexDirection: 'row',
+    gap: spacing.md,
+  },
+  growthCard: {
+    flex: 1,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...shadows.sm,
+  },
+  growthLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+  },
+  growthIconBox: {
+    width: 24,
+    height: 24,
+    borderRadius: borderRadius.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.xs,
+  },
+  growthLabel: {
+    fontSize: fontSize.sm,
+    color: colors['text-secondary'],
+    fontWeight: fontWeight.medium,
+  },
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  growthInput: {
+    flex: 1,
+    fontSize: fontSize.xxl,
+    fontWeight: fontWeight.bold,
+    color: colors.text,
+    padding: 0,
+  },
+  growthUnit: {
+    fontSize: fontSize.sm,
+    color: colors['text-tertiary'],
+    marginLeft: spacing.xs,
+  },
+
+  // 文字内容
+  textAreaWrap: {
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    overflow: 'hidden',
+    ...shadows.sm,
   },
   textArea: {
-    backgroundColor: colors.surface, borderRadius: 12, padding: spacing.md,
-    fontSize: 16, minHeight: 120, textAlignVertical: 'top', borderWidth: 1,
-    borderColor: colors.border,
+    padding: spacing.lg,
+    fontSize: fontSize.md,
+    minHeight: 150,
+    color: colors.text,
+    lineHeight: fontSize.md * 1.6,
   },
-  charCount: { fontSize: 12, color: colors['text-tertiary'], textAlign: 'right', marginTop: spacing.xs },
+  charCountWrap: {
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    backgroundColor: colors.background,
+  },
+  charCountLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+  },
+  charCount: {
+    fontSize: fontSize.xs,
+    color: colors['text-tertiary'],
+    marginLeft: spacing.xs,
+  },
+
+  // 底部装饰
+  decoration: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: spacing.xxl,
+    marginBottom: spacing.lg,
+  },
+  decorationLine: {
+    height: 1,
+    width: 40,
+    backgroundColor: colors.border,
+    marginHorizontal: spacing.md,
+  },
+  decorationIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.primaryLight + '30',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  bottomSpacer: {
+    height: spacing.xxl,
+  },
 });

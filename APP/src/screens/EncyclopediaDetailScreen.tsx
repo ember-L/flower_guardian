@@ -6,10 +6,20 @@ import { Icons } from '../components/Icon';
 import { colors, spacing, borderRadius, shadows } from '../constants/theme';
 import { NavigationProps } from '../navigation/AppNavigator';
 import { getPlantDetail, addToMyGarden, Plant } from '../services/plantService';
+import { API_BASE_URL } from '../services/config';
 
 interface EncyclopediaDetailScreenProps extends Partial<NavigationProps> {
   route?: { params?: { plantId?: number } };
 }
+
+// 获取完整的图片URL
+const getFullImageUrl = (url: string | undefined): string | undefined => {
+  if (!url || typeof url !== 'string') return undefined;
+  const trimmed = url.trim();
+  if (trimmed.length === 0) return undefined;
+  if (trimmed.startsWith('http')) return trimmed;
+  return `${API_BASE_URL}${trimmed}`;
+};
 
 export function EncyclopediaDetailScreen({ onGoBack, ...props }: EncyclopediaDetailScreenProps) {
   const plantId = (props as any).route?.plantId;
@@ -112,8 +122,8 @@ export function EncyclopediaDetailScreen({ onGoBack, ...props }: EncyclopediaDet
 
           <View style={styles.plantInfoContainer}>
             <View style={styles.plantImageWrapper}>
-              {plant.image_url ? (
-                <Image source={{ uri: plant.image_url }} style={styles.plantImage} />
+              {plant?.image_url && typeof plant.image_url === 'string' && plant.image_url.trim().length > 0 ? (
+                <Image source={{ uri: getFullImageUrl(plant.image_url) }} style={styles.plantImage} />
               ) : (
                 <View style={styles.plantImagePlaceholder}>
                   <Icons.Flower2 size={56} color={colors.white} />

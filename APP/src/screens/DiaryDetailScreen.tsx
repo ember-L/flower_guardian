@@ -130,12 +130,12 @@ export function DiaryDetailScreen({ onGoBack, onNavigate, diaryId, isLoggedIn, o
         {/* 图片 */}
         {diary.images && diary.images.length > 0 && (
           <View style={styles.images}>
-            {diary.images.length === 1 ? (
+            {diary.images.length === 1 && typeof diary.images[0] === 'string' && diary.images[0].trim().length > 0 ? (
               <Image source={{ uri: diary.images[0] }} style={styles.singleImage} />
             ) : (
               <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                 {diary.images.map((uri, index) => (
-                  <Image key={index} source={{ uri }} style={styles.thumbnail} />
+                  uri && typeof uri === 'string' && uri.trim().length > 0 ? <Image key={index} source={{ uri }} style={styles.thumbnail} /> : null
                 ))}
               </ScrollView>
             )}

@@ -6,6 +6,7 @@ import { Icons } from '../components/Icon';
 import { colors, spacing } from '../constants/theme';
 import { NavigationProps } from '../navigation/AppNavigator';
 import { getCurrentUser } from '../services/auth';
+import { GardenStats, getGardenStats } from '../services/plantService';
 
 interface ProfileScreenProps extends Partial<NavigationProps> {}
 
@@ -16,21 +17,41 @@ const menuItems = [
   { id: '4', icon: Icons.Sparkles, title: '新手推荐', subtitle: '场景问答选植物', screen: 'Recommendation', color: colors.warning },
   { id: '5', icon: Icons.Bell, title: '提醒管理', subtitle: '智能提醒设置', screen: 'Reminder', color: colors.primary },
   { id: '6', icon: Icons.MapPin, title: '地址管理', subtitle: '收货地址管理', screen: 'Address', color: colors.success },
-  { id: '7', icon: Icons.Bell, title: '通知中心', subtitle: '查看提醒通知', screen: 'Notification', color: colors.warning },
+  // { id: '7', icon: Icons.Bell, title: '通知中心', subtitle: '查看提醒通知', screen: 'Notification', color: colors.warning },
   { id: '8', icon: Icons.Settings, title: '设置', subtitle: '偏好设置', screen: 'Settings', color: colors['text-secondary'] },
   { id: '9', icon: Icons.HelpCircle, title: '帮助反馈', subtitle: '联系我们', screen: 'Help', color: colors['text-secondary'] },
 ];
 
 export function ProfileScreen({ onNavigate, currentTab, onTabChange, isLoggedIn: propIsLoggedIn, onRequireLogin, onLogout }: ProfileScreenProps) {
   const [displayUser, setDisplayUser] = useState<any>(null);
+  const [stats, setStats] = useState<GardenStats | null>(null);
 
   useEffect(() => {
     if (propIsLoggedIn) {
       getCurrentUser().then(user => setDisplayUser(user));
+      // 加载花园统计数据
+      getGardenStats().then(setStats).catch(() => setStats(null));
     } else {
       setDisplayUser(null);
+      setStats(null);
     }
   }, [propIsLoggedIn]);
+
+  // 计算用户等级
+  const getUserLevel = (plantCount: number) => {
+    if (plantCount >= 20) return { level: 10, title: '植物大师' };
+    if (plantCount >= 15) return { level: 9, title: '绿植达人' };
+    if (plantCount >= 10) return { level: 8, title: '种植专家' };
+    if (plantCount >= 7) return { level: 7, title: '养护高手' };
+    if (plantCount >= 5) return { level: 6, title: '园丁之星' };
+    if (plantCount >= 3) return { level: 5, title: '进阶园丁' };
+    if (plantCount >= 2) return { level: 4, title: '新手园丁' };
+    if (plantCount >= 1) return { level: 3, title: '种花新手' };
+    return { level: 1, title: '养花小白' };
+  };
+
+  const plantCount = stats?.total_plants || 0;
+  const userLevel = getUserLevel(plantCount);
 
   const isLoggedIn = propIsLoggedIn;
   const handleLoginPress = () => {
@@ -78,7 +99,7 @@ export function ProfileScreen({ onNavigate, currentTab, onTabChange, isLoggedIn:
               <View style={styles.profileRow}>
                 <View style={styles.avatarContainer}>
                   <View style={styles.avatar}>
-                    {displayUser?.avatar ? (
+                    {displayUser?.avatar && typeof displayUser.avatar === 'string' && displayUser.avatar.trim().length > 0 ? (
                       <Image source={{ uri: displayUser.avatar }} style={styles.avatarImage} />
                     ) : (
                       <Icons.User size={40} color="#fff" />
@@ -91,10 +112,9 @@ export function ProfileScreen({ onNavigate, currentTab, onTabChange, isLoggedIn:
                 <View style={styles.profileInfo}>
                   <View style={styles.nameRow}>
                     <Text style={styles.userName}>{displayUser?.username || displayUser?.email?.split('@')[0] || '养花小白'}</Text>
-                    <View style={styles.levelBadge}><Text style={styles.levelText}>Lv.3 园丁</Text></View>
-                  
-                  <Text style={styles.plantCount}>已养护 2 盆植物</Text>
+                    <View style={styles.levelBadge}><Text style={styles.levelText}>Lv.{userLevel.level} {userLevel.title}</Text></View>
                   </View>
+                  <Text style={styles.plantCount}>已养护 {plantCount} 盆植物</Text>
                 </View>
               </View>
             </>
@@ -113,20 +133,20 @@ export function ProfileScreen({ onNavigate, currentTab, onTabChange, isLoggedIn:
         <View style={styles.statsCard}>
           <View style={styles.statItem}>
             <View style={[styles.statIcon, { backgroundColor: colors.primary + '15' }]}><Icons.Clock size={18} color={colors.primary} /></View>
-            <Text style={styles.statNumber}>5</Text>
-            <Text style={styles.statLabel}>本周浇水</Text>
+            <Text style={styles.statNumber}>{stats?.this_month_cares || 0}</Text>
+            <Text style={styles.statLabel}>本月养护</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
-            <View style={[styles.statIcon, { backgroundColor: colors.secondary + '15' }]}><Icons.Camera size={18} color={colors.secondary} /></View>
-            <Text style={styles.statNumber}>2</Text>
-            <Text style={styles.statLabel}>识别次数</Text>
+            <View style={[styles.statIcon, { backgroundColor: colors.secondary + '15' }]}><Icons.CheckCircle size={18} color={colors.secondary} /></View>
+            <Text style={styles.statNumber}>{stats?.health_distribution?.good || 0}</Text>
+            <Text style={styles.statLabel}>健康植物</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
-            <View style={[styles.statIcon, { backgroundColor: colors.warning + '15' }]}><Icons.Star size={18} color={colors.warning} /></View>
-            <Text style={styles.statNumber}>1</Text>
-            <Text style={styles.statLabel}>连续打卡</Text>
+            <View style={[styles.statIcon, { backgroundColor: colors.warning + '15' }]}><Icons.Heart size={18} color={colors.warning} /></View>
+            <Text style={styles.statNumber}>{stats?.health_distribution?.fair || 0}</Text>
+            <Text style={styles.statLabel}>正常植物</Text>
           </View>
         </View>
 

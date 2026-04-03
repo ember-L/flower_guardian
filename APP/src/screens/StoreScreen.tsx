@@ -71,7 +71,7 @@ export function StoreScreen({ navigation, onNavigate, isLoggedIn, onRequireLogin
       onPress={() => navigateToDetail(item.id)}
     >
       <Image
-        source={{ uri: item.image_url || 'https://via.placeholder.com/150' }}
+        source={{ uri: item.image_url && typeof item.image_url === 'string' && item.image_url.trim().length > 0 ? item.image_url : 'https://via.placeholder.com/150' }}
         style={styles.productImage}
         resizeMode="cover"
       />

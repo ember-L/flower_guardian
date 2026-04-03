@@ -6,8 +6,18 @@ import { Icons } from '../components/Icon';
 import { colors, spacing, borderRadius, shadows, fontSize, fontWeight } from '../constants/theme';
 import { NavigationProps } from '../navigation/AppNavigator';
 import { getPlants, getPlantCategories, getPopularPlants, Plant, PlantCategory } from '../services/plantService';
+import { API_BASE_URL } from '../services/config';
 
 interface EncyclopediaScreenProps extends Partial<NavigationProps> {}
+
+// 获取完整的图片URL
+const getFullImageUrl = (url: string | undefined): string | undefined => {
+  if (!url || typeof url !== 'string') return undefined;
+  const trimmed = url.trim();
+  if (trimmed.length === 0) return undefined;
+  if (trimmed.startsWith('http')) return trimmed;
+  return `${API_BASE_URL}${trimmed}`;
+};
 
 const difficultyLevels = [
   { id: '1', name: '入门', color: colors.success, value: 1 },
@@ -40,6 +50,7 @@ export function EncyclopediaScreen({ onNavigate, currentTab, onTabChange }: Ency
   const [searchText, setSearchText] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedDifficulty, setSelectedDifficulty] = useState<number | null>(null);
+  const [imageErrors, setImageErrors] = useState<Record<number, boolean>>({});
 
   useEffect(() => {
     loadAllData();
@@ -280,8 +291,8 @@ export function EncyclopediaScreen({ onNavigate, currentTab, onTabChange }: Ency
                     onPress={() => handlePlantPress(plant)}
                   >
                     <View style={styles.categoryPlantImageContainer}>
-                      {plant.image_url ? (
-                        <Image source={{ uri: plant.image_url }} style={styles.categoryPlantImage} />
+                      {plant?.image_url && typeof plant.image_url === 'string' && plant.image_url.trim().length > 0 ? (
+                        <Image source={{ uri: getFullImageUrl(plant.image_url) }} style={styles.categoryPlantImage} />
                       ) : (
                         <Icons.Leaf size={28} color={colors.secondary} />
                       )}
@@ -320,8 +331,12 @@ export function EncyclopediaScreen({ onNavigate, currentTab, onTabChange }: Ency
                       <Text style={styles.plantRankText}>#{index + 1}</Text>
                     </View>
                     <View style={styles.plantImageContainer}>
-                      {plant.image_url ? (
-                        <Image source={{ uri: plant.image_url }} style={styles.plantImage} />
+                      {plant.image_url && typeof plant.image_url === 'string' && plant.image_url.trim().length > 0 && !imageErrors[plant.id] ? (
+                        <Image
+                          source={{ uri: getFullImageUrl(plant.image_url) }}
+                          style={styles.plantImage}
+                          onError={() => setImageErrors(prev => ({ ...prev, [plant.id]: true }))}
+                        />
                       ) : (
                         <View style={styles.plantImagePlaceholder}>
                           <Icons.Leaf size={32} color={colors.secondary} />

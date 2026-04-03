@@ -90,11 +90,13 @@ backend/app/
 │   ├── diagnosis.py  # Pest diagnosis
 │   ├── products.py   # E-commerce products
 │   ├── orders.py     # Order management
+│   ├── chat.py       # AI conversation
 │   └── admin_*/      # Admin endpoints
 ├── core/             # Config, DB, security
 ├── models/           # SQLAlchemy ORM models
 ├── schemas/          # Pydantic request/response models
-└── services/         # Business logic, CV inference
+├── services/         # Business logic, CV inference
+└── tasks/            # APScheduler scheduled tasks
 ```
 
 ### Mobile App (React Native)
@@ -102,7 +104,7 @@ backend/app/
 APP/src/
 ├── screens/          # Screen components
 ├── components/       # Reusable UI components
-├── navigation/       # React Navigation setup
+├── navigation/       # React Navigation setup (AppNavigator.tsx)
 ├── services/        # API client (Axios)
 └── contexts/        # React Context providers
 ```
@@ -118,6 +120,43 @@ web/src/app/admin/
 └── users/          # User management
 ```
 
+## Key Backend Components
+
+### Database
+- **PostgreSQL** runs on localhost:5555 (mapped from 5432)
+- **Credentials**: `flower_user:flower_password@localhost:5555/flower_guardian`
+- Models in `backend/app/models/` use SQLAlchemy
+- Schemas in `backend/app/schemas/` use Pydantic
+- Database migrations: add columns via raw SQL if needed
+
+### AI Services
+- **DashScope API** (阿里云): Used for AI plant doctor conversations
+- **Dual YOLO Models**: Plant recognition + pest/disease recognition in `backend/models/`
+
+### Scheduled Tasks (APScheduler)
+Located in `backend/app/tasks/`:
+- `reminder_tasks.py`: Daily reminders (09:00), overdue reminders (every 3 hours)
+- Test push: `python -c "from app.tasks.reminder_tasks import test_push; import asyncio; asyncio.run(test_push(user_id=1))"`
+
+### Authentication
+- JWT-based authentication
+- Admin role must be set manually in database: `UPDATE users SET role='admin' WHERE email='admin@example.com'`
+
+## Mobile App Key Patterns
+
+### Navigation
+- Custom navigation in `APP/src/navigation/AppNavigator.tsx`
+- Uses state-based routing (no React Navigation stack)
+- Sub-pages defined in `SubPageName` type
+
+### API Services
+- Services in `APP/src/services/` use Axios with auth interceptors
+- Auth token stored via AsyncStorage
+
+### State Management
+- Local state with useState/useEffect
+- Use `isLoggedIn` prop to gate authenticated features
+
 ## CV Model Architecture
 
 Dual YOLO models for AI recognition:
@@ -126,22 +165,60 @@ Dual YOLO models for AI recognition:
 
 Models are stored in `backend/models/` (PyTorch .pt and ONNX formats).
 
+## Key API Endpoints
+
+### Core
+- `POST /api/users/login` - User login
+- `POST /api/plants` - Add user plant
+- `GET /api/plants/my` - Get user's plants
+- `POST /api/recognition/plant` - Plant image recognition
+- `POST /api/diagnosis/full` - Pest/disease diagnosis
+
+### AI & Chat
+- `POST /api/ai/chat` - AI plant doctor
+- `POST /api/chat/conversations` - Create conversation
+- `GET /api/chat/conversations/{id}` - Get conversation with messages
+- `POST /api/chat/conversations/{id}/messages` - Send message
+
+### Reminders
+- `GET /api/reminders` - Get user's reminders
+- `POST /api/reminders` - Create reminder
+
 ## Environment Variables
 
 ### Backend
-| Variable | Description | Default |
-|----------|-------------|---------|
-| DATABASE_URL | PostgreSQL connection | postgresql://... |
-| SECRET_KEY | JWT signing key | your-secret-key |
-| ALGORITHM | JWT algorithm | HS256 |
+| Variable | Description |
+|----------|-------------|
+| DATABASE_URL | PostgreSQL connection (postgresql://flower_user:flower_password@localhost:5555/flower_guardian) |
+| SECRET_KEY | JWT signing key |
+| DASHSCOPE_API_KEY | 阿里云 AI 对话 API Key |
+| HEFENG_KEY | 和风天气 API Key |
 
 ### Mobile App
 When connecting to backend from iOS Simulator, use host machine's IP instead of localhost.
+Config in `APP/src/services/config.ts`
 
-## Key Patterns
+## Common Tasks
 
-- Backend uses SQLAlchemy 2.0 with async-first patterns
-- Mobile app uses UI Kitten components + NativeWind (Tailwind)
-- Web admin uses Tailwind CSS v4
-- Authentication via JWT tokens
-- Admin role set manually in database (update `user.role = "admin"`)
+### Database Schema Changes
+When adding new columns to existing tables:
+```python
+# Direct SQL via Python
+from sqlalchemy import create_engine, text
+engine = create_engine('postgresql://flower_user:flower_password@localhost:5555/flower_guardian')
+with engine.connect() as conn:
+    conn.execute(text('ALTER TABLE table_name ADD COLUMN new_column VARCHAR(255);'))
+    conn.commit()
+```
+
+### Testing Push Notifications
+```bash
+cd backend
+python3 -c "from app.tasks.reminder_tasks import send_daily_reminders; import asyncio; asyncio.run(send_daily_reminders())"
+```
+
+### Mobile App Connect to Backend
+Edit `APP/src/services/config.ts`:
+```typescript
+export const API_BASE_URL = 'http://192.168.1.x:8000';
+```

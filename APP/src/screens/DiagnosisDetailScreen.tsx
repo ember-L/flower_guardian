@@ -4,11 +4,36 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getDiagnosis, toggleFavorite, rediagnose, DiagnosisRecord } from '../services/diagnosisService';
 import { createConversationToBackend, linkDiagnosisToConversation, sendMessageToBackend, callAIChat } from '../services/consultationService';
+import { API_BASE_URL } from '../services/config';
 import { colors, spacing, borderRadius, shadows, duration, fontSize, fontWeight, touchTarget } from '../constants/theme';
 import { NavigationProps } from '../navigation/AppNavigator';
 import { Icon } from '../components/Icon';
 
 interface DiagnosisDetailScreenProps extends NavigationProps {}
+
+// 获取完整的图片URL
+const getFullImageUrl = (url: string | undefined): string | undefined => {
+  if (!url || typeof url !== 'string') return undefined;
+  const trimmed = url.trim();
+  if (trimmed.length === 0) return undefined;
+
+  // 已经是完整的URL（包括 http, https, file, ph 等）
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://') ||
+      trimmed.startsWith('file://') || trimmed.startsWith('ph://') ||
+      trimmed.startsWith('asset-library://')) {
+    return trimmed;
+  }
+
+  // 已经是完整的图片服务器URL
+  if (trimmed.includes(API_BASE_URL)) {
+    return trimmed;
+  }
+
+  // 相对路径，拼接API地址
+  // 确保路径以 / 开头
+  const cleanPath = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+  return `${API_BASE_URL}${cleanPath}`;
+};
 
 // 置信度阈值配置
 const CONFIDENCE_THRESHOLDS = {
@@ -213,9 +238,9 @@ export function DiagnosisDetailScreen({ route, onNavigate, onGoBack }: Diagnosis
       >
         {/* 主图区域 */}
         <View style={styles.imageContainer}>
-          {record.image_url && (
+          {record.image_url && typeof record.image_url === 'string' && record.image_url.trim().length > 0 && (
             <Image
-              source={{ uri: record.image_url }}
+              source={{ uri: getFullImageUrl(record.image_url) }}
               style={styles.image}
               resizeMode="cover"
             />

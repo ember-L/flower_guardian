@@ -20,6 +20,7 @@ import { colors, spacing, borderRadius } from '../constants/theme';
 import { takePhoto, selectFromGallery, recognizePlant, RecognitionResult } from '../services/recognitionService';
 import { getPopularPlants, Plant } from '../services/plantService';
 import { getWeatherTips, WeatherData } from '../services/weatherService';
+import { API_BASE_URL } from '../services/config';
 import * as Location from 'expo-location';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NavigationProps } from '../navigation/AppNavigator';
@@ -28,6 +29,15 @@ import { NavigationProps } from '../navigation/AppNavigator';
 const WEATHER_CACHE_KEY = 'weather_cache';
 const LOCATION_CACHE_KEY = 'location_cache';
 const CACHE_EXPIRY_HOURS = 6; // 缓存6小时
+
+// 获取完整的图片URL
+const getFullImageUrl = (url: string | undefined): string | undefined => {
+  if (!url || typeof url !== 'string') return undefined;
+  const trimmed = url.trim();
+  if (trimmed.length === 0) return undefined;
+  if (trimmed.startsWith('http')) return trimmed;
+  return `${API_BASE_URL}${trimmed}`;
+};
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -40,6 +50,7 @@ export function IdentifyScreen({ onNavigate, currentTab, onTabChange }: Identify
   const [plantNickname, setPlantNickname] = useState('');
   const [recommendPlants, setRecommendPlants] = useState<Plant[]>([]);
   const [capturedImageUri, setCapturedImageUri] = useState<string>('');
+  const [recommendImageErrors, setRecommendImageErrors] = useState<Record<number, boolean>>({});
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
   const [weatherTip, setWeatherTip] = useState<string>('');
   const [weatherLoading, setWeatherLoading] = useState(false);
@@ -79,6 +90,8 @@ export function IdentifyScreen({ onNavigate, currentTab, onTabChange }: Identify
   const loadRecommendPlants = async () => {
     try {
       const data = await getPopularPlants(10);
+      console.log('[Recommend] 加载到植物数量:', data.items?.length || 0);
+      console.log('[Recommend] 第一张图片URL:', data.items?.[0]?.image_url);
       setRecommendPlants(data.items || []);
     } catch (error) {
       console.error('加载推荐植物失败', error);
@@ -474,7 +487,7 @@ export function IdentifyScreen({ onNavigate, currentTab, onTabChange }: Identify
                 </View>
                 <Text style={styles.resultTitle}>识别结果</Text>
                 <View style={styles.resultCard}>
-                  {capturedImageUri ? (
+                  {capturedImageUri && typeof capturedImageUri === 'string' && capturedImageUri.trim().length > 0 ? (
                     <Image source={{ uri: capturedImageUri }} style={styles.resultImage} />
                   ) : (
                     <View style={styles.resultPlantIcon}>
@@ -656,7 +669,24 @@ export function IdentifyScreen({ onNavigate, currentTab, onTabChange }: Identify
                   onPress={() => handleRecommendPlant(plant)}
                 >
                   <View style={[styles.recommendImage, { backgroundColor: plantColor + '20' }]}>
-                    <Icons.Plant size={40} color={plantColor} />
+                    {(() => {
+                      const fullImageUrl = getFullImageUrl(plant.image_url);
+                      const showImage = fullImageUrl && !recommendImageErrors[plant.id];
+                      console.log('[Image] 判断结果:', plant.name, 'showImage=', showImage, 'url=', fullImageUrl);
+                      return showImage ? (
+                        <RNImage
+                          source={{ uri: fullImageUrl }}
+                          style={styles.recommendCardImage}
+                          onError={() => {
+                            console.log('[Image] 加载失败:', fullImageUrl);
+                            setRecommendImageErrors(prev => ({ ...prev, [plant.id]: true }));
+                          }}
+                          onLoad={() => console.log('[Image] 加载成功:', fullImageUrl)}
+                        />
+                      ) : (
+                        <Icons.Plant size={40} color={plantColor} />
+                      );
+                    })()}
                   </View>
                   <View style={styles.recommendInfo}>
                     <Text style={styles.recommendName}>{plant.name}</Text>
@@ -1325,6 +1355,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.sm,
+    overflow: 'hidden',
+  },
+  recommendCardImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
   },
   recommendInfo: {
     paddingHorizontal: spacing.xs,

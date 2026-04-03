@@ -137,7 +137,7 @@ export function StoreDetailScreen({ onGoBack, productId, isLoggedIn, onRequireLo
 
       <ScrollView showsVerticalScrollIndicator={false}>
         <Image
-          source={{ uri: product.image_url || 'https://via.placeholder.com/300' }}
+          source={{ uri: product.image_url && typeof product.image_url === 'string' && product.image_url.trim().length > 0 ? product.image_url : 'https://via.placeholder.com/300' }}
           style={styles.image}
         />
 
