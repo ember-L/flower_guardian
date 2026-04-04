@@ -129,7 +129,7 @@ export function IdentifyScreen({ onNavigate, currentTab, onTabChange }: Identify
       // 使用 expo-location 获取GPS定位
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('权限被拒绝', '需要定位权限来获取天气');
+        console.log('[Weather] 定位权限被拒绝');
         setWeatherLoading(false);
         return;
       }
@@ -138,18 +138,33 @@ export function IdentifyScreen({ onNavigate, currentTab, onTabChange }: Identify
       let latitude: number, longitude: number;
       const cachedLocation = await AsyncStorage.getItem(LOCATION_CACHE_KEY);
 
-      if (cachedLocation) {
-        const { lat, lon, timestamp } = JSON.parse(cachedLocation);
-        const cacheAge = Date.now() - timestamp;
-        // 位置缓存1小时内有效
-        if (cacheAge < 60 * 60 * 1000) {
-          latitude = lat;
-          longitude = lon;
-          console.log('[Weather] 使用缓存位置:', latitude, longitude);
+      try {
+        if (cachedLocation) {
+          const { lat, lon, timestamp } = JSON.parse(cachedLocation);
+          const cacheAge = Date.now() - timestamp;
+          // 位置缓存1小时内有效
+          if (cacheAge < 60 * 60 * 1000) {
+            latitude = lat;
+            longitude = lon;
+            console.log('[Weather] 使用缓存位置:', latitude, longitude);
+          } else {
+            // 位置过期，重新获取
+            const location = await Location.getCurrentPositionAsync({
+              accuracy: Location.Accuracy.Balanced,
+            });
+            latitude = location.coords.latitude;
+            longitude = location.coords.longitude;
+            // 保存位置到缓存
+            await AsyncStorage.setItem(LOCATION_CACHE_KEY, JSON.stringify({
+              lat: latitude,
+              lon: longitude,
+              timestamp: Date.now()
+            }));
+          }
         } else {
-          // 位置过期，重新获取
+          // 首次获取位置
           const location = await Location.getCurrentPositionAsync({
-            accuracy: Location.Accuracy.High,
+            accuracy: Location.Accuracy.Balanced,
           });
           latitude = location.coords.latitude;
           longitude = location.coords.longitude;
@@ -160,41 +175,32 @@ export function IdentifyScreen({ onNavigate, currentTab, onTabChange }: Identify
             timestamp: Date.now()
           }));
         }
-      } else {
-        // 首次获取位置
-        const location = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.High,
-        });
-        latitude = location.coords.latitude;
-        longitude = location.coords.longitude;
-        // 保存位置到缓存
-        await AsyncStorage.setItem(LOCATION_CACHE_KEY, JSON.stringify({
-          lat: latitude,
-          lon: longitude,
-          timestamp: Date.now()
-        }));
+
+        console.log('GPS坐标:', latitude, longitude);
+
+        getWeatherTips(latitude, longitude)
+          .then(async (data) => {
+            setWeatherData(data.weather);
+            setWeatherTip(data.tip);
+            // 保存天气数据到缓存
+            await AsyncStorage.setItem(WEATHER_CACHE_KEY, JSON.stringify({
+              weather: data.weather,
+              tip: data.tip,
+              timestamp: Date.now()
+            }));
+            console.log('[Weather] 天气数据已缓存');
+          })
+          .catch((err) => {
+            console.error('获取天气失败', err);
+          })
+          .finally(() => {
+            setWeatherLoading(false);
+          });
+      } catch (locationError: any) {
+        // 定位失败（可能是设备定位服务关闭）
+        console.warn('[Weather] 定位失败:', locationError?.message);
+        setWeatherLoading(false);
       }
-
-      console.log('GPS坐标:', latitude, longitude);
-
-      getWeatherTips(latitude, longitude)
-        .then(async (data) => {
-          setWeatherData(data.weather);
-          setWeatherTip(data.tip);
-          // 保存天气数据到缓存
-          await AsyncStorage.setItem(WEATHER_CACHE_KEY, JSON.stringify({
-            weather: data.weather,
-            tip: data.tip,
-            timestamp: Date.now()
-          }));
-          console.log('[Weather] 天气数据已缓存');
-        })
-        .catch((err) => {
-          console.error('获取天气失败', err);
-        })
-        .finally(() => {
-          setWeatherLoading(false);
-        });
     } catch (error) {
       console.error('获取天气失败', error);
       setWeatherLoading(false);
@@ -380,8 +386,8 @@ export function IdentifyScreen({ onNavigate, currentTab, onTabChange }: Identify
                 { transform: [{ scale: pulseAnim }] },
               ]}
             >
-              <RNImage
-                source={require('../../assets/logo.png')}
+              <Image
+                source={require('../../assets/logo.webp')}
                 style={styles.logoImage}
               />
             </Animated.View>

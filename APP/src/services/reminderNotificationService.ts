@@ -23,7 +23,6 @@ class ReminderNotificationService {
         importance: Notifications.AndroidImportance.HIGH,
         vibrationPattern: [0, 250, 250, 250],
         lightColor: '#f46',
-        sound: 'default',
       });
     }
 
@@ -71,7 +70,6 @@ class ReminderNotificationService {
             reminder_id: reminder.id,
             reminder_type: reminder.type,
           },
-          sound: 'default',
         },
         trigger: {
           type: Notifications.SchedulableTriggerInputTypes.DATE,
@@ -138,7 +136,6 @@ class ReminderNotificationService {
           title: '🧪 测试通知',
           body: '这是一条测试通知，推送功能正常！',
           data: { type: 'test' },
-          sound: 'default',
         },
         trigger: null, // 立即发送
       });

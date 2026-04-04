@@ -36,7 +36,6 @@ import { KnowledgeDetailScreen } from '../screens/KnowledgeDetailScreen';
 import { PlantDetailScreen } from '../screens/PlantDetailScreen';
 import { NotificationScreen } from '../screens/NotificationScreen';
 import { getCurrentUser, isAuthenticated, logout as authLogout, checkAuthStatus } from '../services/auth';
-import { jpushService } from '../services/jpushService';
 
 export type TabName = 'Identify' | 'Garden' | 'Encyclopedia' | 'Store' | 'Profile';
 export type SubPageName = 'Diagnosis' | 'Recommendation' | 'Reminder' | 'EncyclopediaDetail' | 'Diary' | 'StoreDetail' | 'Cart' | 'Checkout' | 'Orders' | 'OrderDetail' | 'DiagnosisHistory' | 'DiagnosisDetail' | 'Login' | 'Register' | 'ForgotPassword' | 'WriteDiary' | 'DiaryDetail' | 'GrowthCurve' | 'Address' | 'AddressEdit' | 'EmailVerify' | 'ConsultationList' | 'Consultation' | 'Knowledge' | 'KnowledgeDetail' | 'PlantDetail' | 'Notification' | null;
@@ -82,14 +81,6 @@ export function AppNavigator() {
   const handleLoginSuccess = () => {
     setIsLoggedIn(true);
 
-    // 设置 JPush 别名（用于后端推送）
-    getCurrentUser().then(user => {
-      if (user) {
-        console.log('[Navigator] 设置 JPush 别名:', user.id);
-        jpushService.setAlias(user.id.toString());
-      }
-    });
-
     // 登录成功后返回上一个页面或清空
     if (navHistory.length > 0) {
       const previousState = navHistory[navHistory.length - 1];
@@ -106,8 +97,6 @@ export function AppNavigator() {
     await authLogout();
     setIsLoggedIn(false);
     setCurrentTab('Identify');
-    // 删除 JPush 别名
-    jpushService.deleteAlias();
   };
 
   const handleRequireLogin = (callback: () => void) => {

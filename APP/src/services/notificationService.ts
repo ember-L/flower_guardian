@@ -133,7 +133,7 @@ class NotificationService {
         return;
       }
 
-      await axios.post(
+      const response = await axios.post(
         `${API_BASE_URL}/api/users/push-token`,
         { expo_push_token: token },
         {
@@ -143,8 +143,13 @@ class NotificationService {
         }
       );
       console.log('[NotificationService] Push token 已注册到后端');
-    } catch (error) {
-      console.error('[NotificationService] 注册 push token 失败:', error);
+    } catch (error: any) {
+      // 401 表示未登录或 token 过期，这是预期行为，静默处理
+      if (error.response?.status === 401) {
+        console.log('[NotificationService] 未登录或 token 过期，跳过注册 token');
+      } else {
+        console.error('[NotificationService] 注册 push token 失败:', error);
+      }
     }
   };
 

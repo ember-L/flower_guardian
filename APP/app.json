@@ -4,14 +4,14 @@
     "slug": "flower-guardian",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/icon.webp",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/splash-icon.webp",
       "resizeMode": "contain",
       "backgroundColor": "#FFFFFF",
       "dark": {
-        "image": "./assets/splash-icon.png",
+        "image": "./assets/splash-icon.webp",
         "backgroundColor": "#FFFFFF"
       }
     },
@@ -30,7 +30,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/adaptive-icon.webp",
         "backgroundColor": "#FFFFFF"
       },
       "permissions": [
@@ -43,7 +43,7 @@
       "package": "com.flowerguardian.app"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.webp"
     },
     "plugins": [
       [
@@ -62,7 +62,7 @@
       [
         "expo-notifications",
         {
-          "icon": "./assets/notification-icon.png",
+          "icon": "./assets/notification-icon.webp",
           "color": "#f46",
           "sounds": []
         }

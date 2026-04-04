@@ -6,7 +6,7 @@ from app.core.database import get_db
 from app.core.security import get_current_user
 from app.models.user import User
 from app.models.reminder import Reminder
-from app.models.plant import Plant
+from app.models.plant import Plant, UserPlant
 from app.schemas.reminder import (
     ReminderCreate, ReminderUpdate, ReminderResponse,
     SmartReminderCreate, SmartReminderResponse
@@ -16,7 +16,7 @@ from app.services.reminder_service import (
     generate_weather_tip, get_weather_factor, WATER_REQUIREMENT_INTERVAL
 )
 from app.services.weather_service import get_current_weather, get_watering_advice
-from app.services.push_service import push_service
+from app.services.connection_manager import connection_manager
 
 router = APIRouter(prefix="/api/reminders", tags=["reminders"])
 
@@ -135,9 +135,9 @@ def create_smart_reminder(
     else:
         base_interval = reminder.interval_days or 7
 
-    # 计算智能间隔
+    # 计算智能间隔（使用用户设置的间隔作为基础）
     calculated_interval = calculate_smart_interval(
-        plant, weather_factor, season_factor
+        plant, weather_factor, season_factor, reminder.interval_days
     )
 
     next_due = datetime.utcnow() + timedelta(days=calculated_interval)
@@ -326,31 +326,146 @@ def delete_reminder(
 
 
 @router.post("/test-push")
-def test_push_notification(
+async def test_push_notification(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """测试推送通知功能"""
-    if not current_user.expo_push_token:
-        return {"success": False, "message": "未注册推送 Token，请先在 App 中登录"}
-
+    """测试 WebSocket 推送通知功能"""
     title = "🧪 测试推送"
-    content = "这是一条测试通知，推送功能正常！"
+    body = "这是一条 WebSocket 测试推送，收到此消息说明连接正常！"
 
-    success = push_service.send_to_user(
-        user=current_user,
-        title=title,
-        content=content,
-        data={"type": "test", "reminder_id": 0}
+    success = await connection_manager.push_notification(
+        current_user.id,
+        {
+            "action": "reminder",
+            "data": {
+                "id": 0,
+                "title": title,
+                "body": body,
+                "reminder_type": "test",
+                "plant_name": "测试植物",
+            }
+        }
     )
 
     if success:
         return {
             "success": True,
-            "message": "测试推送已发送，请检查手机通知"
+            "message": "测试推送已发送，请检查 App WebSocket 通知"
         }
     else:
         return {
             "success": False,
-            "message": "推送发送失败，请检查 Token 和配置"
+            "message": "推送发送失败，用户可能没有连接 WebSocket"
         }
+
+
+@router.post("/broadcast")
+async def broadcast_notification(db: Session = Depends(get_db)):
+    """广播浇水提醒给需要浇水的用户（无需认证）"""
+    from datetime import datetime
+
+    # 查找所有需要浇水的提醒
+    now = datetime.now()
+
+    # 查找已到期但未完成的浇水提醒
+    reminders = db.query(Reminder).filter(
+        Reminder.enabled == True,
+        Reminder.type == "water",
+        # Reminder.next_due <= now
+    ).all()
+
+    sent_count = 0
+    for reminder in reminders:
+        # 获取用户的植物名称
+        plant_name = "您的植物"
+        if reminder.user_plant:
+            plant_name = reminder.user_plant.nickname or reminder.user_plant.plant_name or plant_name
+
+        # 通过 WebSocket 推送
+        result = await connection_manager.push_notification(
+            reminder.user_id,
+            {
+                "action": "reminder",
+                "data": {
+                    "id": reminder.id,
+                    "title": "🌱 养护提醒",
+                    "body": f'您的"{plant_name}"需要浇水啦！',
+                    "reminder_type": "water",
+                    "plant_name": plant_name,
+                }
+            }
+        )
+        if result:
+            sent_count += 1
+
+    return {
+        "success": True,
+        "message": f"浇水提醒已发送，已提醒 {sent_count} 个用户，当前在线用户数: {connection_manager.get_online_count()}"
+    }
+
+
+@router.get("/check")
+def check_reminders(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    轮询检查端点 - APP 端轮询此接口获取待发送的本地通知
+
+    返回当前用户所有已到期但还未完成的提醒，
+    APP 收到后会触发本地通知展示给用户
+    """
+    now = datetime.utcnow()
+
+    # 查询已到期的提醒（next_due <= now 且未完成）
+    reminders = db.query(Reminder).filter(
+        Reminder.user_id == current_user.id,
+        Reminder.enabled == True,
+        Reminder.next_due <= now
+    ).all()
+
+    notifications = []
+
+    for reminder in reminders:
+        # 获取植物名称
+        plant_name = None
+        if reminder.plant_id:
+            plant = db.query(Plant).filter(Plant.id == reminder.plant_id).first()
+            if plant:
+                plant_name = plant.name
+
+        # 获取用户植物名称（优先使用昵称，其次使用植物名）
+        user_plant_name = None
+        if reminder.user_plant_id:
+            user_plant = db.query(UserPlant).filter(UserPlant.id == reminder.user_plant_id).first()
+            if user_plant:
+                user_plant_name = user_plant.nickname or user_plant.plant_name
+
+        # 使用植物名称（优先用户植物名称）
+        display_name = user_plant_name or plant_name or "您的植物"
+
+        # 根据提醒类型生成通知内容
+        reminder_type_labels = {
+            "water": "浇水",
+            "fertilize": "施肥",
+            "repot": "换盆",
+            "prune": "修剪",
+            "spray": "喷药",
+        }
+        action = reminder_type_labels.get(reminder.type, "养护")
+
+        title = "🌱 养护提醒"
+        body = f'您的"{display_name}"需要{action}啦！'
+
+        notifications.append({
+            "type": "reminder",
+            "id": reminder.id,
+            "title": title,
+            "body": body,
+            "reminder_type": reminder.type,
+            "plant_name": display_name,
+            "timestamp": now.isoformat()
+        })
+
+    return {"notifications": notifications}

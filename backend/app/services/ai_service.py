@@ -1,7 +1,8 @@
 # AI服务 - 阿里云DashScope
 import httpx
 import logging
-from typing import List, Dict, Any, Optional
+import asyncio
+from typing import List, Dict, Any, Optional, AsyncGenerator
 
 logger = logging.getLogger(__name__)
 
@@ -115,6 +116,96 @@ async def chat(
         raise Exception("AI服务响应超时")
     except Exception as e:
         logger.error(f"AI服务错误: {str(e)}")
+        raise
+
+
+async def chat_stream(
+    messages: List[Dict[str, str]],
+    system_context: Optional[str] = None,
+    model: str = "qwen-turbo",
+    temperature: float = 0.7,
+    max_tokens: int = 1000
+) -> AsyncGenerator[str, None]:
+    """
+    调用AI聊天接口 - 流式版本
+
+    Args:
+        messages: 消息列表
+        system_context: 系统上下文
+        model: 模型名称
+        temperature: 温度参数
+        max_tokens: 最大token数
+
+    Yields:
+        AI回复内容片段
+    """
+    global DASHSCOPE_API_KEY
+
+    if not DASHSCOPE_API_KEY:
+        init_ai_service()
+
+    if not DASHSCOPE_API_KEY:
+        raise ValueError("DASHSCOPE_API_KEY未配置")
+
+    # 构建消息
+    all_messages = [{"role": "system", "content": PLANT_DOCTOR_PROMPT}]
+
+    # 添加系统上下文
+    if system_context:
+        all_messages.append({"role": "system", "content": system_context})
+
+    # 添加用户消息
+    all_messages.extend(messages)
+
+    logger.info(f"流式调用AI模型: {model}")
+
+    try:
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            async with client.stream(
+                "POST",
+                DASHSCOPE_URL,
+                json={
+                    "model": model,
+                    "messages": all_messages,
+                    "temperature": temperature,
+                    "max_tokens": max_tokens,
+                    "stream": True
+                },
+                headers={
+                    "Authorization": f"Bearer {DASHSCOPE_API_KEY}",
+                    "Content-Type": "application/json"
+                }
+            ) as response:
+                if response.status_code != 200:
+                    error_text = await response.atext()
+                    logger.error(f"AI API错误: {error_text}")
+                    raise Exception(f"AI服务调用失败: {error_text}")
+
+                full_content = ""
+
+                async for line in response.aiter_lines():
+                    if line.startswith("data: "):
+                        data = line[6:]
+                        if data == "[DONE]":
+                            break
+
+                        try:
+                            import json
+                            chunk_data = json.loads(data)
+                            content = chunk_data.get("choices", [{}])[0].get("delta", {}).get("content", "")
+                            if content:
+                                full_content += content
+                                yield content
+                        except Exception:
+                            continue
+
+                logger.info(f"AI流式回复完成，长度: {len(full_content)}")
+
+    except httpx.TimeoutException:
+        logger.error("AI服务响应超时")
+        raise Exception("AI服务响应超时")
+    except Exception as e:
+        logger.error(f"AI流式服务错误: {str(e)}")
         raise
 
 

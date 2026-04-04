@@ -5,7 +5,7 @@ from app.models.reminder import Reminder
 from app.models.user import User
 from app.services.reminder_service import get_season_factor, get_weather_factor
 from app.services.weather_service import get_current_weather
-from app.services.push_service import push_service
+from app.services.connection_manager import connection_manager
 
 
 async def check_upcoming_reminders():
@@ -61,7 +61,7 @@ async def refresh_weather_factors():
 
 
 async def send_daily_reminders():
-    """每日定时发送提醒"""
+    """每日定时发送提醒 - 通过 WebSocket 推送"""
     db = SessionLocal()
     try:
         now = datetime.utcnow()
@@ -83,14 +83,8 @@ async def send_daily_reminders():
         # 为每个用户发送推送通知
         success_count = 0
         for user_id, user_reminders_list in user_reminders.items():
-            # 获取用户信息
-            user = db.query(User).filter(User.id == user_id).first()
-            if not user or not user.username:
-                continue
-
-            # 收集提醒信息
             type_names = {"water": "浇水", "fertilize": "施肥", "prune": "修剪"}
-            reminder_msgs = []
+
             for reminder in user_reminders_list:
                 reminder_type = type_names.get(reminder.type, "养护")
                 # 获取植物名称（从关联的 user_plant 或 plant 获取）
@@ -99,34 +93,34 @@ async def send_daily_reminders():
                     plant_name = reminder.user_plant.nickname
                 elif reminder.plant and reminder.plant.name:
                     plant_name = reminder.plant.name
-                reminder_msgs.append(f'"{plant_name}"需要{reminder_type}')
 
-            # 发送推送
-            title = "🌱 养护提醒"
-            content = "您的植物：" + "，".join(reminder_msgs) + "，快去看看吧！"
+                # 通过 WebSocket 推送
+                pushed = await connection_manager.push_notification(
+                    user_id,
+                    {
+                        "action": "reminder",
+                        "data": {
+                            "id": reminder.id,
+                            "title": "🌱 养护提醒",
+                            "body": f'您的"{plant_name}"需要{reminder_type}啦！',
+                            "reminder_type": reminder.type,
+                            "plant_name": plant_name,
+                        }
+                    }
+                )
 
-            # 优先使用 Expo Push Token，其次用 JPush
-            sent = push_service.send_to_user(
-                user=user,
-                title=title,
-                content=content,
-                data={"type": "daily_reminder", "user_id": user_id}
-            )
+                if pushed:
+                    success_count += 1
+                    print(f"[Push] 推送提醒给用户 {user_id}: {plant_name} 需要 {reminder_type}")
 
-            if sent:
-                success_count += 1
-                print(f"成功推送通知给用户 {user_id}")
-            else:
-                print(f"用户 {user_id} 推送失败，可能没有绑定 token")
-
-        print(f"发送了 {success_count}/{len(user_reminders)} 条每日提醒推送")
+        print(f"发送了 {success_count} 条 WebSocket 推送")
         return success_count
     finally:
         db.close()
 
 
 async def send_overdue_reminders():
-    """发送逾期未处理的提醒"""
+    """发送逾期未处理的提醒 - 通过 WebSocket 推送"""
     db = SessionLocal()
     try:
         now = datetime.utcnow()
@@ -147,12 +141,8 @@ async def send_overdue_reminders():
 
         # 为每个用户发送推送
         for user_id, user_reminders_list in user_reminders.items():
-            user = db.query(User).filter(User.id == user_id).first()
-            if not user:
-                continue
-
             type_names = {"water": "浇水", "fertilize": "施肥", "prune": "修剪"}
-            overdue_msgs = []
+
             for reminder in user_reminders_list:
                 # 获取植物名称
                 plant_name = "植物"
@@ -161,43 +151,63 @@ async def send_overdue_reminders():
                 elif reminder.plant and reminder.plant.name:
                     plant_name = reminder.plant.name
                 overdue_type = type_names.get(reminder.type, "养护")
-                overdue_msgs.append(f'"{plant_name}"需要{overdue_type}')
 
-            title = "⚠️ 提醒逾期"
-            content = "以下植物还未养护：" + "，".join(overdue_msgs) + "，不要忘记哦！"
-
-            push_service.send_to_user(
-                user=user,
-                title=title,
-                content=content,
-                data={"type": "overdue_reminder", "user_id": user_id}
-            )
+                # 通过 WebSocket 推送
+                await connection_manager.push_notification(
+                    user_id,
+                    {
+                        "action": "reminder",
+                        "data": {
+                            "id": reminder.id,
+                            "title": "⚠️ 提醒逾期",
+                            "body": f'您的"{plant_name}"需要{overdue_type}，不要忘记哦！',
+                            "reminder_type": reminder.type,
+                            "plant_name": plant_name,
+                        }
+                    }
+                )
 
         return len(reminders)
     finally:
         db.close()
 
 
-async def test_push(user_id: int):
-    """测试推送功能"""
-    db = SessionLocal()
-    try:
-        user = db.query(User).filter(User.id == user_id).first()
-        if not user:
-            print(f"用户 {user_id} 不存在")
-            return False
+async def test_ws_push(user_id: int):
+    """通过 WebSocket 发送测试推送"""
 
-        title = "🧪 测试推送"
-        content = "这是一条测试通知，推送功能正常！"
+    print(f"[Push] 发送测试推送给用户 {user_id}")
 
-        result = push_service.send_to_user(
-            user=user,
-            title=title,
-            content=content,
-            data={"type": "test"}
-        )
+    result = await connection_manager.push_notification(
+        user_id,
+        {
+            "action": "reminder",
+            "data": {
+                "id": 0,
+                "title": "🧪 WebSocket 测试",
+                "body": "这是一条 WebSocket 测试推送，收到此消息说明连接正常！",
+                "reminder_type": "test",
+                "plant_name": "测试植物",
+            }
+        }
+    )
 
-        print(f"测试推送结果: {'成功' if result else '失败'}")
-        return result
-    finally:
-        db.close()
+    if result:
+        print(f"[Push] 测试推送成功 - 用户 {user_id} 的连接在线")
+    else:
+        print(f"[Push] 测试推送失败 - 用户 {user_id} 可能没有连接")
+
+    return result
+
+
+async def test_all_connections():
+    """测试所有连接"""
+
+    ws_count = len(connection_manager.ws_connections)
+
+    print(f"[连接状态] WebSocket: {ws_count}")
+    print(f"[连接状态] WebSocket 用户: {list(connection_manager.ws_connections.keys())}")
+
+    return {
+        "websocket_connections": ws_count,
+        "websocket_users": list(connection_manager.ws_connections.keys())
+    }

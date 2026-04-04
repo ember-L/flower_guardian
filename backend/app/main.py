@@ -1,7 +1,8 @@
 import logging
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.base import BaseHTTPMiddleware
 from app.api.router import api_router
 from app.core.database import engine
 from app.db.base import Base
@@ -106,13 +107,29 @@ Base.metadata.create_all(bind=engine)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
+
+# WebSocket CORS 中间件
+@app.middleware("http")
+async def add_websocket_cors_headers(request: Request, call_next):
+    response = await call_next(request)
+    # 为所有响应添加 WebSocket 相关的 CORS 头
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, CONNECT"
+    response.headers["Access-Control-Allow-Headers"] = "*"
+    response.headers["Access-Control-Allow-Credentials"] = "false"
+    return response
 
 # Include API routes
 app.include_router(api_router)
+
+# Include WebSocket routes
+from app.api.endpoints.websocket import router as websocket_router
+app.include_router(websocket_router)
 
 
 @app.get("/")

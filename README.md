@@ -87,7 +87,7 @@ Flower_Guardian/
 │   ├── Dockerfile
 │   └── requirements.txt
 ├── web/                    # Next.js 管理后台
-├── APP/                   # React Native 移动端
+├── APP/                   # React Native 移动端（详见 APP/README.md）
 │   ├── ios/              # iOS 配置
 │   ├── android/          # Android 配置
 │   ├── src/              # 源代码
@@ -123,7 +123,7 @@ docker-compose logs -f
 
 服务启动后：
 - 后端 API: http://localhost:8000
-- 前端 Web: http://localhost:80
+- 前端 Web: http://localhost:3000
 - PostgreSQL: localhost:5432
 
 ### 本地开发
@@ -142,10 +142,10 @@ source venv/bin/activate  # Linux/Mac
 pip install -r requirements.txt
 
 # 运行服务
-uvicorn app.main:app --reload
+uvicorn app.main:app --reload --port 8000
 ```
 
-#### 前端 (React Native 移动端)
+#### 移动端 APP（详见 [APP/README.md](APP/README.md)）
 
 ```bash
 cd APP
@@ -153,8 +153,16 @@ cd APP
 # 安装依赖
 npm install
 
-# 运行开发服务器
-npm start
+# 开发调试
+npm start              # 启动 Metro 开发服务器
+npx expo start        # 或使用 Expo 启动
+
+# 运行 APP
+npx expo run-ios       # iOS
+npx expo run-android   # Android
+
+# 查看可用模拟器
+xcrun simctl list devices available
 ```
 
 #### 管理后台 (Web)
@@ -173,171 +181,38 @@ npm run dev
 
 ## APP 打包
 
-### iOS 打包 (生成 .ipa)
+详细打包说明请查看 [APP/README.md](APP/README.md#-打包发布)
 
-**方式一：Xcode 打包**
-
-1. 在 Xcode 中打开项目：
-   ```bash
-   open ios/FlowerGuardian.xcworkspace
-   ```
-
-2. 选择目标设备和签名方式：
-   - 点击 Xcode 菜单 → Product → Destination → Any iOS Device
-   - 或者选择 Generic iOS Device
-
-3. 打包构建：
-   ```bash
-   # 方法一：使用 xcodebuild 命令行
-   xcodebuild -workspace ios/FlowerGuardian.xcworkspace \
-     -scheme FlowerGuardian \
-     -configuration Release \
-     -derivedDataPath ./build \
-     -archivePath ./build/FlowerGuardian.xcarchive \
-     archive
-   ```
-
-4. 导出 IPA：
-   ```bash
-   xcodebuild -exportArchive \
-     -archivePath ./build/FlowerGuardian.xcarchive \
-     -exportOptionsPlist ios/ExportOptions.plist \
-     -exportPath ./build
-   ```
-
-**方式二：React Native CLI**
+### 快速打包
 
 ```bash
 cd APP
 
-# 清空构建缓存
-rm -rf ios/build
-
-# Release 构建（需要配置签名）
-react-native build-ios --mode=release
-
-# 或指定证书
-react-native build-ios --scheme=FlowerGuardian --configuration=Release
-```
-
-**导出配置说明**
-
-在 `ios/ExportOptions.plist` 中配置：
-
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>method</key>
-    <string>app-store</string>
-    <!-- method 可选: app-store, ad-hoc, enterprise, development -->
-    <key>teamID</key>
-    <string>你的Apple开发者团队ID</string>
-    <key>signingStyle</key>
-    <string>automatic</string>
-</dict>
-</plist>
-```
-
-### Android 打包 (生成 .apk / .aab)
-
-**方式一：命令行打包**
-
-```bash
-cd APP/android
-
-# 调试 APK（无需签名）
-./gradlew assembleDebug
-
-# 发布 APK（需要配置签名）
-./gradlew assembleRelease
-
-# 生成 AAB（用于 Google Play）
-./gradlew bundleRelease
-```
-
-**方式二：React Native CLI**
-
-```bash
-cd APP
-
-# 调试 APK
-react-native build-android --mode=debug
-
-# 发布 APK
-react-native build-android --mode=release
-```
-
-**简化打包命令（推荐）**
-
-```bash
-# 一键打包调试 APK（无需签名）
-cd APP && npm run android
-
-# 或使用 Expo 命令
+# Android 调试 APK（无需签名）
 npx expo run:android
 
-# 打包发布版 APK（需要先配置签名）
-cd APP && npx expo run:android --variant release
-```
+# Android 发布版 APK
+npx expo run:android --variant release
 
-> **提示**：Android 打包无需开发者账号，可直接在手机安装 APK 测试。
-
-**签名配置**
-
-1. 生成签名密钥：
-   ```bash
-   keytool -genkeypair -v -storetype PKCS12 -keystore my-release-key.jks -alias my-key-alias -keyalg RSA -keysize 2048 -validity 10000
-   ```
-
-2. 在 `android/app/build.gradle` 中配置：
-   ```gradle
-   android {
-       signingConfigs {
-           release {
-               storeFile file("my-release-key.jks")
-               storePassword "密码"
-               keyAlias "my-key-alias"
-               keyPassword "密码"
-           }
-       }
-       buildTypes {
-           release {
-               signingConfig signingConfigs.release
-           }
-       }
-   }
-   ```
-
-**APK 输出位置**
-
-- Debug: `APP/android/app/build/outputs/apk/debug/app-debug.apk`
-- Release: `APP/android/app/build/outputs/apk/release/app-release.apk`
-- AAB: `APP/android/app/build/outputs/bundle/release/app-release.aab`
-
-**安装 APK 到手机**
-
-```bash
-# 通过 USB 连接手机后安装
-adb install -r APP/android/app/build/outputs/apk/debug/app-debug.apk
-
-# 或直接将 APK 文件分享到手机安装
+# iOS（需要 Apple 开发者账号）
+open ios/app.xcworkspace
+# 在 Xcode 中配置签名后打包
 ```
 
 ### APP 连接后端配置
 
-APP 需要连接后端 API，修改配置文件：
+APP 需要连接后端 API，修改 `APP/src/services/config.ts`：
 
 ```typescript
-// APP/src/services/config.ts
 export const API_BASE_URL = 'http://192.168.1.100:8000';
 ```
 
-- iOS 模拟器：使用 Mac 的局域网 IP
-- iOS 真机：使用后端服务器的实际 IP 或域名
-- Android 模拟器：使用 `10.0.2.2` 访问主机 localhost
-- Android 真机：使用后端服务器的实际 IP 或域名
+| 运行环境 | API 地址 |
+|---------|----------|
+| iOS 模拟器 | Mac 局域网 IP |
+| iOS 真机 | 后端服务器实际 IP 或域名 |
+| Android 模拟器 | `10.0.2.2` 访问主机 localhost |
+| Android 真机 | 后端服务器实际 IP 或域名 |
 
 ## API 端点
 
@@ -470,47 +345,25 @@ export const API_BASE_URL = 'http://192.168.1.100:8000';
 
 ### 手动测试推送
 
-**方式一：发送每日提醒（测试所有到期提醒）**
-
 ```bash
 cd backend
+
+# 发送每日提醒
 python3 -c "from app.tasks.reminder_tasks import send_daily_reminders; import asyncio; asyncio.run(send_daily_reminders())"
-```
 
-**方式二：发送逾期提醒**
-
-```bash
-cd backend
+# 发送逾期提醒
 python3 -c "from app.tasks.reminder_tasks import send_overdue_reminders; import asyncio; asyncio.run(send_overdue_reminders())"
+
+# SSE 测试推送（需要用户已连接 SSE）
+python3 -c "from app.tasks.reminder_tasks import test_sse_push; import asyncio; asyncio.run(test_sse_push(user_id=2))"
+
+# 查看当前连接状态
+python3 -c "from app.tasks.reminder_tasks import test_all_connections; import asyncio; asyncio.run(test_all_connections())"
 ```
 
-**方式三：测试指定用户的推送**
-
-```python
-# 进入后端目录
-cd backend
-
-# Python shell
-python3
-
-# 执行测试
-from app.tasks.reminder_tasks import test_push
-import asyncio
-asyncio.run(test_push(user_id=1))  # user_id 替换为实际用户ID
-```
-
-**方式四：通过 API 测试**
-
-```bash
-# 先登录获取 token
-TOKEN="your_jwt_token"
-
-# 调用测试接口
-curl -X POST http://localhost:8000/api/reminders/test-push \
-  -H "Authorization: Bearer $TOKEN"
-```
-
-> **注意**：推送需要用户已登录 App 并获取 Expo Push Token。如果未获取 Token，会显示"未注册推送 Token"。
+> **注意**：
+> - 推送需要用户已登录 App
+> - SSE 推送需要 APP 在前台运行并保持连接
 
 ## 管理员设置
 
@@ -544,11 +397,7 @@ python backend/train/train_plant.py
 
 # 训练病虫害识别模型
 python backend/train/train_pest.py
-```
 
-### 模型导出
-
-```bash
 # 导出为 ONNX 格式
 python backend/train/export_onnx.py --type all
 ```
@@ -572,4 +421,4 @@ MIT License
 
 ---
 
-*文档最后更新：2026-03-28*
+*文档最后更新：2026-04-02*

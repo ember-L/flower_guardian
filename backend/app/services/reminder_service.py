@@ -51,13 +51,17 @@ def get_weather_factor(
 def calculate_smart_interval(
     plant: Optional[Plant],
     weather_factor: float = 1.0,
-    season_factor: Optional[float] = None
+    season_factor: Optional[float] = None,
+    user_interval: Optional[int] = None
 ) -> int:
     """计算智能浇水间隔"""
     if season_factor is None:
         season_factor = get_season_factor()
 
-    if plant and plant.water_requirement:
+    # 优先使用用户设置的间隔
+    if user_interval:
+        base_interval = user_interval
+    elif plant and plant.water_requirement:
         base_interval = WATER_REQUIREMENT_INTERVAL.get(
             plant.water_requirement, 7
         )

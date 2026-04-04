@@ -181,7 +181,7 @@ export function DiagnosisScreen({ onGoBack, onNavigate, isLoggedIn }: DiagnosisS
           <View style={styles.headerContent}>
             <View style={styles.headerIcon}>
               <Image
-                source={require('../../assets/logo.png')}
+                source={require('../../assets/logo.webp')}
                 style={styles.logoImage}
               />
             </View>

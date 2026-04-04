@@ -193,6 +193,31 @@ export function ReminderScreen({ onGoBack, isLoggedIn, onRequireLogin }: Reminde
     ]);
   };
 
+  const handleDelete = (id: number, plantName: string, type: string) => {
+    Alert.alert(
+      '删除提醒',
+      `确定删除 "${plantName} - ${getTypeName(type)}" 提醒吗？`,
+      [
+        { text: '取消', style: 'cancel' },
+        {
+          text: '删除',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await reminderService.deleteReminder(id);
+              setReminders(prev => prev.filter(r => r.id !== id));
+              // 取消本地通知
+              await reminderNotificationService.cancelReminder(id);
+              Alert.alert('成功', '提醒已删除');
+            } catch (error) {
+              Alert.alert('错误', '删除提醒失败');
+            }
+          }
+        }
+      ]
+    );
+  };
+
   const formatNextDue = (nextDue?: string) => {
     if (!nextDue) return '未知';
     const date = new Date(nextDue);
@@ -323,18 +348,24 @@ export function ReminderScreen({ onGoBack, isLoggedIn, onRequireLogin }: Reminde
                     thumbColor={reminder.enabled ? typeColor : colors['text-tertiary']}
                   />
                 </View>
-                {reminder.enabled && (
-                  <View style={styles.reminderActions}>
-                    <TouchableOpacity onPress={() => handleSnooze(reminder.id)} style={styles.actionButton} activeOpacity={0.7}>
-                      <Icons.Clock size={16} color={colors['text-secondary']} />
-                      <Text style={styles.actionButtonText}>延迟</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => handleComplete(reminder.id, getTypeName(reminder.type))} style={[styles.actionButton, styles.actionButtonPrimary]} activeOpacity={0.7}>
-                      <Icons.Check size={16} color="#fff" />
-                      <Text style={[styles.actionButtonText, { color: '#fff' }]}>完成</Text>
-                    </TouchableOpacity>
-                  </View>
-                )}
+                <View style={styles.reminderActions}>
+                  {reminder.enabled ? (
+                    <>
+                      <TouchableOpacity onPress={() => handleSnooze(reminder.id)} style={styles.actionButton} activeOpacity={0.7}>
+                        <Icons.Clock size={16} color={colors['text-secondary']} />
+                        <Text style={styles.actionButtonText}>延迟</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity onPress={() => handleComplete(reminder.id, getTypeName(reminder.type))} style={[styles.actionButton, styles.actionButtonPrimary]} activeOpacity={0.7}>
+                        <Icons.Check size={16} color="#fff" />
+                        <Text style={[styles.actionButtonText, { color: '#fff' }]}>完成</Text>
+                      </TouchableOpacity>
+                    </>
+                  ) : null}
+                  <TouchableOpacity onPress={() => handleDelete(reminder.id, reminder.plant_name || getTypeName(reminder.type), reminder.type)} style={[styles.actionButton, styles.actionButtonDanger]} activeOpacity={0.7}>
+                    <Icons.Trash2 size={16} color={colors.error} />
+                    <Text style={[styles.actionButtonText, { color: colors.error }]}>删除</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             );
           })}
@@ -650,6 +681,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   actionButtonPrimary: { backgroundColor: colors.primary, borderColor: colors.primary },
+  actionButtonDanger: { borderColor: colors.error },
   actionButtonText: { fontSize: 14, color: colors['text-secondary'], fontWeight: '500' },
 
   // 提示卡片
