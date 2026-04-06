@@ -36,6 +36,7 @@ import { KnowledgeDetailScreen } from '../screens/KnowledgeDetailScreen';
 import { PlantDetailScreen } from '../screens/PlantDetailScreen';
 import { NotificationScreen } from '../screens/NotificationScreen';
 import { getCurrentUser, isAuthenticated, logout as authLogout, checkAuthStatus } from '../services/auth';
+import { SwipeBackWrapper } from '../components/SwipeBackWrapper';
 
 export type TabName = 'Identify' | 'Garden' | 'Encyclopedia' | 'Store' | 'Profile';
 export type SubPageName = 'Diagnosis' | 'Recommendation' | 'Reminder' | 'EncyclopediaDetail' | 'Diary' | 'StoreDetail' | 'Cart' | 'Checkout' | 'Orders' | 'OrderDetail' | 'DiagnosisHistory' | 'DiagnosisDetail' | 'Login' | 'Register' | 'ForgotPassword' | 'WriteDiary' | 'DiaryDetail' | 'GrowthCurve' | 'Address' | 'AddressEdit' | 'EmailVerify' | 'ConsultationList' | 'Consultation' | 'Knowledge' | 'KnowledgeDetail' | 'PlantDetail' | 'Notification' | null;
@@ -294,13 +295,103 @@ export function AppNavigator() {
     );
   };
 
+  // 根据历史记录渲染任意页面
+  const renderPageByHistory = (tab: TabName, page: SubPageName, params: any) => {
+    if (page) {
+      // 子页面
+      switch (page) {
+        case 'Diagnosis':
+          return <DiagnosisScreen onGoBack={handleGoBack} onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} isLoggedIn={isLoggedIn} onRequireLogin={() => setCurrentSubPage('Login')} />;
+        case 'Recommendation':
+          return <RecommendationScreen onGoBack={handleGoBack} onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} />;
+        case 'Reminder':
+          return <ReminderScreen onGoBack={handleGoBack} onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} isLoggedIn={isLoggedIn} onRequireLogin={() => setCurrentSubPage('Login')} />;
+        case 'EncyclopediaDetail':
+          return <EncyclopediaDetailScreen onGoBack={handleGoBack} onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} route={params || {}} />;
+        case 'Diary':
+          return <DiaryScreen onGoBack={handleGoBack} onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} isLoggedIn={isLoggedIn} onRequireLogin={() => setCurrentSubPage('Login')} />;
+        case 'StoreDetail':
+          return <StoreDetailScreen onGoBack={handleGoBack} onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} productId={params?.productId} />;
+        case 'Cart':
+          return <CartScreen onGoBack={handleGoBack} onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} isLoggedIn={isLoggedIn} onRequireLogin={() => setCurrentSubPage('Login')} />;
+        case 'Orders':
+          return <OrdersScreen onGoBack={handleGoBack} onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} isLoggedIn={isLoggedIn} onRequireLogin={() => setCurrentSubPage('Login')} />;
+        case 'OrderDetail':
+          return <OrderDetailScreen route={params || {}} onGoBack={handleGoBack} onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} isLoggedIn={isLoggedIn} onRequireLogin={() => setCurrentSubPage('Login')} />;
+        case 'DiagnosisHistory':
+          return <DiagnosisHistoryScreen onGoBack={handleGoBack} onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} isLoggedIn={isLoggedIn} onRequireLogin={() => setCurrentSubPage('Login')} />;
+        case 'DiagnosisDetail':
+          return <DiagnosisDetailScreen route={{ params: params || {} }} onGoBack={handleGoBack} onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} isLoggedIn={isLoggedIn} onRequireLogin={() => setCurrentSubPage('Login')} />;
+        case 'ConsultationList':
+          return <ConsultationListScreen onGoBack={handleGoBack} onNavigate={handleNavigate} />;
+        case 'Consultation':
+          return <ConsultationScreen onGoBack={handleGoBack} conversationId={params?.conversationId} diagnosisContext={params?.diagnosisContext} />;
+        case 'Knowledge':
+          return <KnowledgeScreen onGoBack={handleGoBack} onNavigate={handleNavigate} />;
+        case 'KnowledgeDetail':
+          return <KnowledgeDetailScreen onGoBack={handleGoBack} article={params?.article || {}} />;
+        case 'PlantDetail':
+          return <PlantDetailScreen route={{ params }} onNavigate={handleNavigate} onTabChange={handleTabChange} />;
+        case 'Notification':
+          return <NotificationScreen onGoBack={handleGoBack} onNavigate={handleNavigate} />;
+        case 'Login':
+          return <LoginScreen onGoBack={handleGoBack} onLoginSuccess={handleLoginSuccess} onSwitchToRegister={() => setCurrentSubPage('Register')} onSwitchToForgotPassword={() => setCurrentSubPage('ForgotPassword')} />;
+        case 'Register':
+          return <RegisterScreen onGoBack={handleGoBack} onRegisterSuccess={() => setCurrentSubPage('Login')} onSwitchToLogin={() => setCurrentSubPage('Login')} />;
+        case 'EmailVerify':
+          return <EmailVerifyScreen onGoBack={() => setCurrentSubPage('Login')} onVerifySuccess={handleLoginSuccess} />;
+        case 'ForgotPassword':
+          return <ForgotPasswordScreen onGoBack={() => setCurrentSubPage('Login')} onResetSuccess={() => setCurrentSubPage('Login')} />;
+        case 'WriteDiary':
+          return <WriteDiaryScreen onGoBack={handleGoBack} onNavigate={handleNavigate} isLoggedIn={isLoggedIn} onRequireLogin={() => setCurrentSubPage('Login')} />;
+        case 'DiaryDetail':
+          return <DiaryDetailScreen onGoBack={handleGoBack} onNavigate={handleNavigate} diaryId={params?.diaryId} isLoggedIn={isLoggedIn} onRequireLogin={() => setCurrentSubPage('Login')} />;
+        case 'GrowthCurve':
+          return <GrowthCurveScreen onGoBack={handleGoBack} onNavigate={handleNavigate} preselectedPlantId={params?.preselectedPlantId} isLoggedIn={isLoggedIn} onRequireLogin={() => setCurrentSubPage('Login')} />;
+        case 'Address':
+          return <AddressScreen onGoBack={handleGoBack} onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} isLoggedIn={isLoggedIn} onRequireLogin={() => setCurrentSubPage('Login')} />;
+        case 'AddressEdit':
+          return <AddressEditScreen onGoBack={handleGoBack} addressId={params?.addressId} />;
+        default:
+          return null;
+      }
+    }
+    // 主 Tab 页面
+    switch (tab) {
+      case 'Identify':
+        return <IdentifyScreen onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} />;
+      case 'Garden':
+        return <GardenScreen onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} isLoggedIn={isLoggedIn} onRequireLogin={() => setCurrentSubPage('Login')} onLogout={handleLogout} />;
+      case 'Encyclopedia':
+        return <EncyclopediaScreen onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} />;
+      case 'Store':
+        return <StoreScreen onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} isLoggedIn={isLoggedIn} onRequireLogin={() => setCurrentSubPage('Login')} />;
+      case 'Profile':
+        return <ProfileScreen onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} isLoggedIn={isLoggedIn} onLogout={handleLogout} onRequireLogin={() => setCurrentSubPage('Login')} />;
+      default:
+        return <IdentifyScreen onNavigate={handleNavigate} currentTab={currentTab} onTabChange={handleTabChange} />;
+    }
+  };
+
+  // 获取上一个页面内容
+  const getBackgroundContent = () => {
+    if (navHistory.length > 0) {
+      const previousState = navHistory[navHistory.length - 1];
+      return renderPageByHistory(previousState.tab, previousState.page, previousState.params);
+    }
+    // 没有历史记录时显示当前 Tab 主页
+    return renderPageByHistory(currentTab, null, null);
+  };
+
   // 子页面时隐藏底部导航
   if (currentSubPage) {
     return (
       <View style={styles.container}>
-        <View style={styles.contentContainer}>
-          {renderContent()}
-        </View>
+        <SwipeBackWrapper backgroundContent={getBackgroundContent()} onSwipeBack={handleGoBack}>
+          <View style={styles.contentContainer}>
+            {renderContent()}
+          </View>
+        </SwipeBackWrapper>
       </View>
     );
   }

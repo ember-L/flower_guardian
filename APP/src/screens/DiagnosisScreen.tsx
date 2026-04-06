@@ -95,7 +95,7 @@ export function DiagnosisScreen({ onGoBack, onNavigate, isLoggedIn }: DiagnosisS
           setIsLoading(false);
           return;
         }
-        result = await ImagePicker.launchCameraAsync({ mediaTypes: 'Images', quality: 0.8 });
+        result = await ImagePicker.launchCameraAsync({ quality: 0.8 });
       } else {
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (status !== 'granted') {
@@ -103,7 +103,7 @@ export function DiagnosisScreen({ onGoBack, onNavigate, isLoggedIn }: DiagnosisS
           setIsLoading(false);
           return;
         }
-        result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: 'Images', quality: 0.8 });
+        result = await ImagePicker.launchImageLibraryAsync({ quality: 0.8 });
       }
 
       if (result.canceled || !result.assets?.length) {
@@ -111,31 +111,33 @@ export function DiagnosisScreen({ onGoBack, onNavigate, isLoggedIn }: DiagnosisS
         return;
       }
 
-      const imageUri = result.assets[0].uri;
-      const diagnosisResult: DiagnosisResult = await pestRecognitionService.recognize(imageUri);
+      const tempImageUri = result.assets[0].uri;
 
-      // 保存诊断记录到后端
+      // 先上传图片到服务器，获取永久 URL（用于保存到数据库）
+      const serverImageUrl = await pestRecognitionService.uploadImage(tempImageUri);
+
+      // 用本地临时图片进行识别（服务器路径不能作为文件上传）
+      const diagnosisResult: DiagnosisResult = await pestRecognitionService.recognize(tempImageUri);
+
+      // 保存诊断记录到后端（使用服务器上的图片 URL）
       try {
         if (isLoggedIn) {
-          console.log('[Diagnosis] Saving record, isLoggedIn:', isLoggedIn);
           await createDiagnosis({
-            image_url: imageUri,
+            image_url: serverImageUrl,
             disease_name: diagnosisResult.name,
             confidence: diagnosisResult.confidence,
-            description: diagnosisResult.treatment, // 使用治疗建议作为描述
+            description: diagnosisResult.treatment,
             treatment: diagnosisResult.treatment,
             prevention: diagnosisResult.prevention,
             recommended_products: '',
           });
-          console.log('[Diagnosis] Record saved successfully');
-        } else {
-          console.log('[Diagnosis] Not logged in, skipping save');
         }
-      } catch (saveError: any) {
-        console.error('[Diagnosis] Failed to save record:', saveError?.response?.data || saveError);
+      } catch (saveError) {
+        // 保存失败不影响显示识别结果
       }
 
-      setCapturedImage(imageUri);
+      // 用本地 URI 显示图片（显示拍的图片）
+      setCapturedImage(tempImageUri);
       setDiagnosisResult(diagnosisResult);
 
       const isConnected = await isNetworkConnected();
@@ -181,7 +183,7 @@ export function DiagnosisScreen({ onGoBack, onNavigate, isLoggedIn }: DiagnosisS
           <View style={styles.headerContent}>
             <View style={styles.headerIcon}>
               <Image
-                source={require('../../assets/logo.webp')}
+                source={require('../../assets/logo.png')}
                 style={styles.logoImage}
               />
             </View>

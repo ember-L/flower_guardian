@@ -10,7 +10,7 @@ import { AppNavigator } from './src/navigation/AppNavigator';
 import { colors } from './src/constants/theme';
 import { notificationService } from './src/services/notificationService';
 import { reminderNotificationService } from './src/services/reminderNotificationService';
-import { webSocketService } from './src/services/webSocketService';
+import { webSocketService } from './src/services/websocketService';
 import { getToken } from './src/services/auth';
 
 function App() {
@@ -84,16 +84,16 @@ function App() {
           onDisconnected: () => {
             console.log('[App] WebSocket 推送已断开');
           },
-          onError: (error) => {
-            console.error('[App] WebSocket 推送错误:', error);
+          onError: () => {
+            // 静默处理错误，不显示日志
           }
         });
       } else {
         console.log('[App] 用户未登录，断开 WebSocket');
         webSocketService.disconnectPush();
       }
-    } catch (error) {
-      console.error('[App] 检查登录状态失败:', error);
+    } catch {
+      // 静默处理
     }
   };
 

@@ -48,6 +48,7 @@ const uriToBase64 = async (uri: string): Promise<string> => {
 
 // 在线识别 - 调用后端API
 const recognizeOnline = async (imageUri: string): Promise<DiagnosisResult> => {
+  // ImagePicker 已压缩 (quality: 0.8)，直接上传
   const formData = new FormData();
   formData.append('file', {
     uri: imageUri,
@@ -125,7 +126,46 @@ const recognizeOffline = async (imageUri: string): Promise<DiagnosisResult> => {
   };
 };
 
+// 上传图片到服务器
+export const uploadImageToServer = async (imageUri: string): Promise<string> => {
+  try {
+    // ImagePicker 已压缩 (quality: 0.8)，直接上传
+    const formData = new FormData();
+    formData.append('file', {
+      uri: imageUri,
+      type: 'image/jpeg',
+      name: 'photo.jpg',
+    } as any);
+
+    const authHeaders = await getAuthHeaders();
+
+    const response = await fetch(`${API_BASE_URL}/api/diagnosis/upload-image`, {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        ...authHeaders,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`上传失败: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log('[PestRecognition] Image uploaded:', data.image_url);
+    return data.image_url;
+  } catch (error) {
+    console.error('[PestRecognition] Upload failed:', error);
+    // 如果上传失败，返回原 URI 作为备选
+    return imageUri;
+  }
+};
+
 export const pestRecognitionService = {
+  // 上传图片到服务器
+  uploadImage: uploadImageToServer,
+
   // 执行识别 - 自动选择在线/离线模式
   async recognize(imageUri: string): Promise<DiagnosisResult> {
     const connected = await isNetworkConnected();

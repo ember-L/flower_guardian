@@ -176,21 +176,16 @@ class WebSocketService {
 
     const token = await getAuthToken();
     if (!token) {
-      console.log('[WS/Push] No auth token, skipping connection');
+      // 未登录，不显示日志
       return false;
     }
 
     return new Promise((resolve) => {
       try {
         const wsUrl = `${API_BASE_URL.replace('http', 'ws')}/ws/push?token=${token}`;
-        console.log('[WS/Push] Connecting to:', wsUrl);
-        console.log('[WS/Push] Token length:', token.length);
-
         this.pushWs = new WebSocket(wsUrl);
-        console.log('[WS/Push] WebSocket created');
 
         this.pushWs.onopen = () => {
-          console.log('[WS/Push] onopen fired - Connected!');
           this.pushReconnectAttempts = 0;
           this.startPushHeartbeat();
           this.pushCallbacks.onConnected?.();
@@ -198,16 +193,11 @@ class WebSocketService {
         };
 
         this.pushWs.onmessage = (event) => {
-          console.log('[WS/Push] onmessage fired');
           try {
             const message: WSMessage = JSON.parse(event.data);
-            console.log('[WS/Push] Received:', message);
-
             // 心跳响应
             if (message.type === 'heartbeat' && message.action === 'pong') {
-              console.log('[WS/Push] Received pong');
-            } else if (message.type === 'connected') {
-              console.log('[WS/Push] Server confirmed connection');
+              // 收到 pong，忽略
             } else {
               this.handlePushMessage(message);
             }
@@ -218,13 +208,17 @@ class WebSocketService {
 
         this.pushWs.onerror = (error) => {
           console.log('[WS/Push] onerror fired');
-          console.error('[WS/Push] Error:', error);
-          this.pushCallbacks.onError?.(error);
+          // 不打印错误详情，避免日志过长
           resolve(false);
         };
 
         this.pushWs.onclose = (event) => {
-          console.log('[WS/Push] onclose fired, code:', event.code, 'reason:', event.reason);
+          // 403 错误不重连（可能是 token 过期或后端不可用）
+          if (event.code === 403) {
+            this.stopPushHeartbeat();
+            resolve(false);
+            return;
+          }
           this.stopPushHeartbeat();
           this.pushCallbacks.onDisconnected?.();
           this.schedulePushReconnect();
@@ -234,11 +228,10 @@ class WebSocketService {
         // 超时处理
         setTimeout(() => {
           if (this.pushWs?.readyState !== WebSocket.OPEN) {
-            console.log('[WS/Push] Connection timeout, state:', this.pushWs?.readyState);
+            this.pushWs?.close();
           }
         }, 10000);
-      } catch (e) {
-        console.error('[WS/Push] Connection failed:', e);
+      } catch {
         resolve(false);
       }
     });

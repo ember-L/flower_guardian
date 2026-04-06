@@ -387,7 +387,7 @@ export function IdentifyScreen({ onNavigate, currentTab, onTabChange }: Identify
               ]}
             >
               <Image
-                source={require('../../assets/logo.webp')}
+                source={require('../../assets/logo.png')}
                 style={styles.logoImage}
               />
             </Animated.View>

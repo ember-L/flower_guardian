@@ -58,7 +58,7 @@ export function LoginScreen({ onGoBack, onLoginSuccess, onSwitchToRegister, onSw
           {/* 标题 */}
           <View style={styles.titleSection}>
             <View style={styles.logoContainer}>
-              <Image source={require('../../assets/logo.webp')} style={styles.logo} />
+              <Image source={require('../../assets/logo.png')} style={styles.logo} />
             </View>
             <Text style={styles.title}>欢迎回来</Text>
             <Text style={styles.subtitle}>登录您的账号继续</Text>

@@ -350,6 +350,24 @@ export function DiagnosisDetailScreen({ route, onNavigate, onGoBack }: Diagnosis
               </View>
             </View>
           )}
+
+          {/* AI 问诊按钮 */}
+          <TouchableOpacity
+            style={styles.aiConsultCard}
+            onPress={handleAIConsult}
+            activeOpacity={duration.pressed}
+          >
+            <View style={styles.aiConsultLeft}>
+              <View style={[styles.aiConsultIcon, { backgroundColor: colors.primaryLight + '20' }]}>
+                <Icon name="message-circle" size={24} color={colors.primary} />
+              </View>
+              <View style={styles.aiConsultText}>
+                <Text style={styles.aiConsultTitle}>AI 智能问诊</Text>
+                <Text style={styles.aiConsultDesc}>基于诊断结果获取专业治疗建议</Text>
+              </View>
+            </View>
+            <Icon name="chevron-right" size={20} color={colors['text-tertiary']} />
+          </TouchableOpacity>
         </View>
       </Animated.ScrollView>
 
@@ -369,15 +387,6 @@ export function DiagnosisDetailScreen({ route, onNavigate, onGoBack }: Diagnosis
           <Text style={[styles.actionButtonText, record.is_favorite && styles.actionButtonTextActive]}>
             {record.is_favorite ? '已收藏' : '收藏'}
           </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.primaryButton}
-          onPress={handleAIConsult}
-          activeOpacity={duration.pressed}
-        >
-          <Icon name="message-circle" size={22} color={colors.white} />
-          <Text style={styles.primaryButtonText}>AI 问诊</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -547,6 +556,46 @@ const styles = StyleSheet.create({
     fontSize: fontSize.md,
     color: colors['text-secondary'],
     lineHeight: 26,
+  },
+
+  // AI 问诊卡片
+  aiConsultCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.xl,
+    padding: spacing.lg,
+    marginTop: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...shadows.md,
+  },
+  aiConsultLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  aiConsultIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.md,
+  },
+  aiConsultText: {
+    flex: 1,
+  },
+  aiConsultTitle: {
+    fontSize: fontSize.lg,
+    fontWeight: fontWeight.semibold,
+    color: colors.text,
+    marginBottom: 2,
+  },
+  aiConsultDesc: {
+    fontSize: fontSize.sm,
+    color: colors['text-secondary'],
   },
 
   // 底部操作栏

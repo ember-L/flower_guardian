@@ -73,6 +73,12 @@ export const getCurrentUser = async (): Promise<User | null> => {
   }
 };
 
+// 获取当前用户ID
+export const getCurrentUserId = async (): Promise<number | null> => {
+  const user = await getCurrentUser();
+  return user?.id || null;
+};
+
 // 保存当前用户
 const saveCurrentUser = async (user: User | null): Promise<void> => {
   try {

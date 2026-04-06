@@ -31,14 +31,16 @@ services:
       DATABASE_URL: postgresql://flower_user:flower_password@postgres:5555/flower_guardian
       SECRET_KEY: ${SECRET_KEY:-your-secret-key-change-in-production}
       ALGORITHM: HS256
-      ACCESS_TOKEN_EXPIRE_MINUTES: 30
-      # 前端API地址（用于CORS）
+      ACCESS_TOKEN_EXPIRE_MINUTES: 10080  # 7天
       FRONTEND_URL: http://frontend:3000
+      ENVIRONMENT: production
+      IMAGE_STORAGE_PATH: /var/www/uploads  # 持久化存储路径
     ports:
       - "8000:8000"
     volumes:
       - ./backend:/app
       - model_weights:/app/models
+      - user_photos:/var/www/uploads  # 持久化用户上传图片
     depends_on:
       postgres:
         condition: service_healthy
@@ -46,8 +48,9 @@ services:
       - flower_network
     command: >
       sh -c "
+        mkdir -p /var/www/uploads &&
         python -m app.db.seed &&
-        uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+        uvicorn app.main:app --host 0.0.0.0 --port 8000
       "
 
   # React Native Web 前端 (Nginx生产部署)
@@ -66,6 +69,7 @@ services:
 volumes:
   postgres_data:
   model_weights:
+  user_photos:  # 用户上传图片持久化
 
 networks:
   flower_network:
