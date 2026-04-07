@@ -2,6 +2,7 @@
 import { isNetworkConnected } from '../utils/networkMonitor';
 import { getToken } from './auth';
 import { API_BASE_URL } from './config';
+import * as ImageManipulator from 'expo-image-manipulator';
 
 // 获取认证头
 const getAuthHeaders = async (): Promise<Record<string, string>> => {
@@ -126,6 +127,78 @@ const recognizeOffline = async (imageUri: string): Promise<DiagnosisResult> => {
   };
 };
 
+// 合并上传和识别 - 单次请求完成
+const uploadAndRecognizeOnline = async (imageUri: string): Promise<DiagnosisResult> => {
+  // 压缩图片以减少上传时间（调整为 800px 宽度，质量 70%）
+  let manipulatedUri = imageUri;
+  try {
+    const manipResult = await ImageManipulator.manipulateAsync(
+      imageUri,
+      [{ resize: { width: 800 } }],  // 宽度 800px，保持比例
+      { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG }
+    );
+    manipulatedUri = manipResult.uri;
+    console.log('[PestRecognition] 图片压缩完成，原始 URI:', imageUri, '-> 压缩后:', manipulatedUri);
+  } catch (error) {
+    console.warn('[PestRecognition] 图片压缩失败，使用原图:', error);
+  }
+
+  const formData = new FormData();
+  formData.append('file', {
+    uri: manipulatedUri,
+    type: 'image/jpeg',
+    name: 'photo.jpg',
+  } as any);
+
+  const authHeaders = await getAuthHeaders();
+
+  const response = await fetch(`${API_BASE_URL}/api/diagnosis/upload-and-recognize`, {
+    method: 'POST',
+    body: formData,
+    headers: {
+      'Content-Type': 'multipart/form-data',
+      ...authHeaders,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`诊断失败: ${response.status}`);
+  }
+
+  const data = await response.json();
+  console.log('[PestRecognition] uploadAndRecognize response:', data);
+
+  if (data.diagnosis) {
+    return {
+      id: data.diagnosis.id || '0',
+      name: data.diagnosis.name || '未知',
+      confidence: data.diagnosis.confidence || 0,
+      type: data.diagnosis.type || 'unknown',
+      treatment: data.diagnosis.treatment || '',
+      prevention: data.diagnosis.prevention || '',
+      severity: data.diagnosis.severity || 'low',
+      recommendations: data.recommendations,
+      imageUrl: data.image_url || imageUri,
+    };
+  }
+
+  return {
+    id: data.id || '0',
+    name: data.name || '未知',
+    confidence: data.confidence || 0,
+    type: data.type || 'unknown',
+    treatment: data.treatment || '',
+    prevention: data.prevention || '',
+    severity: data.severity || 'low',
+    recommendations: {
+      immediate: data.treatment || '',
+      prevention: data.prevention || '',
+      severity_level: data.severity || 'low',
+    },
+    imageUrl: imageUri,
+  };
+};
+
 // 上传图片到服务器
 export const uploadImageToServer = async (imageUri: string): Promise<string> => {
   try {
@@ -165,6 +238,24 @@ export const uploadImageToServer = async (imageUri: string): Promise<string> => 
 export const pestRecognitionService = {
   // 上传图片到服务器
   uploadImage: uploadImageToServer,
+
+  // 合并上传和识别（单次请求）
+  async uploadAndRecognize(imageUri: string): Promise<DiagnosisResult> {
+    const connected = await isNetworkConnected();
+
+    if (connected) {
+      console.log('[PestRecognition] Using uploadAndRecognize mode');
+      try {
+        return await uploadAndRecognizeOnline(imageUri);
+      } catch (error) {
+        console.error('[PestRecognition] uploadAndRecognize failed, falling back to offline:', error);
+        return await recognizeOffline(imageUri);
+      }
+    } else {
+      console.log('[PestRecognition] Using OFFLINE mode');
+      return await recognizeOffline(imageUri);
+    }
+  },
 
   // 执行识别 - 自动选择在线/离线模式
   async recognize(imageUri: string): Promise<DiagnosisResult> {

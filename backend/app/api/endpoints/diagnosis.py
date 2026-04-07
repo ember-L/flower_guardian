@@ -48,43 +48,42 @@ def generate_filename(original_filename: str) -> str:
 
 
 def convert_image_to_webp(content: bytes) -> bytes:
-    """将图片转换为 WebP 格式（使用 cwebp 命令行）"""
+    """将图片转换为 WebP 格式（使用 Pillow 库）"""
     import logging
-    import subprocess
-    import tempfile
+    from PIL import Image
+    import io
+    # 注册 HEIF 格式支持（iOS 相机默认格式）
+    try:
+        import pillow_heif
+        pillow_heif.register_heif_opener()
+    except ImportError:
+        pass  # pillow-heif 未安装，跳过但仍支持其他格式
     logger = logging.getLogger(__name__)
     try:
-        # 写入临时文件
-        with tempfile.NamedTemporaryFile(suffix='.jpg', delete=False) as tmp_in:
-            tmp_in.write(content)
-            tmp_in_path = tmp_in.name
+        # 使用 Pillow 打开图片（自动检测格式，支持 JPEG, PNG, HEIC, WEBP 等）
+        image = Image.open(io.BytesIO(content))
 
-        tmp_out_path = tmp_in_path + '.webp'
+        # 强制转换为 RGB 模式（处理 RGBA 或其他模式）
+        if image.mode in ('RGBA', 'LA', 'P'):
+            # 对于 RGBA 图片，创建一个白色背景
+            background = Image.new('RGB', image.size, (255, 255, 255))
+            if image.mode == 'P':
+                image = image.convert('RGBA')
+            background.paste(image, mask=image.split()[-1] if image.mode == 'RGBA' else None)
+            image = background
+        elif image.mode != 'RGB':
+            image = image.convert('RGB')
 
-        # 使用 cwebp 转换（有损压缩，速度快且文件更小）
-        # -q 85: 质量因子 85，平衡质量和大小
-        # 不使用 -lossless，因为会导致文件更大且处理慢
-        subprocess.run([
-            'cwebp', '-q', '65',
-            tmp_in_path, '-o', tmp_out_path
-        ], check=True, capture_output=True)
+        # 转换为 WebP 格式
+        output = io.BytesIO()
+        image.save(output, format='WEBP', quality=85)
+        result = output.getvalue()
 
-        # 读取转换后的文件
-        with open(tmp_out_path, 'rb') as f:
-            result = f.read()
-
-        # 清理临时文件
-        os.unlink(tmp_in_path)
-        os.unlink(tmp_out_path)
-
-        logger.info(f"WebP conversion done, size: {len(result)} bytes")
+        logger.info(f"WebP conversion done, size: {len(result)} bytes, original mode: {image.mode}")
         return result
-    except subprocess.CalledProcessError as e:
-        logger.error(f"WebP conversion failed: cwebp error: {e.stderr}")
-        raise Exception(f"WebP 转换失败: {e.stderr.decode() if e.stderr else str(e)}")
     except Exception as e:
         logger.error(f"WebP conversion failed: {str(e)}")
-        raise
+        raise Exception(f"WebP 转换失败: {str(e)}")
 
 
 async def save_file_async(content: bytes, file_path: str) -> None:

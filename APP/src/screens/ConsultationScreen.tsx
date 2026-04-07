@@ -191,6 +191,7 @@ export function ConsultationScreen({ onGoBack, conversationId, diagnosisContext 
               }
 
               setConversation(updated);
+              setIsLoading(false);
               setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
             } catch (sendError) {
               console.error('Send initial message error:', sendError);

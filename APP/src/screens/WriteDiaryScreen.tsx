@@ -9,7 +9,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { Icons } from '../components/Icon';
 import { colors, spacing, borderRadius, shadows, fontSize, fontWeight } from '../constants/theme';
 import { NavigationProps } from '../navigation/AppNavigator';
-import { createDiary, getMyPlants, Plant } from '../services/diaryService';
+import { createDiary, getMyPlants, uploadDiaryImages, Plant } from '../services/diaryService';
 
 interface WriteDiaryScreenProps extends Partial<NavigationProps> {
   editDiaryId?: number;
@@ -113,10 +113,19 @@ export function WriteDiaryScreen({ onGoBack, onNavigate, editDiaryId, isLoggedIn
 
     setLoading(true);
     try {
+      // 先上传所有图片到服务器，获得服务器 URL
+      let serverImageUrls: string[] = [];
+      if (images.length > 0) {
+        console.log('[WriteDiary] 开始上传', images.length, '张图片');
+        serverImageUrls = await uploadDiaryImages(images);
+        console.log('[WriteDiary] 图片上传完成，获得 URL:', serverImageUrls);
+      }
+
+      // 使用服务器 URL 创建日记
       await createDiary({
         user_plant_id: selectedPlantId,
         content: content.trim(),
-        images: images.length > 0 ? images : undefined,
+        images: serverImageUrls.length > 0 ? serverImageUrls : undefined,
         height: height ? parseInt(height, 10) : undefined,
         leaf_count: leafCount ? parseInt(leafCount, 10) : undefined,
       });
@@ -124,6 +133,7 @@ export function WriteDiaryScreen({ onGoBack, onNavigate, editDiaryId, isLoggedIn
         { text: '确定', onPress: () => onGoBack?.() }
       ]);
     } catch (error) {
+      console.error('[WriteDiary] 保存日记失败:', error);
       Alert.alert('错误', '保存失败，请重试');
     } finally {
       setLoading(false);

@@ -131,7 +131,7 @@ export function StoreDetailScreen({ onGoBack, productId, isLoggedIn, onRequireLo
   return (
     <SafeAreaView style={styles.container}>
       {/* 返回按钮 */}
-      <TouchableOpacity style={styles.backBtn} onPress={handleGoBack}>
+      <TouchableOpacity style={styles.backBtn} onPress={onGoBack}>
         <Icons.ArrowLeft size={24} color="#333" />
       </TouchableOpacity>
 

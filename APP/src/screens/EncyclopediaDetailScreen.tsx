@@ -113,7 +113,7 @@ export function EncyclopediaDetailScreen({ onGoBack, ...props }: EncyclopediaDet
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Hero 区域 - 大图背景 */}
         <View style={styles.heroSection}>
-          <TouchableOpacity onPress={handleGoBack} style={styles.backButton}>
+          <TouchableOpacity onPress={onGoBack} style={styles.backButton}>
             <Icons.ChevronLeft size={22} color={colors.white} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.shareButton}>

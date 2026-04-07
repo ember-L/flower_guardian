@@ -98,7 +98,7 @@ export function AddressEditScreen({ onGoBack, addressId }: AddressEditScreenProp
     <SafeAreaView style={styles.container}>
       <View style={styles.headerGradient}>
         <View style={styles.header}>
-          <TouchableOpacity style={styles.backBtn} onPress={handleGoBack}>
+          <TouchableOpacity style={styles.backBtn} onPress={onGoBack}>
             <Icons.ArrowLeft size={24} color="#fff" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>{isEdit ? '编辑地址' : '新增地址'}</Text>

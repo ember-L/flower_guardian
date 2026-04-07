@@ -9,6 +9,7 @@ passlib[bcrypt]>=1.7.4
 python-multipart>=0.0.6
 aiofiles>=23.2.1
 pillow>=10.2.0
+pillow-heif>=0.18.0
 torch>=2.10.0
 torchvision>=0.25.0
 ultralytics>=8.4.21

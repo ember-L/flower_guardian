@@ -12,7 +12,7 @@ import { networkMonitor, isNetworkConnected } from '../utils/networkMonitor';
 
 interface DiagnosisScreenProps extends Partial<NavigationProps> {}
 
-export function DiagnosisScreen({ onGoBack, onNavigate, isLoggedIn }: DiagnosisScreenProps) {
+export function DiagnosisScreen({ onGoBack, onNavigate, isLoggedIn, onRequireLogin }: DiagnosisScreenProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [diagnosisResult, setDiagnosisResult] = useState<DiagnosisResult | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
@@ -113,11 +113,9 @@ export function DiagnosisScreen({ onGoBack, onNavigate, isLoggedIn }: DiagnosisS
 
       const tempImageUri = result.assets[0].uri;
 
-      // 先上传图片到服务器，获取永久 URL（用于保存到数据库）
-      const serverImageUrl = await pestRecognitionService.uploadImage(tempImageUri);
-
-      // 用本地临时图片进行识别（服务器路径不能作为文件上传）
-      const diagnosisResult: DiagnosisResult = await pestRecognitionService.recognize(tempImageUri);
+      // 使用合并接口，一次请求完成上传和识别
+      const diagnosisResult: DiagnosisResult = await pestRecognitionService.uploadAndRecognize(tempImageUri);
+      const serverImageUrl = diagnosisResult.imageUrl;
 
       // 保存诊断记录到后端（使用服务器上的图片 URL）
       try {
@@ -177,7 +175,7 @@ export function DiagnosisScreen({ onGoBack, onNavigate, isLoggedIn }: DiagnosisS
         {/* 头部 */}
         <View style={styles.header}>
           <View style={styles.headerBg} />
-          <TouchableOpacity style={styles.backButton} onPress={handleGoBack} activeOpacity={duration.pressed}>
+          <TouchableOpacity style={styles.backButton} onPress={onGoBack} activeOpacity={duration.pressed}>
             <Icons.ChevronLeft size={22} color={colors.white} />
           </TouchableOpacity>
           <View style={styles.headerContent}>

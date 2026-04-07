@@ -1,5 +1,5 @@
 // 导航配置 - 支持子页面跳转
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, StyleSheet, Platform, TouchableOpacity, Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icons } from '../components/Icon';
@@ -75,6 +75,29 @@ export function AppNavigator() {
   const [authChecked, setAuthChecked] = useState(false);
   const [navHistory, setNavHistory] = useState<NavHistoryItem[]>([]);
 
+  // 使用 ref 跟踪导航状态，避免闭包问题
+  const currentTabRef = useRef(currentTab);
+  const currentSubPageRef = useRef(currentSubPage);
+  const navParamsRef = useRef(navParams);
+  const navHistoryRef = useRef(navHistory);
+
+  // 当状态变化时更新 refs
+  useEffect(() => {
+    currentTabRef.current = currentTab;
+  }, [currentTab]);
+
+  useEffect(() => {
+    currentSubPageRef.current = currentSubPage;
+  }, [currentSubPage]);
+
+  useEffect(() => {
+    navParamsRef.current = navParams;
+  }, [navParams]);
+
+  useEffect(() => {
+    navHistoryRef.current = navHistory;
+  }, [navHistory]);
+
   useEffect(() => {
     checkAuthStatus().then(setIsLoggedIn).finally(() => setAuthChecked(true));
   }, []);
@@ -125,7 +148,11 @@ export function AppNavigator() {
   };
 
   const handleNavigate = (page: SubPageName, params?: any) => {
-    console.log('[Navigator] handleNavigate called:', page, 'params:', params);
+    // 使用 ref 获取最新状态，避免闭包问题
+    const currentSubPage = currentSubPageRef.current;
+    const currentTab = currentTabRef.current;
+    const navParams = navParamsRef.current;
+
     // 保存当前页面到历史记录
     if (currentSubPage) {
       setNavHistory(prev => [...prev, { tab: currentTab, page: currentSubPage, params: navParams }]);
@@ -137,11 +164,13 @@ export function AppNavigator() {
   };
 
   const handleGoBack = () => {
-    console.log('[Navigator] handleGoBack called, navHistory length:', navHistory.length);
+    // 使用 ref 获取最新状态
+    const navHistory = navHistoryRef.current;
     if (navHistory.length > 0) {
       // 从历史记录中取出上一个页面
       const previousState = navHistory[navHistory.length - 1];
-      console.log('[Navigator] Going back to:', previousState);
+
+      // 更新所有状态
       setNavHistory(prev => prev.slice(0, -1));
       setCurrentTab(previousState.tab);
       setCurrentSubPage(previousState.page);
@@ -196,7 +225,6 @@ export function AppNavigator() {
       return <ConsultationListScreen onGoBack={handleGoBack} onNavigate={handleNavigate} />;
     }
     if (currentSubPage === 'Consultation') {
-      console.log('[Navigator] Rendering ConsultationScreen, navParams:', navParams);
       return <ConsultationScreen onGoBack={handleGoBack} conversationId={navParams?.conversationId} diagnosisContext={navParams?.diagnosisContext} />;
     }
     if (currentSubPage === 'Knowledge') {
@@ -387,7 +415,11 @@ export function AppNavigator() {
   if (currentSubPage) {
     return (
       <View style={styles.container}>
-        <SwipeBackWrapper backgroundContent={getBackgroundContent()} onSwipeBack={handleGoBack}>
+        <SwipeBackWrapper
+          key={currentSubPage}
+          backgroundContent={getBackgroundContent()}
+          onSwipeBack={handleGoBack}
+        >
           <View style={styles.contentContainer}>
             {renderContent()}
           </View>

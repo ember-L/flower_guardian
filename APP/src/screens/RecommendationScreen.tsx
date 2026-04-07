@@ -100,7 +100,7 @@ export function RecommendationScreen({ onGoBack }: RecommendationScreenProps) {
       <View style={styles.headerWrapper}>
         {/* 头部 */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={handleGoBack} style={styles.backButton}>
+          <TouchableOpacity onPress={onGoBack} style={styles.backButton}>
             <Icons.ChevronLeft size={22} color={colors.primary} />
           </TouchableOpacity>
           <View style={styles.headerContent}>

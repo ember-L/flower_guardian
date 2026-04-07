@@ -307,7 +307,7 @@ export function DiagnosisHistoryScreen({ onGoBack, onNavigate, isLoggedIn, onReq
           style={styles.backButton}
           onPress={onGoBack}
           hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-          activeOpacity={duration.pressed}
+          activeOpacity={1}
         >
           <Icon name="arrow-left" size={24} color={colors.text} />
         </TouchableOpacity>

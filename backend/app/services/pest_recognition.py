@@ -1,5 +1,6 @@
 import os
 import json
+import tempfile
 from typing import Optional
 
 
@@ -69,6 +70,195 @@ class PestRecognitionService:
             print(f"Warning: Could not load pest model: {e}")
             self.model = None
 
+    def _ensure_valid_image(self, image_path: str) -> str:
+        """验证并转换图片为 YOLO 可读的格式"""
+        import io
+        # 注册 HEIF 格式支持（iOS 相机默认格式）
+        try:
+            import pillow_heif
+            pillow_heif.register_heif_opener()
+        except ImportError:
+            pass  # pillow-heif 未安装，跳过但仍支持其他格式
+        try:
+            from PIL import Image
+            # 尝试打开图片验证其有效性
+            with Image.open(image_path) as img:
+                # 强制转换为 RGB（JPEG 不支持 RGBA）
+                if img.mode in ('RGBA', 'LA', 'P'):
+                    background = Image.new('RGB', img.size, (255, 255, 255))
+                    if img.mode == 'P':
+                        img = img.convert('RGBA')
+                    if img.mode == 'RGBA':
+                        background.paste(img, mask=img.split()[-1])
+                    else:
+                        background.paste(img)
+                    img = background
+                elif img.mode != 'RGB':
+                    img = img.convert('RGB')
+
+                # 检查文件扩展名是否与实际格式匹配
+                ext = os.path.splitext(image_path)[1].lower()
+                expected_format = {'jpg': 'JPEG', 'jpeg': 'JPEG', 'png': 'PNG', 'webp': 'WEBP'}.get(ext)
+
+                # 如果格式不匹配或文件扩展名不是标准图片格式，转换为 JPEG
+                if not expected_format or img.format != expected_format:
+                    # 保存为 JPEG 到临时文件
+                    with tempfile.NamedTemporaryFile(suffix='.jpg', delete=False) as tmp:
+                        img.save(tmp.name, format='JPEG', quality=95)
+                        print(f"[PestRecognition] 图片已转换为 JPEG: {tmp.name}")
+                        return tmp.name
+
+            return image_path
+        except Exception as e:
+            print(f"[PestRecognition] 图片验证失败: {e}，尝试直接使用原路径")
+            return image_path
+
+    def _recognize_from_boxes(self, boxes_data: tuple) -> dict:
+        """从 YOLO 检测结果提取识别结果"""
+        boxes, class_id, confidence = boxes_data
+
+        print(f"[PestRecognition] 检测到目标 - Class ID: {class_id}, 置信度: {confidence:.2%}")
+
+        if confidence < self.CONFIDENCE_THRESHOLD:
+            print(f"[PestRecognition] 置信度 {confidence:.2%} 低于阈值 {self.CONFIDENCE_THRESHOLD}, 返回未识别")
+            return {
+                "id": "-1",
+                "name": "未识别",
+                "confidence": confidence,
+                "type": "unknown",
+                "treatment": "置信度较低，请拍摄更清晰的照片",
+                "severity": "low"
+            }
+
+        class_info = self.classes.get(class_id, {})
+        pest_type = class_info.get("type", "unknown")
+        pest_name = class_info.get("name", "未知")
+
+        print(f"[PestRecognition] 识别成功 - 病虫害: {pest_name}, 类型: {pest_type}, 严重程度: {class_info.get('severity', 'low')}")
+
+        return {
+            "id": class_id,
+            "name": pest_name,
+            "confidence": confidence,
+            "type": pest_type,
+            "treatment": class_info.get("treatment", ""),
+            "severity": class_info.get("severity", "low")
+        }
+
+    def recognize_from_bytes(self, content: bytes) -> tuple:
+        """
+        从字节数据识别病虫害（不依赖文件路径）
+        返回 (result_dict, jpeg_bytes) 元组
+        """
+        import io
+        from PIL import Image
+
+        print(f"[PestRecognition] 开始从字节数据识别，长度: {len(content)} bytes")
+
+        if not self.model:
+            print(f"[PestRecognition] 模型未加载，返回模拟结果")
+            return {
+                "id": "0",
+                "name": "蚜虫",
+                "confidence": 0.88,
+                "type": "insect",
+                "treatment": "使用吡虫啉喷洒",
+                "severity": "medium"
+            }, content  # 返回原始内容
+
+        tmp_path = None
+        jpeg_bytes = None
+        try:
+            # 注册 HEIF 格式支持
+            try:
+                import pillow_heif
+                pillow_heif.register_heif_opener()
+            except ImportError:
+                pass
+
+            # 使用 BytesIO 打开图片
+            image = Image.open(io.BytesIO(content))
+
+            # 强制转换为 RGB
+            if image.mode in ('RGBA', 'LA', 'P'):
+                background = Image.new('RGB', image.size, (255, 255, 255))
+                if image.mode == 'P':
+                    image = image.convert('RGBA')
+                if image.mode == 'RGBA':
+                    background.paste(image, mask=image.split()[-1])
+                else:
+                    background.paste(image)
+                image = background
+            elif image.mode != 'RGB':
+                image = image.convert('RGB')
+
+            # 保存为 JPEG bytes（用于返回给调用方，避免重新转换）
+            output = io.BytesIO()
+            image.save(output, format='JPEG', quality=90)
+            jpeg_bytes = output.getvalue()
+            print(f"[PestRecognition] JPEG 转换完成，大小: {len(jpeg_bytes)} bytes")
+
+            # 保存为临时 JPEG 文件供 YOLO 使用
+            with tempfile.NamedTemporaryFile(suffix='.jpg', delete=False) as tmp:
+                tmp.write(jpeg_bytes)
+                tmp_path = tmp.name
+
+            print(f"[PestRecognition] 临时文件: {tmp_path}")
+
+            # 直接执行 YOLO 识别，避免重复转换
+            try:
+                results = self.model(tmp_path)
+                result_data = results[0]
+
+                if result_data.boxes:
+                    best_idx = result_data.boxes.conf.argmax()
+                    box = result_data.boxes[best_idx]
+                    confidence = float(box.conf[0])
+                    class_id = str(int(box.cls[0]))
+
+                    print(f"[PestRecognition] 检测到目标 - Class ID: {class_id}, 置信度: {confidence:.2%}")
+
+                    if confidence < self.CONFIDENCE_THRESHOLD:
+                        print(f"[PestRecognition] 置信度 {confidence:.2%} 低于阈值 {self.CONFIDENCE_THRESHOLD}, 返回未识别")
+                        result = {
+                            "id": "-1",
+                            "name": "未识别",
+                            "confidence": confidence,
+                            "type": "unknown",
+                            "treatment": "置信度较低，请拍摄更清晰的照片",
+                            "severity": "low"
+                        }
+                    else:
+                        class_info = self.classes.get(class_id, {})
+                        pest_type = class_info.get("type", "unknown")
+                        pest_name = class_info.get("name", "未知")
+
+                        print(f"[PestRecognition] 识别成功 - 病虫害: {pest_name}, 类型: {pest_type}")
+                        result = {
+                            "id": class_id,
+                            "name": pest_name,
+                            "confidence": confidence,
+                            "type": pest_type,
+                            "treatment": class_info.get("treatment", ""),
+                            "severity": class_info.get("severity", "low")
+                        }
+                else:
+                    print(f"[PestRecognition] 未检测到目标框")
+                    result = {"id": "-1", "name": "未识别", "confidence": 0.0, "type": "unknown"}
+            except Exception as e:
+                print(f"[PestRecognition] 识别出错: {e}")
+                result = {"id": "-1", "name": "未识别", "confidence": 0.0, "type": "unknown"}
+
+            return result, jpeg_bytes
+
+        except Exception as e:
+            print(f"[PestRecognition] 字节识别出错: {e}")
+            return {"id": "-1", "name": "未识别", "confidence": 0.0, "type": "unknown"}, content
+        finally:
+            # 清理临时文件
+            if tmp_path and os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+
     def recognize(self, image_path: str) -> dict:
         """识别病虫害"""
         print(f"[PestRecognition] 开始识别图片: {image_path}")
@@ -84,6 +274,9 @@ class PestRecognitionService:
                 "treatment": "使用吡虫啉喷洒",
                 "severity": "medium"
             }
+
+        # 验证图片是否可读，必要时转换格式
+        image_path = self._ensure_valid_image(image_path)
 
         try:
             results = self.model(image_path)

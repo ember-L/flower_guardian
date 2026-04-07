@@ -153,7 +153,7 @@ export function CartScreen({ navigation, onGoBack, onNavigate, isLoggedIn, onReq
       {/* 头部 - 渐变背景 */}
       <View style={styles.headerGradient}>
         <View style={styles.header}>
-          <TouchableOpacity style={styles.backBtn} onPress={handleGoBack}>
+          <TouchableOpacity style={styles.backBtn} onPress={onGoBack}>
             <Icons.ArrowLeft size={24} color="#fff" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>购物车</Text>

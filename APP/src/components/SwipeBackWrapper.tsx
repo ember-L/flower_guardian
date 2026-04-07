@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -26,16 +26,33 @@ export function SwipeBackWrapper({
 }: SwipeBackWrapperProps) {
   const translateX = useRef(new Animated.Value(0)).current;
   const screenWidth = Dimensions.get('window').width;
+  const isAnimatingRef = useRef(false);
+  const hasCalledBackRef = useRef(false);
+  const animationRef = useRef<Animated.CompositeAnimation | null>(null);
+
+  // 当组件挂载时确保状态重置
+  useEffect(() => {
+    translateX.setValue(0);
+    isAnimatingRef.current = false;
+    hasCalledBackRef.current = false;
+    animationRef.current = null;
+
+    return () => {
+      // 组件卸载时停止动画
+      if (animationRef.current) {
+        animationRef.current.stop();
+      }
+      translateX.setValue(0);
+    };
+  }, []);
 
   const panResponder = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: () => false, // 不在开始时拦截
+      onStartShouldSetPanResponder: () => false,
       onMoveShouldSetPanResponder: (_, gestureState) => {
-        // 只在水平移动大于垂直移动且在左边缘区域时拦截
         if (!enabled || gestureState.x0 > EDGE_TRIGGER_WIDTH) {
           return false;
         }
-        // 允许垂直滚动，只在明显水平滑动时拦截
         return Math.abs(gestureState.dx) > Math.abs(gestureState.dy);
       },
       onPanResponderMove: (_, gestureState) => {
@@ -44,23 +61,36 @@ export function SwipeBackWrapper({
         }
       },
       onPanResponderRelease: (_, gestureState) => {
+        // 防止重复触发
+        if (isAnimatingRef.current || hasCalledBackRef.current) {
+          return;
+        }
+
         const shouldNavigateBack =
           gestureState.dx > screenWidth * SWIPE_THRESHOLD ||
           gestureState.vx > VELOCITY_THRESHOLD;
 
         if (shouldNavigateBack) {
-          Animated.timing(translateX, {
+          isAnimatingRef.current = true;
+
+          animationRef.current = Animated.timing(translateX, {
             toValue: screenWidth,
             duration: 200,
             useNativeDriver: true,
-          }).start(() => {
-            onSwipeBack();
+          });
+
+          animationRef.current.start(() => {
+            if (!hasCalledBackRef.current) {
+              hasCalledBackRef.current = true;
+              onSwipeBack();
+            }
           });
         } else {
-          Animated.spring(translateX, {
+          animationRef.current = Animated.spring(translateX, {
             toValue: 0,
             useNativeDriver: true,
-          }).start();
+          });
+          animationRef.current.start();
         }
       },
     })

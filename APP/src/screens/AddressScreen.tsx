@@ -118,7 +118,7 @@ export function AddressScreen({ onGoBack, onNavigate, isLoggedIn, onRequireLogin
     <SafeAreaView style={styles.container}>
       <View style={styles.headerGradient}>
         <View style={styles.header}>
-          <TouchableOpacity style={styles.backBtn} onPress={handleGoBack}>
+          <TouchableOpacity style={styles.backBtn} onPress={onGoBack}>
             <Icons.ArrowLeft size={24} color="#fff" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>收货地址</Text>

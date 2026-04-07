@@ -110,7 +110,7 @@ export function OrdersScreen({ onNavigate, onGoBack, isLoggedIn, onRequireLogin 
       {/* 头部 - 渐变背景 */}
       <View style={styles.headerGradient}>
         <View style={styles.header}>
-          <TouchableOpacity style={styles.backBtn} onPress={handleGoBack}>
+          <TouchableOpacity style={styles.backBtn} onPress={onGoBack}>
             <Icons.ArrowLeft size={24} color="#fff" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>我的订单</Text>

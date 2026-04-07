@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Image, Animated, Easing } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getDiagnosis, toggleFavorite, rediagnose, DiagnosisRecord } from '../services/diagnosisService';
-import { createConversationToBackend, linkDiagnosisToConversation, sendMessageToBackend, callAIChat } from '../services/consultationService';
+import { createConversationToBackend, linkDiagnosisToConversation } from '../services/consultationService';
 import { API_BASE_URL } from '../services/config';
 import { colors, spacing, borderRadius, shadows, duration, fontSize, fontWeight, touchTarget } from '../constants/theme';
 import { NavigationProps } from '../navigation/AppNavigator';
@@ -51,16 +51,11 @@ const getConfidenceConfig = (confidence: number) => {
   return { label: '低置信度', color: colors.error, bgColor: colors.errorLight, icon: 'alert-circle' };
 };
 
-export function DiagnosisDetailScreen({ route, onNavigate, onGoBack }: DiagnosisDetailScreenProps) {
+export function DiagnosisDetailScreen({ route, onNavigate, onGoBack, isLoggedIn }: DiagnosisDetailScreenProps) {
   const { diagnosisId } = route?.params || {};
   const [record, setRecord] = useState<DiagnosisRecord | null>(null);
   const [loading, setLoading] = useState(true);
   const [fadeAnim] = useState(new Animated.Value(0));
-
-  const handleGoBack = () => {
-    // 重置诊断页面状态后返回
-    onGoBack?.();
-  };
 
   useEffect(() => {
     console.log('[DiagnosisDetail] useEffect triggered, diagnosisId:', diagnosisId);
@@ -119,8 +114,7 @@ export function DiagnosisDetailScreen({ route, onNavigate, onGoBack }: Diagnosis
 
   const handleAIConsult = async () => {
     try {
-      console.log('[DiagnosisDetail] handleAIConsult called, record:', record);
-      const id = typeof diagnosisId === 'string' ? parseInt(diagnosisId, 10) : diagnosisId;
+      console.log('[DiagnosisDetail] handleAIConsult called, record:', record, 'isLoggedIn:', isLoggedIn);
 
       // 构建诊断上下文
       const diagnosisContext = {
@@ -140,42 +134,42 @@ export function DiagnosisDetailScreen({ route, onNavigate, onGoBack }: Diagnosis
         return;
       }
 
+      // 需要登录才能创建对话
+      if (!isLoggedIn) {
+        Alert.alert('提示', '登录后可使用AI问诊功能', [
+          { text: '取消', style: 'cancel' },
+          { text: '登录', onPress: () => onNavigate?.('Login') },
+        ]);
+        return;
+      }
+
       // 创建新对话，传递诊断上下文作为标题的一部分
       const title = `诊断咨询: ${record?.disease_name || '植物问题'}`;
       const conversationId = await createConversationToBackend(title, diagnosisContext);
 
-      // 关联诊断记录与对话
-      await linkDiagnosisToConversation(id, conversationId);
-
-      // 构建初始诊断消息
-      const diagnosisText = `用户刚刚完成了病害诊断，结果如下：
-- 病害名称：${record?.disease_name || '未知'}
-- 置信度：${((record?.confidence || 0) * 100).toFixed(0)}%
-- 描述：${record?.description || '无'}
-- 治疗建议：${record?.treatment || '无'}
-- 预防措施：${record?.prevention || '无'}
-
-请基于以上诊断结果，提供专业的治疗建议和后续养护指导。`;
-
-      // 保存初始诊断消息到后端，并获取AI回复
-      try {
-        await sendMessageToBackend(conversationId, 'user', diagnosisText);
-
-        // 调用AI获取回复
-        const aiResponse = await callAIChat([
-          { id: '1', role: 'user', content: diagnosisText, timestamp: Date.now() }
-        ], diagnosisContext);
-
-        // 保存AI回复到后端
-        await sendMessageToBackend(conversationId, 'assistant', aiResponse);
-      } catch (msgError) {
-        console.error('Failed to save initial message:', msgError);
+      if (!conversationId) {
+        console.error('[DiagnosisDetail] Failed to create conversation: no conversationId returned');
+        Alert.alert('错误', '创建对话失败，请重试');
+        return;
       }
 
-      // 跳转到AI问诊页面，传递对话ID和诊断上下文
+      // 关联诊断记录与对话
+      const id = typeof diagnosisId === 'string' ? parseInt(diagnosisId, 10) : diagnosisId;
+      await linkDiagnosisToConversation(id, conversationId);
+
+      // 立即跳转到问诊页面，让页面显示等待气泡
       onNavigate?.('Consultation', { conversationId, diagnosisContext });
-    } catch (error) {
-      console.error('Failed to start AI consultation:', error);
+    } catch (error: any) {
+      console.error('[DiagnosisDetail] handleAIConsult error:', error?.response?.data || error);
+      // 如果是未登录错误，引导用户登录
+      if (error?.response?.status === 401) {
+        Alert.alert('提示', '登录后可使用AI问诊功能', [
+          { text: '取消', style: 'cancel' },
+          { text: '登录', onPress: () => onNavigate?.('Login') },
+        ]);
+      } else {
+        Alert.alert('错误', '启动问诊失败，请重试');
+      }
     }
   };
 
@@ -210,7 +204,7 @@ export function DiagnosisDetailScreen({ route, onNavigate, onGoBack }: Diagnosis
       {/* 头部 */}
       <View style={styles.header}>
         <TouchableOpacity
-          onPress={handleGoBack}
+          onPress={onGoBack}
           style={styles.backButton}
           activeOpacity={duration.pressed}
         >

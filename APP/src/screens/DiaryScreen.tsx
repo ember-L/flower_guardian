@@ -10,12 +10,15 @@ import {
   RefreshControl,
   Pressable,
   FlatList,
+  Alert,
+  ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { Icon } from '../components/Icon';
 import { colors, spacing, borderRadius, shadows, duration, touchTarget } from '../constants/theme';
-import { getDiaries, getMyPlants, Plant } from '../services/diaryService';
+import { getDiaries, getMyPlants, deleteDiary, Plant } from '../services/diaryService';
+import { deleteMyPlant } from '../services/plantService';
 
 interface DiaryScreenProps {
   onGoBack: () => void;
@@ -32,6 +35,7 @@ interface DisplayDiary {
   comments: number;
   compareWithPrevious?: boolean;
   images: string[];
+  userPlantId?: number;  // 植物 ID，用于过滤
 }
 
 interface EmptyStateProps {
@@ -131,9 +135,11 @@ const formatDate = (dateString: string): { date: string; label: string } => {
 export function DiaryScreen({ onGoBack, onNavigate, isLoggedIn, onRequireLogin }: DiaryScreenProps & { isLoggedIn?: boolean; onRequireLogin?: () => void }) {
   const [selectedTab, setSelectedTab] = useState(0);
   const [diaries, setDiaries] = useState<DisplayDiary[]>([]);
+  const [allDiaries, setAllDiaries] = useState<DisplayDiary[]>([]);  // 保存原始日记数据
   const [plants, setPlants] = useState<Plant[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [selectedPlantFilter, setSelectedPlantFilter] = useState<number | null>(null);  // 植物过滤
 
   // 使用 useFocusEffect 每次页面获得焦点时检查登录状态
   useFocusEffect(
@@ -168,10 +174,14 @@ export function DiaryScreen({ onGoBack, onNavigate, isLoggedIn, onRequireLogin }
             comments: 0,
             compareWithPrevious: !!d.height || !!d.leaf_count,
             images: d.images || [],
+            userPlantId: d.user_plant_id,  // 保存植物 ID 用于过滤
           };
         });
-        setDiaries(displayDiaries);
+        setAllDiaries(displayDiaries);
+        // 根据当前过滤条件筛选
+        filterDiaries(displayDiaries, selectedPlantFilter);
       } else {
+        setAllDiaries([]);
         setDiaries([]);
       }
     } catch (error: any) {
@@ -180,12 +190,28 @@ export function DiaryScreen({ onGoBack, onNavigate, isLoggedIn, onRequireLogin }
       if ((error?.response?.status === 401 || error?.response?.status === 422) && onRequireLogin) {
         onRequireLogin();
       }
+      setAllDiaries([]);
       setDiaries([]);
       setPlants([]);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isLoggedIn, selectedPlantFilter]);
+
+  // 根据植物过滤日记
+  const filterDiaries = (allDiaryList: DisplayDiary[], plantId: number | null) => {
+    if (plantId === null) {
+      setDiaries(allDiaryList);
+    } else {
+      setDiaries(allDiaryList.filter(d => d.userPlantId === plantId));
+    }
+  };
+
+  // 处理植物过滤变化
+  const handlePlantFilterChange = (plantId: number | null) => {
+    setSelectedPlantFilter(plantId);
+    filterDiaries(allDiaries, plantId);
+  };
 
   useEffect(() => {
     loadData();
@@ -209,6 +235,54 @@ export function DiaryScreen({ onGoBack, onNavigate, isLoggedIn, onRequireLogin }
 
   const handleGrowthRecordPress = (plantId?: number) => {
     onNavigate('GrowthCurve', { preselectedPlantId: plantId });
+  };
+
+  const handleDeletePlant = (plant: Plant) => {
+    Alert.alert(
+      '删除植物',
+      `确定要删除"${plant.name}"吗？删除后将无法恢复。`,
+      [
+        { text: '取消', style: 'cancel' },
+        {
+          text: '删除',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteMyPlant(plant.id);
+              setPlants((prev) => prev.filter((p) => p.id !== plant.id));
+            } catch (error) {
+              console.error('Failed to delete plant:', error);
+              Alert.alert('删除失败', '无法删除植物，请稍后重试。');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleDeleteDiary = (diary: DisplayDiary) => {
+    Alert.alert(
+      '删除日记',
+      '确定要删除这篇日记吗？此操作无法撤销。',
+      [
+        { text: '取消', style: 'cancel' },
+        {
+          text: '删除',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              if (typeof diary.id === 'number') {
+                await deleteDiary(diary.id);
+                setDiaries((prev) => prev.filter((d) => d.id !== diary.id));
+              }
+            } catch (error) {
+              console.error('Failed to delete diary:', error);
+              Alert.alert('删除失败', '无法删除日记，请稍后重试。');
+            }
+          },
+        },
+      ]
+    );
   };
 
   const renderDiaryCard = ({ item }: { item: DisplayDiary }) => (
@@ -274,8 +348,11 @@ export function DiaryScreen({ onGoBack, onNavigate, isLoggedIn, onRequireLogin }
           <Icon name="message-circle" size={14} color={colors['text-light']} />
           <Text style={styles.statText}>{item.comments}</Text>
         </View>
-        <TouchableOpacity style={styles.shareButton}>
+        <TouchableOpacity style={styles.shareButton} onLongPress={() => handleDeleteDiary(item)}>
           <Icon name="share" size={14} color={colors['text-secondary']} />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.deleteButton} onPress={() => handleDeleteDiary(item)}>
+          <Icon name="trash" size={14} color={colors.error} />
         </TouchableOpacity>
       </View>
     </Pressable>
@@ -294,36 +371,56 @@ export function DiaryScreen({ onGoBack, onNavigate, isLoggedIn, onRequireLogin }
         <Text style={styles.plantName}>{item.name}</Text>
         <Text style={styles.plantHint}>点击查看生长曲线</Text>
       </View>
+      <TouchableOpacity style={styles.plantDeleteButton} onPress={() => handleDeletePlant(item)}>
+        <Icon name="trash" size={18} color={colors.error} />
+      </TouchableOpacity>
       <Icon name="chevron-right" size={20} color={colors['text-light']} />
     </Pressable>
   );
 
-  const renderHeader = () => (
-    <View style={styles.header}>
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={onGoBack}
-        hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-      >
-        <Icon name="arrow-left" size={24} color={colors.text} />
-      </TouchableOpacity>
-      <View style={styles.headerCenter}>
-        <Text style={styles.headerTitle}>
-          {selectedTab === 0 ? '养花日记' : '生长记录'}
-        </Text>
-        <Text style={styles.headerSubtitle}>
-          {selectedTab === 0 ? '记录植物的成长点滴' : '查看植物生长趋势'}
-        </Text>
+  const renderHeader = () => {
+    // 获取当前选中的植物名称
+    const getCurrentPlantName = () => {
+      if (selectedTab === 0 && selectedPlantFilter !== null) {
+        const plant = plants.find(p => p.id === selectedPlantFilter);
+        return plant?.name || plant?.nickname || '该植物';
+      }
+      return null;
+    };
+
+    const currentPlantName = getCurrentPlantName();
+
+    return (
+      <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={onGoBack}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+        >
+          <Icon name="arrow-left" size={24} color={colors.text} />
+        </TouchableOpacity>
+        <View style={styles.headerCenter}>
+          <Text style={styles.headerTitle}>
+            {selectedTab === 0
+              ? currentPlantName || '养花日记'
+              : '生长记录'}
+          </Text>
+          <Text style={styles.headerSubtitle}>
+            {selectedTab === 0
+              ? currentPlantName ? `记录${currentPlantName}的成长` : '记录植物的成长点滴'
+              : '查看植物生长趋势'}
+          </Text>
+        </View>
+        <View style={styles.headerRight}>
+          {selectedTab === 0 && (
+            <TouchableOpacity style={styles.writeButton} onPress={handleWriteDiary}>
+              <Icon name="plus" size={18} color={colors.white} />
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
-      <View style={styles.headerRight}>
-        {selectedTab === 0 && (
-          <TouchableOpacity style={styles.writeButton} onPress={handleWriteDiary}>
-            <Icon name="plus" size={18} color={colors.white} />
-          </TouchableOpacity>
-        )}
-      </View>
-    </View>
-  );
+    );
+  };
 
   const renderTabs = () => (
     <View style={styles.tabsContainer}>
@@ -388,10 +485,41 @@ export function DiaryScreen({ onGoBack, onNavigate, isLoggedIn, onRequireLogin }
 
   // Tab 0: 我的日记
   if (selectedTab === 0) {
+    // 渲染植物过滤标签
+    const renderPlantFilter = () => {
+      if (plants.length === 0) return null;
+      return (
+        <View style={styles.plantFilterContainer}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.plantFilterScroll}>
+            <TouchableOpacity
+              style={[styles.plantFilterChip, selectedPlantFilter === null && styles.plantFilterChipActive]}
+              onPress={() => handlePlantFilterChange(null)}
+            >
+              <Text style={[styles.plantFilterText, selectedPlantFilter === null && styles.plantFilterTextActive]}>
+                全部
+              </Text>
+            </TouchableOpacity>
+            {plants.map((plant) => (
+              <TouchableOpacity
+                key={plant.id}
+                style={[styles.plantFilterChip, selectedPlantFilter === plant.id && styles.plantFilterChipActive]}
+                onPress={() => handlePlantFilterChange(plant.id)}
+              >
+                <Text style={[styles.plantFilterText, selectedPlantFilter === plant.id && styles.plantFilterTextActive]}>
+                  {plant.name || plant.nickname || '植物'}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      );
+    };
+
     return (
       <SafeAreaView style={styles.container}>
         {renderHeader()}
         {renderTabs()}
+        {renderPlantFilter()}
         <FlatList
           data={diaries}
           renderItem={renderDiaryCard}
@@ -541,6 +669,39 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
   },
 
+  // Plant Filter
+  plantFilterContainer: {
+    backgroundColor: colors.white,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  plantFilterScroll: {
+    paddingRight: spacing.md,
+  },
+  plantFilterChip: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.background,
+    marginRight: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  plantFilterChipActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  plantFilterText: {
+    fontSize: 13,
+    color: colors['text-secondary'],
+  },
+  plantFilterTextActive: {
+    color: colors.white,
+    fontWeight: '600' as const,
+  },
+
   // List
   list: {
     padding: spacing.md,
@@ -674,6 +835,10 @@ const styles = StyleSheet.create({
     marginLeft: 'auto',
     padding: spacing.xs,
   },
+  deleteButton: {
+    padding: spacing.xs,
+    marginLeft: spacing.sm,
+  },
 
   // Plant Card
   plantCard: {
@@ -711,6 +876,10 @@ const styles = StyleSheet.create({
   plantHint: {
     fontSize: 13,
     color: colors['text-tertiary'],
+  },
+  plantDeleteButton: {
+    padding: spacing.xs,
+    marginRight: spacing.xs,
   },
 
   // FAB

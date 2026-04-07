@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
 import json
+import os
 from app.core.database import get_db
 from app.core.security import get_current_user
 from app.models.user import User
@@ -13,6 +14,11 @@ from app.schemas.diagnosis import (
 from app.services.diagnosis import diagnosis_service
 
 router = APIRouter(prefix="/api/diagnoses", tags=["diagnoses"])
+
+# 图片存储路径配置（与 diagnosis.py 保持一致）
+IMAGE_STORAGE_PATH = os.getenv("IMAGE_STORAGE_PATH", "/var/www/uploads")
+if not os.path.exists(IMAGE_STORAGE_PATH):
+    IMAGE_STORAGE_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), "uploads")
 
 
 @router.get("", response_model=DiagnosisRecordListResponse)
@@ -166,7 +172,7 @@ def delete_diagnosis(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """删除诊断记录"""
+    """删除诊断记录（同时删除关联的图片）"""
     record = db.query(DiagnosisRecord).filter(
         DiagnosisRecord.id == diagnosis_id,
         DiagnosisRecord.user_id == current_user.id
@@ -174,6 +180,20 @@ def delete_diagnosis(
 
     if not record:
         raise HTTPException(status_code=404, detail="Diagnosis record not found")
+
+    # 删除关联的图片文件
+    if record.image_url:
+        try:
+            # 从 URL 解析文件路径，格式如：/api/diagnosis/images/{user_id}/{filename}
+            if record.image_url.startswith("/api/diagnosis/images/"):
+                relative_path = record.image_url.replace("/api/diagnosis/images/", "")
+                file_path = os.path.join(IMAGE_STORAGE_PATH, relative_path)
+
+                if os.path.exists(file_path):
+                    os.unlink(file_path)
+                    print(f"[DeleteDiagnosis] 图片已删除: {file_path}")
+        except Exception as e:
+            print(f"[DeleteDiagnosis] 删除图片失败: {e}")
 
     db.delete(record)
     db.commit()
