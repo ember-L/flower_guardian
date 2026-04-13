@@ -1,7 +1,16 @@
 # Flower Guardian Backend Dockerfile
-FROM python:3.11-slim
+FROM swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/python:3.11-slim
+ #python:3.11-slim
 
 WORKDIR /app
+
+RUN rm -f /etc/apt/sources.list.d/debian.sources \
+    && echo "deb http://mirrors.aliyun.com/debian/ bookworm main contrib non-free non-free-firmware" \
+    > /etc/apt/sources.list \
+    && echo "deb http://mirrors.aliyun.com/debian/ bookworm-updates main contrib non-free non-free-firmware" \
+    >> /etc/apt/sources.list \
+    && echo "deb http://mirrors.aliyun.com/debian-security/ bookworm-security main contrib non-free non-free-firmware" \
+    >> /etc/apt/sources.list
 
 # 安装系统依赖
 RUN apt-get update && apt-get install -y \
@@ -16,9 +25,10 @@ RUN apt-get update && apt-get install -y \
 # 复制依赖文件
 COPY requirements.txt .
 
-# 安装Python依赖
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --upgrade pip  -i https://pypi.tuna.tsinghua.edu.cn/simple
 
+# 安装Python依赖
+RUN pip install --no-cache-dir -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple --root-user-action=ignore
 # 复制应用代码（排除 .git, __pycache__, venv 等）
 COPY . .
 
@@ -29,8 +39,6 @@ RUN mkdir -p /var/www/uploads && chmod 755 /var/www/uploads
 EXPOSE 8000
 
 # 健康检查
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8000/docs || exit 1
 
 # 启动命令
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

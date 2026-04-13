@@ -88,7 +88,7 @@ def get_overview(
 def get_trend(
     start_date: Optional[str] = None,
     end_date: Optional[str] = None,
-    group_by: str = Query("day", regex="^(day|week|month)$"),
+    group_by: str = Query("day", pattern="^(day|week|month)$"),
     db: Session = Depends(get_db),
     admin: User = Depends(get_current_admin_user)
 ):

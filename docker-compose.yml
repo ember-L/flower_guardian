@@ -3,7 +3,7 @@
 services:
   # PostgreSQL 数据库
   postgres:
-    image: swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/postgres:15-alpine-linuxarm64
+    image: swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/postgres:15-alpine #postgres:15-alpine
     container_name: flower_guardian_db
     environment:
       POSTGRES_USER: flower_user
@@ -27,8 +27,9 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: flower_guardian_backend
+    mem_limit: 2g
     environment:
-      DATABASE_URL: postgresql://flower_user:flower_password@postgres:5555/flower_guardian
+      DATABASE_URL: postgresql://flower_user:flower_password@postgres:5432/flower_guardian
       SECRET_KEY: ${SECRET_KEY:-your-secret-key-change-in-production}
       ALGORITHM: HS256
       ACCESS_TOKEN_EXPIRE_MINUTES: 10080  # 7天
@@ -48,23 +49,23 @@ services:
       - flower_network
     command: >
       sh -c "
-        mkdir -p /var/www/uploads &&
+        mkdir -p /var/www/uploads static &&
         python -m app.db.seed &&
         uvicorn app.main:app --host 0.0.0.0 --port 8000
       "
 
   # React Native Web 前端 (Nginx生产部署)
-  frontend:
-    build:
-      context: .
-      dockerfile: frontend/Dockerfile
-    container_name: flower_guardian_frontend
-    ports:
-      - "80:80"
-    depends_on:
-      - backend
-    networks:
-      - flower_network
+  #  frontend:
+  # build:
+  #   context: .
+  #   dockerfile: frontend/Dockerfile
+  # container_name: flower_guardian_frontend
+  # ports:
+  #- "80:80"
+        # depends_on:
+        # - backend
+        # networks:
+        #- flower_network
 
 volumes:
   postgres_data:

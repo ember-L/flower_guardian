@@ -135,13 +135,13 @@ export function DiagnosisHistoryScreen({ onGoBack, onNavigate, isLoggedIn, onReq
     }
     setLoading(true);
     try {
-      console.log('[DiagnosisHistory] Loading records, filter:', filter);
+      // console.log('[DiagnosisHistory] Loading records, filter:', filter);
       const favoriteParam = filter === 'favorite' ? true : undefined;
       const data = await getDiagnoses(favoriteParam);
-      console.log('[DiagnosisHistory] Loaded records:', data.items.length);
+      // console.log('[DiagnosisHistory] Loaded records:', data.items.length);
       setRecords(data.items);
     } catch (error: any) {
-      console.error('[DiagnosisHistory] Failed to load diagnoses:', error);
+      // console.error('[DiagnosisHistory] Failed to load diagnoses:', error);
       // 401 未授权，跳转到登录页面
       if (error?.response?.status === 401 && onRequireLogin) {
         onRequireLogin();
