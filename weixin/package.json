@@ -1,0 +1,55 @@
+{
+  "name": "flower-guardian-weixin",
+  "version": "1.0.0",
+  "private": true,
+  "description": "护花使者 - 微信小程序端",
+  "templateInfo": {
+    "name": "default",
+    "typescript": true,
+    "css": "sass"
+  },
+  "scripts": {
+    "build:weapp": "taro build --type weapp",
+    "dev:weapp": "npm run build:weapp -- --watch"
+  },
+  "browserslist": [
+    "last 3 versions",
+    "Android >= 4.1",
+    "ios >= 8"
+  ],
+  "dependencies": {
+    "@tarojs/components": "4.0.9",
+    "@tarojs/helper": "4.0.9",
+    "@tarojs/plugin-framework-react": "4.0.9",
+    "@tarojs/plugin-html": "4.0.9",
+    "@tarojs/plugin-platform-weapp": "4.0.9",
+    "@tarojs/react": "4.0.9",
+    "@tarojs/router": "4.0.9",
+    "@tarojs/runtime": "4.0.9",
+    "@tarojs/shared": "4.0.9",
+    "@tarojs/taro": "4.0.9",
+    "axios": "^1.7.9",
+    "lucide-react": "^0.474.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.8.0",
+    "@babel/plugin-proposal-class-properties": "^7.18.0",
+    "@babel/plugin-proposal-decorators": "^7.21.0",
+    "@babel/plugin-proposal-object-rest-spread": "^7.20.0",
+    "@babel/plugin-proposal-optional-chaining": "^7.21.0",
+    "@babel/plugin-transform-runtime": "^7.21.0",
+    "@babel/preset-env": "^7.21.0",
+    "@babel/preset-react": "^7.18.0",
+    "@babel/preset-typescript": "^7.21.0",
+    "@babel/runtime": "^7.21.0",
+    "@tarojs/cli": "4.0.9",
+    "@tarojs/webpack5-runner": "4.0.9",
+    "@types/react": "^18.0.0",
+    "babel-preset-taro": "4.0.9",
+    "sass": "^1.80.0",
+    "typescript": "^5.1.0",
+    "webpack": "^5.78.0"
+  }
+}

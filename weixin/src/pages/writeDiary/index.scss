@@ -1,0 +1,494 @@
+/* WriteDiary - 匹配RN WriteDiaryScreen样式 */
+.write-diary {
+  min-height: 100vh;
+  background: #fafafa;
+}
+
+.loading-container {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.loading-text {
+  font-size: 28px;
+  color: #999999;
+}
+
+/* 头部 - 渐变设计 */
+.header-gradient {
+  background: #f46;
+  border-bottom-left-radius: 56px;
+  border-bottom-right-radius: 56px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(244, 68, 102, 0.2);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 20px 16px;
+}
+
+.close-btn {
+  width: 72px;
+  height: 72px;
+  border-radius: 36px;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-icon {
+  font-size: 36px;
+  color: #ffffff;
+  font-weight: bold;
+}
+
+.header-center {
+  display: flex;
+  align-items: center;
+}
+
+.header-icon-badge {
+  width: 56px;
+  height: 56px;
+  border-radius: 28px;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.header-icon-text {
+  font-size: 28px;
+  color: #f46;
+}
+
+.header-title {
+  font-size: 40px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.save-btn {
+  background: #ffffff;
+  border-radius: 9999px;
+  padding: 16px 20px;
+  min-width: 128px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.save-btn-text {
+  color: #f46;
+  font-weight: 700;
+  font-size: 26px;
+}
+
+/* 内容区 */
+.content {
+  height: calc(100vh - 120px);
+}
+
+.content {
+  padding: 0 20px;
+  padding-top: 40px;
+}
+
+.section {
+  margin-bottom: 48px;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.section-icon-box {
+  width: 56px;
+  height: 56px;
+  border-radius: 28px;
+  background: #f46;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+  &.accent {
+    background: #faad14;
+  }
+
+  &.secondary {
+    background: #52c41a;
+  }
+
+  &.dark {
+    background: #e6335c;
+  }
+}
+
+.section-icon-text {
+  font-size: 24px;
+  color: #ffffff;
+}
+
+.section-title {
+  font-size: 34px;
+  font-weight: 600;
+  color: #333333;
+  margin-left: 16px;
+}
+
+.optional-tag {
+  font-size: 22px;
+  color: #999999;
+  margin-left: 16px;
+}
+
+.image-count {
+  font-size: 22px;
+  color: #999999;
+  margin-left: auto;
+}
+
+/* 植物选择 */
+.empty-card {
+  display: flex;
+  align-items: center;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 20px;
+  border: 3px solid #eeeeee;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.empty-icon-wrap {
+  width: 96px;
+  height: 96px;
+  border-radius: 16px;
+  background: rgba(255, 240, 243, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.empty-icon {
+  font-size: 40px;
+  color: #f46;
+  font-weight: bold;
+}
+
+.empty-content {
+  flex: 1;
+  margin-left: 16px;
+}
+
+.empty-title {
+  font-size: 30px;
+  font-weight: 600;
+  color: #333333;
+}
+
+.empty-desc {
+  font-size: 26px;
+  color: #999999;
+  margin-top: 4px;
+}
+
+.chevron-right {
+  font-size: 36px;
+  color: #999999;
+}
+
+.plant-scroll {
+  width: 100%;
+  white-space: nowrap;
+}
+
+.plant-chips {
+  display: inline-flex;
+  gap: 16px;
+  padding-right: 20px;
+}
+
+.plant-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 16px 20px;
+  border-radius: 9999px;
+  background: #ffffff;
+  border: 2px solid #eeeeee;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+
+  &.active {
+    background: #f46;
+    border-color: #f46;
+  }
+}
+
+.plant-chip-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 22px;
+  background: rgba(123, 201, 138, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 8px;
+
+  &.active {
+    background: rgba(255, 255, 255, 0.25);
+  }
+}
+
+.chip-leaf {
+  font-size: 20px;
+  color: #52c41a;
+
+  .active & {
+    color: #ffffff;
+  }
+}
+
+.plant-chip-text {
+  font-size: 26px;
+  color: #333333;
+
+  &.active {
+    color: #ffffff;
+    font-weight: 500;
+  }
+}
+
+/* 图片网格 */
+.image-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+}
+
+.image-wrapper {
+  width: calc((100% - 48px) / 3);
+  aspect-ratio: 1;
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.image {
+  width: 100%;
+  height: 100%;
+}
+
+.remove-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 48px;
+  height: 48px;
+  border-radius: 24px;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.remove-icon {
+  font-size: 24px;
+  color: #ffffff;
+  font-weight: bold;
+}
+
+.add-btn {
+  width: calc((100% - 48px) / 3);
+  aspect-ratio: 1;
+  border-radius: 16px;
+  border: 4px dashed #f46;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+}
+
+.add-icon-wrap {
+  width: 104px;
+  height: 104px;
+  border-radius: 52px;
+  background: rgba(255, 240, 243, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.add-icon {
+  font-size: 48px;
+  color: #f46;
+}
+
+.add-text {
+  font-size: 26px;
+  color: #f46;
+  font-weight: 500;
+}
+
+/* 生长数据 */
+.growth-row {
+  display: flex;
+  gap: 16px;
+}
+
+.growth-card {
+  flex: 1;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 16px;
+  border: 2px solid #eeeeee;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.growth-label-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.growth-icon-box {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 8px;
+
+  &.accent-light {
+    background: #ffe58f;
+  }
+
+  &.secondary-light {
+    background: rgba(123, 201, 138, 0.3);
+  }
+}
+
+.growth-icon-text {
+  font-size: 24px;
+  color: #faad14;
+
+  .secondary-light & {
+    color: #52c41a;
+  }
+}
+
+.growth-label {
+  font-size: 26px;
+  color: #666666;
+  font-weight: 500;
+}
+
+.input-row {
+  display: flex;
+  align-items: center;
+}
+
+.growth-input {
+  flex: 1;
+  font-size: 48px;
+  font-weight: 700;
+  color: #333333;
+}
+
+.growth-placeholder {
+  color: #999999;
+}
+
+.growth-unit {
+  font-size: 26px;
+  color: #999999;
+  margin-left: 8px;
+}
+
+/* 文字内容 */
+.text-area-wrap {
+  background: #ffffff;
+  border-radius: 16px;
+  border: 2px solid #eeeeee;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.text-area {
+  padding: 20px;
+  font-size: 30px;
+  min-height: 300px;
+  color: #333333;
+  line-height: 48px;
+}
+
+.text-placeholder {
+  color: #999999;
+}
+
+.char-count-wrap {
+  border-top: 2px solid #eeeeee;
+  padding: 8px 20px;
+  background: #fafafa;
+}
+
+.char-count-left {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.char-count {
+  font-size: 22px;
+  color: #999999;
+  margin-left: 8px;
+}
+
+/* 底部装饰 */
+.decoration {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 64px;
+  margin-bottom: 20px;
+}
+
+.decoration-line {
+  height: 2px;
+  width: 80px;
+  background: #eeeeee;
+  margin: 0 20px;
+}
+
+.decoration-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 32px;
+  background: rgba(255, 240, 243, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.decoration-icon-text {
+  font-size: 28px;
+  color: #f46;
+}
+
+.bottom-spacer {
+  height: 64px;
+}

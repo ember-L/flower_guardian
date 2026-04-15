@@ -10,6 +10,9 @@ frontend/coverage/
 frontend/.metro-health-check*
 frontend/yarn-error.log
 dataset/*
+uniapp/node_modules/*
+weixin/node_modules
+weixin/.swc/*
 # iOS
 frontend/ios/build/
 frontend/ios/*.xcuserstate

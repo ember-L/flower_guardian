@@ -1,0 +1,360 @@
+/* PlantDetail - 匹配RN PlantDetailScreen样式 */
+.plant-detail {
+  min-height: 100vh;
+  background: #fafafa;
+}
+
+.page-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: #fafafa;
+}
+
+.loading-text {
+  font-size: 32px;
+  color: #666666;
+}
+
+/* 头部 */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid #eeeeee;
+  background: #ffffff;
+}
+
+.header-back {
+  padding: 4px;
+}
+
+.icon-back {
+  font-size: 36px;
+  color: #333333;
+  font-weight: bold;
+}
+
+.header-title {
+  font-size: 36px;
+  font-weight: bold;
+  color: #333333;
+  flex: 1;
+  text-align: center;
+}
+
+.header-delete {
+  padding: 4px;
+}
+
+.icon-delete {
+  font-size: 32px;
+  color: #ff4d4f;
+  font-weight: bold;
+}
+
+.content {
+  height: calc(100vh - 68px);
+}
+
+/* 信息卡片 */
+.info-card {
+  margin: 20px;
+  background: #ffffff;
+  border-radius: 32px;
+  overflow: hidden;
+}
+
+.plant-image {
+  height: 360px;
+  background: #f46;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.plant-image-icon {
+  font-size: 120px;
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.info-row {
+  padding: 16px;
+}
+
+.plant-name {
+  font-size: 40px;
+  font-weight: bold;
+  color: #333333;
+}
+
+.plant-type {
+  font-size: 28px;
+  color: #666666;
+  margin-top: 4px;
+}
+
+/* 位置选择 */
+.location-section {
+  padding: 16px;
+  padding-top: 0;
+}
+
+.location-title {
+  font-size: 28px;
+  color: #666666;
+  margin-bottom: 8px;
+}
+
+.location-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.location-chip {
+  padding: 8px 16px;
+  border-radius: 32px;
+  background: #fafafa;
+
+  &.active {
+    background: #f46;
+  }
+}
+
+.location-chip-text {
+  font-size: 24px;
+  color: #666666;
+
+  &.active {
+    color: #ffffff;
+  }
+}
+
+/* Tab 切换 */
+.tabs {
+  display: flex;
+  margin: 0 20px 16px;
+}
+
+.tab {
+  flex: 1;
+  padding: 16px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 4px solid transparent;
+
+  &.active {
+    border-bottom-color: #f46;
+  }
+}
+
+.tab-text {
+  font-size: 28px;
+  color: #999999;
+
+  &.active {
+    color: #f46;
+    font-weight: 600;
+  }
+}
+
+/* Tab 内容 */
+.tab-content {
+  padding: 0 20px 64px;
+}
+
+.add-record-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px;
+  border: 2px solid #f46;
+  border-radius: 24px;
+  margin-bottom: 16px;
+}
+
+.add-record-icon {
+  font-size: 32px;
+  color: #f46;
+  font-weight: bold;
+}
+
+.add-record-text {
+  color: #f46;
+  font-weight: 500;
+  font-size: 28px;
+}
+
+.empty-text {
+  text-align: center;
+  color: #999999;
+  padding: 48px 0;
+  font-size: 28px;
+}
+
+/* 记录卡片 */
+.record-card {
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 16px;
+  margin-bottom: 8px;
+}
+
+.record-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.record-type {
+  font-size: 32px;
+  font-weight: 600;
+  color: #333333;
+}
+
+.record-date {
+  font-size: 24px;
+  color: #999999;
+}
+
+.record-notes {
+  font-size: 28px;
+  color: #666666;
+  margin-top: 4px;
+}
+
+/* 生长统计 */
+.growth-stats {
+  display: flex;
+  gap: 16px;
+}
+
+.growth-stat {
+  font-size: 28px;
+  color: #666666;
+}
+
+/* 健康状态徽章 */
+.status-badge {
+  padding: 4px 16px;
+  border-radius: 16px;
+}
+
+.status-badge-text {
+  font-size: 24px;
+  color: #ffffff;
+}
+
+/* 底部弹窗 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: #ffffff;
+  border-top-left-radius: 48px;
+  border-top-right-radius: 48px;
+  padding: 20px;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.modal-title {
+  font-size: 36px;
+  font-weight: bold;
+  color: #333333;
+}
+
+.modal-close {
+  padding: 8px;
+}
+
+.modal-close-text {
+  font-size: 36px;
+  color: #999999;
+}
+
+.input-label {
+  font-size: 28px;
+  color: #666666;
+  margin-bottom: 8px;
+  margin-top: 16px;
+}
+
+.form-input {
+  background: #fafafa;
+  border: 2px solid #eeeeee;
+  border-radius: 24px;
+  padding: 16px;
+  font-size: 28px;
+  color: #333333;
+  margin-bottom: 8px;
+}
+
+.type-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.type-chip {
+  padding: 16px;
+  border-radius: 40px;
+  background: #fafafa;
+
+  &.active {
+    background: #f46;
+  }
+}
+
+.type-chip-text {
+  font-size: 28px;
+  color: #666666;
+
+  &.active {
+    color: #ffffff;
+  }
+}
+
+.submit-btn {
+  background: #f46;
+  padding: 16px;
+  border-radius: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.submit-btn-text {
+  color: #ffffff;
+  font-size: 32px;
+  font-weight: 600;
+}
+
+.bottom-spacer {
+  height: 64px;
+}

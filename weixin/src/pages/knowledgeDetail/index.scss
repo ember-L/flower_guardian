@@ -1,0 +1,136 @@
+.container {
+  min-height: 100vh;
+  background: #fafafa;
+}
+
+.page-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: #fafafa;
+}
+
+.empty-icon {
+  font-size: 80rpx;
+  margin-bottom: 20rpx;
+}
+
+.empty-text {
+  font-size: 28rpx;
+  color: #666666;
+}
+
+.scroll-view {
+  flex: 1;
+  height: 100vh;
+}
+
+.content {
+  padding: 40rpx;
+}
+
+/* 分类标签 - 对应RN categoryBadge */
+.category-badge {
+  align-self: flex-start;
+  background: rgba(255, 107, 136, 0.12);
+  padding-left: 32rpx;
+  padding-right: 32rpx;
+  padding-top: 8rpx;
+  padding-bottom: 8rpx;
+  border-radius: 999rpx;
+  margin-bottom: 32rpx;
+}
+
+.category-text {
+  font-size: 26rpx;
+  color: #f46;
+  font-weight: 500;
+}
+
+/* 标题 - 对应RN title */
+.title {
+  font-size: 48rpx;
+  font-weight: 700;
+  color: #333333;
+  margin-bottom: 16rpx;
+}
+
+/* 摘要 - 对应RN summary */
+.summary {
+  font-size: 30rpx;
+  color: #666666;
+  line-height: 48rpx;
+}
+
+/* 分割线 - 对应RN divider */
+.divider {
+  height: 2rpx;
+  background: #eeeeee;
+  margin-top: 40rpx;
+  margin-bottom: 40rpx;
+}
+
+/* 文章内容 */
+.article-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+/* Markdown样式 - 对应RN markdownStyles */
+.h2 {
+  font-size: 34rpx;
+  font-weight: 700;
+  color: #333333;
+  margin-top: 32rpx;
+  margin-bottom: 16rpx;
+}
+
+.h3 {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #333333;
+  margin-top: 16rpx;
+  margin-bottom: 8rpx;
+}
+
+.body {
+  font-size: 30rpx;
+  color: #333333;
+  line-height: 52rpx;
+}
+
+.bullet-item {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  padding-left: 16rpx;
+}
+
+.bullet {
+  font-size: 30rpx;
+  color: #f46;
+  margin-right: 16rpx;
+  line-height: 52rpx;
+}
+
+.number-item {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  padding-left: 16rpx;
+}
+
+.number {
+  font-size: 30rpx;
+  color: #f46;
+  margin-right: 16rpx;
+  font-weight: 500;
+  line-height: 52rpx;
+}
+
+.spacer {
+  height: 16rpx;
+}

@@ -1,0 +1,288 @@
+// 主题常量
+$primary: #f46;
+$primary-light: #ff6b88;
+$background: #fafafa;
+$surface: #ffffff;
+$text: #333333;
+$text-secondary: #666666;
+$text-tertiary: #999999;
+$border: #eeeeee;
+$success: #52c41a;
+$error: #ff4d4f;
+$warning: #faad14;
+
+// 间距
+$xs: 8px;    // 4 * 2
+$sm: 16px;   // 8 * 2
+$md: 32px;   // 16 * 2
+$lg: 40px;   // 20 * 2
+$xl: 48px;   // 24 * 2
+
+.cart-page {
+  min-height: 100vh;
+  background: $background;
+  display: flex;
+  flex-direction: column;
+}
+
+.loading-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-text {
+  font-size: 28px;
+  color: $text-tertiary;
+}
+
+/* 头部渐变 - RN: backgroundColor: primary, borderBottomLeftRadius: 24, borderBottomRightRadius: 24 */
+.header-gradient {
+  background: $primary;
+  border-bottom-left-radius: 48px;  // 24 * 2
+  border-bottom-right-radius: 48px;  // 24 * 2
+  overflow: hidden;
+}
+
+/* RN: flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: spacing.lg, paddingTop: spacing.xl * 1.5, paddingBottom: spacing.lg */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: $lg $lg;
+  padding-top: calc($xl * 1.5);
+  padding-bottom: $lg;
+}
+
+/* RN: width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' */
+.back-btn {
+  width: 72px;   // 36 * 2
+  height: 72px;  // 36 * 2
+  border-radius: 36px;  // 18 * 2
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.back-icon {
+  font-size: 36px;
+  color: #fff;
+  font-weight: bold;
+}
+
+/* RN: fontSize: 24, fontWeight: 'bold', color: '#fff', flex: 1, textAlign: 'center', marginHorizontal: 36 */
+.header-title {
+  font-size: 48px;  // 24 * 2
+  font-weight: bold;
+  color: #fff;
+  flex: 1;
+  text-align: center;
+  margin: 0 72px;  // 36 * 2
+}
+
+/* RN: color: '#fff', fontSize: 14 */
+.clear-btn-text {
+  font-size: 28px;  // 14 * 2
+  color: #fff;
+}
+
+/* RN: width: 36 */
+.placeholder {
+  width: 72px;  // 36 * 2
+}
+
+/* RN: flex: 1, justifyContent: 'center', alignItems: 'center' */
+.empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* RN: fontSize: 16, color: text-tertiary */
+.empty-text {
+  font-size: 32px;  // 16 * 2
+  color: $text-tertiary;
+}
+
+/* RN: marginTop: spacing.md, paddingHorizontal: 24, paddingVertical: 12, backgroundColor: primary, borderRadius: 24 */
+.shop-btn {
+  margin-top: $md;
+  padding: 24px 48px;  // 12*2, 24*2
+  background: $primary;
+  border-radius: 48px;  // 24 * 2
+}
+
+/* RN: color: white, fontWeight: '600' */
+.shop-btn-text {
+  color: $surface;
+  font-weight: 600;
+  font-size: 28px;
+}
+
+/* 购物车列表区域 */
+.cart-scroll {
+  flex: 1;
+}
+
+/* RN: padding: spacing.md */
+.list-content {
+  padding: $md;
+}
+
+/* RN: flexDirection: 'row', backgroundColor: white, borderRadius: 12, padding: spacing.sm, marginBottom: spacing.sm, shadows.sm */
+.cart-item {
+  display: flex;
+  background: $surface;
+  border-radius: 24px;  // 12 * 2
+  padding: $sm;
+  margin-bottom: $sm;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+}
+
+/* RN: width: 80, height: 80, borderRadius: 8, backgroundColor: background */
+.product-image {
+  width: 160px;  // 80 * 2
+  height: 160px;  // 80 * 2
+  border-radius: 16px;  // 8 * 2
+  background: $background;
+  flex-shrink: 0;
+}
+
+/* RN: flex: 1, marginLeft: spacing.sm */
+.item-info {
+  flex: 1;
+  margin-left: $sm;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* RN: fontSize: 14, fontWeight: '600', color: text */
+.product-name {
+  font-size: 28px;  // 14 * 2
+  font-weight: 600;
+  color: $text;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* RN: fontSize: 14, color: primary, marginTop: 4 */
+.product-price {
+  font-size: 28px;  // 14 * 2
+  color: $primary;
+  margin-top: 8px;  // 4 * 2
+}
+
+/* RN: flexDirection: 'row', alignItems: 'center', marginTop: spacing.xs */
+.quantity-row {
+  display: flex;
+  align-items: center;
+  margin-top: $xs;
+}
+
+/* RN: width: 28, height: 28, borderRadius: 14, backgroundColor: background, justifyContent: 'center', alignItems: 'center' */
+.qty-btn {
+  width: 56px;   // 28 * 2
+  height: 56px;  // 28 * 2
+  border-radius: 28px;  // 14 * 2
+  background: $background;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* RN: fontSize: 16, fontWeight: 'bold', color: text */
+.qty-btn-text {
+  font-size: 32px;  // 16 * 2
+  font-weight: bold;
+  color: $text;
+}
+
+/* RN: marginHorizontal: 12, fontSize: 14 */
+.quantity {
+  margin: 0 24px;  // 12 * 2
+  font-size: 28px;  // 14 * 2
+}
+
+/* RN: alignItems: 'flex-end', justifyContent: 'space-between' */
+.item-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-left: $sm;
+}
+
+/* RN: fontSize: 16, fontWeight: 'bold', color: primary */
+.subtotal {
+  font-size: 32px;  // 16 * 2
+  font-weight: bold;
+  color: $primary;
+}
+
+/* RN: color: error, fontSize: 12 */
+.delete-btn-text {
+  color: $error;
+  font-size: 24px;  // 12 * 2
+}
+
+.bottom-spacer {
+  height: 200px;
+}
+
+/* 底部总价栏 - RN: backgroundColor: white, padding: spacing.md, borderTopWidth: 1, borderTopColor: background */
+.footer {
+  background: $surface;
+  padding: $md;
+  padding-bottom: calc(#{$md} + env(safe-area-inset-bottom));
+  border-top: 2px solid $background;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+}
+
+/* RN: flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm */
+.total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $sm;
+}
+
+/* RN: fontSize: 14, color: text-secondary */
+.total-label {
+  font-size: 28px;  // 14 * 2
+  color: $text-secondary;
+}
+
+/* RN: fontSize: 20, fontWeight: 'bold', color: primary */
+.total-amount {
+  font-size: 40px;  // 20 * 2
+  font-weight: bold;
+  color: $primary;
+}
+
+/* RN: backgroundColor: primary, paddingVertical: 14, borderRadius: 24, alignItems: 'center' */
+.checkout-btn {
+  background: $primary;
+  padding: 28px 0;  // 14 * 2
+  border-radius: 48px;  // 24 * 2
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* RN: color: white, fontSize: 16, fontWeight: '600' */
+.checkout-btn-text {
+  color: $surface;
+  font-size: 32px;  // 16 * 2
+  font-weight: 600;
+}

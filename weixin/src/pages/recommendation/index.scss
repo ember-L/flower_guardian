@@ -1,0 +1,464 @@
+.container {
+  min-height: 100vh;
+  background: #fafafa;
+}
+
+// 头部包装器
+.header-wrapper {
+  background: #ffffff;
+  border-bottom-left-radius: 48rpx;
+  border-bottom-right-radius: 48rpx;
+  box-shadow: 0 8rpx 32rpx rgba(255, 68, 102, 0.1);
+  z-index: 10;
+}
+
+.header {
+  padding-top: 40rpx;
+  padding-bottom: 64rpx;
+  padding-left: 40rpx;
+  padding-right: 40rpx;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  min-height: 280rpx;
+}
+
+.back-button {
+  position: absolute;
+  left: 32rpx;
+  top: 40rpx;
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 36rpx;
+  background: rgba(255, 68, 102, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.back-icon {
+  font-size: 32rpx;
+  color: #f46;
+  font-weight: bold;
+}
+
+.placeholder {
+  width: 72rpx;
+}
+
+.header-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.header-icon {
+  width: 128rpx;
+  height: 128rpx;
+  border-radius: 40rpx;
+  background: rgba(250, 173, 20, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16rpx;
+  box-shadow: 0 4rpx 16rpx rgba(250, 173, 20, 0.2);
+}
+
+.header-emoji {
+  font-size: 56rpx;
+}
+
+.header-title {
+  font-size: 44rpx;
+  font-weight: bold;
+  color: #333333;
+}
+
+.header-subtitle {
+  font-size: 28rpx;
+  color: #666666;
+  margin-top: 8rpx;
+}
+
+// 内容
+.content {
+  padding: 40rpx;
+}
+
+.scroll-view {
+  flex: 1;
+}
+
+// 进度
+.progress-container {
+  margin-bottom: 40rpx;
+}
+
+.progress-header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  margin-bottom: 16rpx;
+}
+
+.progress-label {
+  font-size: 28rpx;
+  color: #666666;
+}
+
+.progress-percent {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #f46;
+}
+
+.progress-bar {
+  height: 16rpx;
+  background: #eeeeee;
+  border-radius: 8rpx;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: #f46;
+  border-radius: 8rpx;
+  transition: width 0.3s ease;
+}
+
+// 问题卡片
+.question-card {
+  background: #ffffff;
+  border-radius: 40rpx;
+  padding: 40rpx;
+  box-shadow: 0 4rpx 24rpx rgba(0, 0, 0, 0.04);
+  border: 2rpx solid #eeeeee;
+}
+
+.question-icon {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 28rpx;
+  background: rgba(255, 68, 102, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  margin-bottom: 32rpx;
+}
+
+.question-emoji {
+  font-size: 40rpx;
+}
+
+.question-text {
+  font-size: 40rpx;
+  font-weight: 600;
+  color: #333333;
+  text-align: center;
+  margin-bottom: 40rpx;
+}
+
+.options-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.option-button {
+  width: 100%;
+  padding: 32rpx;
+  border-width: 3rpx;
+  border-style: solid;
+  border-color: #eeeeee;
+  border-radius: 28rpx;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 16rpx;
+  background: #ffffff;
+}
+
+.option-button-selected {
+  border-color: #f46;
+  background: #f46;
+}
+
+.option-icon {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 16rpx;
+  background: rgba(255, 68, 102, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.option-icon-selected {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.option-emoji {
+  font-size: 32rpx;
+}
+
+.option-text {
+  font-size: 32rpx;
+  font-weight: 500;
+  color: #333333;
+  flex: 1;
+}
+
+.option-text-selected {
+  color: #ffffff;
+}
+
+.option-check {
+  font-size: 32rpx;
+}
+
+// 继续按钮
+.continue-button {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 16rpx;
+  background: #f46;
+  padding: 32rpx 0;
+  border-radius: 28rpx;
+  margin-top: 40rpx;
+  box-shadow: 0 8rpx 24rpx rgba(255, 68, 102, 0.3);
+}
+
+.continue-button-disabled {
+  background: #eeeeee;
+  box-shadow: none;
+}
+
+.continue-button-text {
+  color: #ffffff;
+  font-size: 32rpx;
+  font-weight: 600;
+}
+
+.continue-arrow {
+  color: #ffffff;
+  font-size: 36rpx;
+}
+
+// 结果
+.result-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 48rpx;
+}
+
+.result-icon {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 48rpx;
+  background: rgba(82, 196, 26, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 32rpx;
+  box-shadow: 0 8rpx 24rpx rgba(82, 196, 26, 0.2);
+}
+
+.result-emoji {
+  font-size: 64rpx;
+}
+
+.result-title {
+  font-size: 48rpx;
+  font-weight: bold;
+  color: #333333;
+}
+
+.result-subtitle {
+  font-size: 28rpx;
+  color: #666666;
+  margin-top: 8rpx;
+}
+
+// 推荐卡片
+.recommend-card {
+  background: #ffffff;
+  border-radius: 40rpx;
+  padding: 32rpx;
+  margin-bottom: 32rpx;
+  box-shadow: 0 4rpx 24rpx rgba(0, 0, 0, 0.04);
+  border: 2rpx solid #eeeeee;
+}
+
+.recommend-row {
+  display: flex;
+  flex-direction: row;
+}
+
+.recommend-icon {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 32rpx;
+  background: rgba(82, 196, 26, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.recommend-emoji {
+  font-size: 56rpx;
+}
+
+.recommend-info {
+  flex: 1;
+  margin-left: 16rpx;
+}
+
+.recommend-top {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.recommend-name {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #333333;
+}
+
+.survival-badge {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8rpx;
+  background: rgba(250, 173, 20, 0.08);
+  padding: 4rpx 16rpx;
+  border-radius: 20rpx;
+}
+
+.survival-star {
+  font-size: 20rpx;
+}
+
+.survival-text {
+  color: #faad14;
+  font-size: 24rpx;
+  font-weight: 600;
+}
+
+.recommend-reason {
+  font-size: 28rpx;
+  color: #666666;
+  margin-top: 8rpx;
+  line-height: 40rpx;
+}
+
+.feature-row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 16rpx;
+  margin-top: 16rpx;
+}
+
+.feature-tag {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8rpx;
+  background: rgba(82, 196, 26, 0.08);
+  padding: 8rpx 16rpx;
+  border-radius: 20rpx;
+}
+
+.feature-tag-danger {
+  background: rgba(255, 77, 79, 0.08);
+}
+
+.feature-check {
+  font-size: 20rpx;
+}
+
+.feature-text {
+  color: #52c41a;
+  font-size: 24rpx;
+}
+
+.feature-text-danger {
+  color: #ff4d4f;
+}
+
+.add-button {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+  background: #f46;
+  padding: 16rpx 0;
+  border-radius: 24rpx;
+  margin-top: 32rpx;
+}
+
+.add-icon {
+  color: #ffffff;
+  font-size: 32rpx;
+  font-weight: bold;
+}
+
+.add-button-text {
+  color: #ffffff;
+  font-size: 28rpx;
+  font-weight: 600;
+}
+
+// 空结果
+.empty-result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 64rpx 0;
+}
+
+.empty-emoji {
+  font-size: 80rpx;
+  margin-bottom: 32rpx;
+}
+
+.empty-text {
+  font-size: 32rpx;
+  color: #999999;
+}
+
+// 重新测试
+.restart-button {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 16rpx;
+  padding: 32rpx 0;
+  border-width: 3rpx;
+  border-style: solid;
+  border-color: #f46;
+  border-radius: 28rpx;
+  margin-top: 32rpx;
+  margin-bottom: 128rpx;
+}
+
+.restart-icon {
+  font-size: 32rpx;
+}
+
+.restart-button-text {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #f46;
+}

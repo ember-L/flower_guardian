@@ -1,0 +1,173 @@
+// 主题常量
+$primary: #f46;
+$primary-light: #ff6b88;
+$background: #fafafa;
+$surface: #ffffff;
+$text: #333333;
+$text-secondary: #666666;
+$text-tertiary: #999999;
+$border: #eeeeee;
+$success: #52c41a;
+$error: #ff4d4f;
+$warning: #faad14;
+
+// 间距
+$xs: 8px;    // 4 * 2
+$sm: 16px;   // 8 * 2
+$md: 32px;   // 16 * 2
+$lg: 40px;   // 20 * 2
+$xl: 48px;   // 24 * 2
+
+.orders-page {
+  min-height: 100vh;
+  background: $background;
+  display: flex;
+  flex-direction: column;
+}
+
+.loading-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-text {
+  font-size: 28px;
+  color: $text-tertiary;
+}
+
+/* 头部渐变 - RN: backgroundColor: primary, borderBottomLeftRadius: 24, borderBottomRightRadius: 24 */
+.header-gradient {
+  background: $primary;
+  border-bottom-left-radius: 48px;  // 24 * 2
+  border-bottom-right-radius: 48px;  // 24 * 2
+  overflow: hidden;
+}
+
+/* RN: flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: spacing.lg, paddingTop: spacing.xl * 1.5, paddingBottom: spacing.lg */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: $lg $lg;
+  padding-top: calc($xl * 1.5);
+  padding-bottom: $lg;
+}
+
+/* RN: width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' */
+.back-btn {
+  width: 72px;   // 36 * 2
+  height: 72px;  // 36 * 2
+  border-radius: 36px;  // 18 * 2
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.back-icon {
+  font-size: 36px;
+  color: #fff;
+  font-weight: bold;
+}
+
+/* RN: fontSize: 24, fontWeight: 'bold', color: '#fff', flex: 1, textAlign: 'center' */
+.header-title {
+  font-size: 48px;  // 24 * 2
+  font-weight: bold;
+  color: #fff;
+  flex: 1;
+  text-align: center;
+}
+
+/* RN: width: 36 */
+.placeholder {
+  width: 72px;  // 36 * 2
+}
+
+/* RN: flex: 1, justifyContent: 'center', alignItems: 'center' */
+.empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* RN: fontSize: 16, color: text-tertiary */
+.empty-text {
+  font-size: 32px;  // 16 * 2
+  color: $text-tertiary;
+}
+
+/* 订单列表滚动区域 */
+.orders-scroll {
+  flex: 1;
+}
+
+/* RN: padding: spacing.md */
+.list-content {
+  padding: $md;
+}
+
+/* RN: backgroundColor: white, borderRadius: 12, padding: spacing.md, marginBottom: spacing.md, shadows.sm */
+.order-card {
+  background: $surface;
+  border-radius: 24px;  // 12 * 2
+  padding: $md;
+  margin-bottom: $md;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+}
+
+/* RN: flexDirection: 'row', justifyContent: 'space-between', marginBottom: spacing.sm */
+.order-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: $sm;
+}
+
+/* RN: fontSize: 14, fontFamily: 'monospace', color: text-secondary */
+.order-no {
+  font-size: 28px;  // 14 * 2
+  font-family: monospace;
+  color: $text-secondary;
+}
+
+/* RN: fontSize: 14, fontWeight: '600' */
+.status {
+  font-size: 28px;  // 14 * 2
+  font-weight: 600;
+}
+
+/* RN: marginBottom: spacing.sm */
+.order-items {
+  margin-bottom: $sm;
+}
+
+/* RN: fontSize: 14, color: text */
+.item-text {
+  font-size: 28px;  // 14 * 2
+  color: $text;
+  display: block;
+  line-height: 1.6;
+}
+
+/* RN: flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' */
+.order-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* RN: fontSize: 16, fontWeight: 'bold', color: primary */
+.total-amount {
+  font-size: 32px;  // 16 * 2
+  font-weight: bold;
+  color: $primary;
+}
+
+/* RN: fontSize: 12, color: text-tertiary */
+.date {
+  font-size: 24px;  // 12 * 2
+  color: $text-tertiary;
+}

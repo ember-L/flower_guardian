@@ -1,0 +1,286 @@
+.page-container {
+  min-height: 100vh;
+  background: #fafafa;
+}
+
+.scroll-view {
+  height: 100vh;
+}
+
+/* User Info Section */
+.user-info-section {
+  background: #f46;
+  padding: 0 40px;
+  padding-top: 60px;
+  padding-bottom: 60px;
+  border-bottom-left-radius: 24px;
+  border-bottom-right-radius: 24px;
+}
+
+.user-info-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.avatar-container {
+  position: relative;
+  margin-right: 32px;
+}
+
+.avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 40px;
+  border-width: 3px;
+  border-style: solid;
+  border-color: rgba(255, 255, 255, 0.4);
+  box-shadow: 0 4px 12px rgba(244, 68, 102, 0.4);
+}
+
+.avatar-placeholder {
+  width: 80px;
+  height: 80px;
+  border-radius: 40px;
+  background: rgba(255, 255, 255, 0.2);
+  border-width: 3px;
+  border-style: solid;
+  border-color: rgba(255, 255, 255, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(244, 68, 102, 0.4);
+}
+
+.avatar-text {
+  font-size: 40px;
+  color: #fff;
+}
+
+.level-badge {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background: #faad14;
+  padding: 2px 12px;
+  border-radius: 12px;
+  border-width: 2px;
+  border-style: solid;
+  border-color: #f46;
+}
+
+.level-badge-text {
+  font-size: 12px;
+  font-weight: bold;
+  color: #fff;
+}
+
+.user-text {
+  flex: 1;
+}
+
+.name-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.username {
+  font-size: 22px;
+  font-weight: bold;
+  color: #fff;
+}
+
+.edit-profile {
+  width: 32px;
+  height: 32px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 12px;
+}
+
+.edit-profile-text {
+  font-size: 16px;
+  color: #fff;
+}
+
+.level-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-top: 4px;
+  gap: 8px;
+}
+
+.level-name {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 500;
+}
+
+.points-text {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Login State */
+.login-hint {
+  font-size: 20px;
+  font-weight: bold;
+  color: #fff;
+}
+
+.login-subhint {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+  margin-top: 4px;
+}
+
+.login-arrow {
+  font-size: 24px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* Stats Card */
+.stats-card {
+  display: flex;
+  flex-direction: row;
+  background: #fff;
+  margin: -24px 40px 0;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 4px 20px rgba(244, 68, 102, 0.15);
+  position: relative;
+  z-index: 1;
+}
+
+.stat-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stat-value {
+  font-size: 20px;
+  font-weight: bold;
+  color: #f46;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: #666;
+  margin-top: 2px;
+}
+
+.stat-divider {
+  width: 2px;
+  background: #eee;
+}
+
+/* Menu Section */
+.menu-section {
+  padding: 0 40px;
+  margin-top: 24px;
+}
+
+.menu-list {
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+}
+
+.menu-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+  border-bottom-color: #fafafa;
+
+  &:last-child {
+    border-bottom-width: 0;
+  }
+}
+
+.menu-item-left {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+}
+
+.menu-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.menu-icon-text {
+  font-size: 18px;
+}
+
+.menu-label {
+  font-size: 15px;
+  color: #333;
+  font-weight: 500;
+}
+
+.menu-arrow {
+  font-size: 18px;
+  color: #ccc;
+}
+
+/* Logout */
+.logout-section {
+  padding: 0 40px;
+  margin-top: 16px;
+}
+
+.logout-button {
+  background: rgba(255, 77, 79, 0.1);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logout-button-text {
+  font-size: 16px;
+  color: #ff4d4f;
+  font-weight: 600;
+}
+
+/* Footer */
+.footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 0 64px;
+}
+
+.footer-text {
+  font-size: 13px;
+  color: #999;
+}
+
+.footer-subtext {
+  font-size: 12px;
+  color: #ccc;
+  margin-top: 4px;
+}

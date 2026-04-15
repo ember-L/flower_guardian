@@ -1,0 +1,256 @@
+.encyclopedia-detail {
+  min-height: 100vh;
+  background: #fafafa;
+}
+
+.page-loading, .page-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: #fafafa;
+}
+
+.loading-text {
+  font-size: 28px;
+  color: #999;
+}
+
+.empty-icon {
+  font-size: 80px;
+  margin-bottom: 20px;
+}
+
+.empty-text {
+  font-size: 28px;
+  color: #666;
+}
+
+.detail-scroll {
+  height: calc(100vh - 120px);
+}
+
+/* 顶部图片 */
+.hero-image-wrap {
+  position: relative;
+  width: 100%;
+  height: 500px;
+  overflow: hidden;
+}
+
+.hero-image {
+  width: 100%;
+  height: 100%;
+}
+
+.hero-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 200px;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.3));
+}
+
+/* 基本信息 */
+.info-card {
+  margin: -40px 24px 0;
+  padding: 32px;
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  position: relative;
+  z-index: 2;
+}
+
+.name-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.plant-name {
+  font-size: 40px;
+  font-weight: 700;
+  color: #333;
+}
+
+.category-badge {
+  padding: 6px 16px;
+  background: rgba(255, 68, 102, 0.1);
+  border-radius: 20px;
+}
+
+.category-text {
+  font-size: 22px;
+  color: #f46;
+  font-weight: 500;
+}
+
+.scientific-name {
+  font-size: 24px;
+  color: #999;
+  font-style: italic;
+  margin-bottom: 16px;
+  display: block;
+}
+
+.care-level-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.care-label {
+  font-size: 24px;
+  color: #666;
+  margin-right: 4px;
+}
+
+.stars {
+  display: flex;
+  gap: 4px;
+}
+
+.star {
+  font-size: 28px;
+  color: #ddd;
+
+  &.active {
+    color: #faad14;
+  }
+}
+
+.care-text {
+  font-size: 24px;
+  color: #f46;
+  font-weight: 600;
+  margin-left: 8px;
+}
+
+/* 养护参数 */
+.params-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin: 20px 24px 0;
+  padding: 24px;
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+}
+
+.param-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 0;
+  background: #fafafa;
+  border-radius: 16px;
+}
+
+.param-icon {
+  font-size: 36px;
+  margin-bottom: 8px;
+}
+
+.param-label {
+  font-size: 22px;
+  color: #999;
+  margin-bottom: 4px;
+}
+
+.param-value {
+  font-size: 24px;
+  color: #333;
+  font-weight: 600;
+}
+
+/* 内容卡片 */
+.section-card {
+  margin: 20px 24px 0;
+  padding: 28px;
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+}
+
+.section-title {
+  font-size: 30px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 16px;
+  display: block;
+}
+
+.section-content {
+  font-size: 26px;
+  color: #666;
+  line-height: 1.8;
+}
+
+/* 特点列表 */
+.features-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.feature-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f46, #ff6b9d);
+  flex-shrink: 0;
+}
+
+.feature-text {
+  font-size: 26px;
+  color: #666;
+  line-height: 1.6;
+}
+
+/* 底部 */
+.bottom-spacer {
+  height: 140px;
+}
+
+.bottom-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 16px 24px;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom));
+  background: #fff;
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.06);
+  z-index: 100;
+}
+
+.add-btn {
+  height: 88px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f46 0%, #ff6b9d 100%);
+  border-radius: 44px;
+  box-shadow: 0 4px 16px rgba(255, 68, 102, 0.4);
+
+  &.disabled {
+    opacity: 0.6;
+  }
+}
+
+.add-btn-text {
+  font-size: 32px;
+  font-weight: 600;
+  color: #fff;
+}

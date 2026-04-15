@@ -1,0 +1,174 @@
+.container {
+  min-height: 100vh;
+  background: #fafafa;
+}
+
+.header {
+  padding: 24rpx 40rpx;
+}
+
+.back-button {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 40rpx;
+  background: rgba(255, 68, 102, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.back-icon {
+  font-size: 36rpx;
+  color: #f46;
+  font-weight: bold;
+}
+
+.scroll-view {
+  flex: 1;
+  height: calc(100vh - 120rpx);
+}
+
+.content {
+  flex: 1;
+  padding: 0 40rpx;
+  padding-bottom: 60rpx;
+}
+
+.title-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 24rpx;
+  margin-bottom: 48rpx;
+}
+
+.icon-container {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 80rpx;
+  background: rgba(255, 68, 102, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 40rpx;
+}
+
+.icon-emoji {
+  font-size: 80rpx;
+}
+
+.title {
+  font-size: 56rpx;
+  font-weight: bold;
+  color: #333333;
+  margin-bottom: 8rpx;
+}
+
+.subtitle {
+  font-size: 32rpx;
+  color: #666666;
+  text-align: center;
+  padding: 0 40rpx;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 32rpx;
+}
+
+.input-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  background: #ffffff;
+  border-radius: 28rpx;
+  border: 2rpx solid #eeeeee;
+  overflow: hidden;
+  height: 100rpx;
+}
+
+.input-icon {
+  width: 100rpx;
+  height: 100rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 68, 102, 0.06);
+  flex-shrink: 0;
+}
+
+.icon-text {
+  font-size: 36rpx;
+}
+
+.input {
+  flex: 1;
+  height: 100rpx;
+  padding: 0 24rpx;
+  font-size: 32rpx;
+  color: #333333;
+}
+
+.input-placeholder {
+  color: #999999;
+  font-size: 32rpx;
+}
+
+.eye-button {
+  padding: 24rpx;
+  flex-shrink: 0;
+}
+
+.eye-icon {
+  font-size: 32rpx;
+}
+
+.resend-button {
+  padding: 0 32rpx;
+  flex-shrink: 0;
+}
+
+.resend-text {
+  color: #f46;
+  font-size: 28rpx;
+  font-weight: 600;
+}
+
+.resend-text-disabled {
+  color: #999999;
+}
+
+.submit-button {
+  background: #f46;
+  padding: 32rpx 0;
+  border-radius: 28rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 16rpx;
+  box-shadow: 0 8rpx 16rpx rgba(255, 68, 102, 0.3);
+}
+
+.submit-button-disabled {
+  background: #eeeeee;
+  box-shadow: none;
+}
+
+.submit-button-text {
+  color: #ffffff;
+  font-size: 34rpx;
+  font-weight: 600;
+}
+
+.back-step-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32rpx 0;
+}
+
+.back-step-text {
+  color: #f46;
+  font-size: 30rpx;
+}

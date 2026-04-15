@@ -1,0 +1,198 @@
+// 主题常量
+$primary: #f46;
+$primary-light: #ff6b88;
+$background: #fafafa;
+$surface: #ffffff;
+$text: #333333;
+$text-secondary: #666666;
+$text-tertiary: #999999;
+$border: #eeeeee;
+$success: #52c41a;
+$error: #ff4d4f;
+$warning: #faad14;
+
+// 间距
+$xs: 8px;    // 4 * 2
+$sm: 16px;   // 8 * 2
+$md: 32px;   // 16 * 2
+$lg: 40px;   // 20 * 2
+$xl: 48px;   // 24 * 2
+
+.order-detail {
+  min-height: 100vh;
+  background: $background;
+  display: flex;
+  flex-direction: column;
+}
+
+.loading-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-text {
+  font-size: 28px;
+  color: $text-tertiary;
+}
+
+.detail-scroll {
+  flex: 1;
+}
+
+/* RN: padding: spacing.md, backgroundColor: white */
+.header {
+  padding: $md;
+  background: $surface;
+}
+
+/* RN: fontSize: 16, fontFamily: 'monospace', color: text */
+.order-no {
+  font-size: 32px;  // 16 * 2
+  font-family: monospace;
+  color: $text;
+}
+
+/* RN: alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12, marginTop: spacing.xs */
+.status-badge {
+  align-self: flex-start;
+  padding: 8px 24px;  // 4*2, 12*2
+  border-radius: 24px;  // 12 * 2
+  margin-top: $xs;
+}
+
+/* RN: fontSize: 14, fontWeight: '600' */
+.status-text {
+  font-size: 28px;  // 14 * 2
+  font-weight: 600;
+}
+
+/* RN: backgroundColor: white, marginTop: spacing.sm, padding: spacing.md */
+.section {
+  background: $surface;
+  margin-top: $sm;
+  padding: $md;
+}
+
+/* RN: fontSize: 16, fontWeight: '600', color: text, marginBottom: spacing.sm */
+.section-title {
+  font-size: 32px;  // 16 * 2
+  font-weight: 600;
+  color: $text;
+  margin-bottom: $sm;
+}
+
+/* RN: flexDirection: 'row', paddingVertical: spacing.xs */
+.item-row {
+  display: flex;
+  padding: $xs 0;
+  align-items: center;
+}
+
+/* RN: flex: 1, fontSize: 14, color: text */
+.item-name {
+  flex: 1;
+  font-size: 28px;  // 14 * 2
+  color: $text;
+}
+
+/* RN: fontSize: 14, color: text-secondary, marginRight: spacing.md */
+.item-qty {
+  font-size: 28px;  // 14 * 2
+  color: $text-secondary;
+  margin-right: $md;
+}
+
+/* RN: fontSize: 14, fontWeight: '600' */
+.item-price {
+  font-size: 28px;  // 14 * 2
+  font-weight: 600;
+}
+
+/* RN: flexDirection: 'row', justifyContent: 'space-between', marginTop: spacing.sm, paddingTop: spacing.sm, borderTopWidth: 1, borderTopColor: background */
+.total-row {
+  display: flex;
+  justify-content: space-between;
+  margin-top: $sm;
+  padding-top: $sm;
+  border-top: 2px solid $background;
+}
+
+/* RN: fontSize: 16, fontWeight: '600' */
+.total-label {
+  font-size: 32px;  // 16 * 2
+  font-weight: 600;
+}
+
+/* RN: fontSize: 18, fontWeight: 'bold', color: primary */
+.total-amount {
+  font-size: 36px;  // 18 * 2
+  font-weight: bold;
+  color: $primary;
+}
+
+/* RN: fontSize: 14, color: text-secondary, marginBottom: 4 */
+.info-text {
+  font-size: 28px;  // 14 * 2
+  color: $text-secondary;
+  margin-bottom: 8px;  // 4 * 2
+  display: block;
+}
+
+.bottom-spacer {
+  height: 160px;
+}
+
+/* RN: flexDirection: 'row', padding: spacing.md, backgroundColor: white, borderTopWidth: 1, borderTopColor: background */
+.footer {
+  display: flex;
+  padding: $md;
+  padding-bottom: calc(#{$md} + env(safe-area-inset-bottom));
+  background: $surface;
+  border-top: 2px solid $background;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+}
+
+/* RN: flex: 1, paddingVertical: 12, borderRadius: 24, borderWidth: 1, borderColor: error, marginRight: spacing.sm */
+.cancel-btn {
+  flex: 1;
+  padding: 24px 0;  // 12 * 2
+  border-radius: 48px;  // 24 * 2
+  border: 2px solid $error;
+  margin-right: $sm;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* RN: color: error, textAlign: 'center', fontWeight: '600' */
+.cancel-btn-text {
+  color: $error;
+  text-align: center;
+  font-weight: 600;
+  font-size: 28px;
+}
+
+/* RN: flex: 1, paddingVertical: 12, borderRadius: 24, backgroundColor: primary */
+.reorder-btn {
+  flex: 1;
+  padding: 24px 0;  // 12 * 2
+  border-radius: 48px;  // 24 * 2
+  background: $primary;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* RN: color: white, textAlign: 'center', fontWeight: '600' */
+.reorder-btn-text {
+  color: $surface;
+  text-align: center;
+  font-weight: 600;
+  font-size: 28px;
+}
