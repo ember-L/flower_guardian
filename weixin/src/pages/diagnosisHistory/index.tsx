@@ -1,27 +1,25 @@
 import { View, Text, Image, ScrollView } from '@tarojs/components'
-import Taro from '@tarojs/taro'
+import Taro, { useDidShow } from '@tarojs/taro'
 import { useState, useEffect, useCallback } from 'react'
 import { diagnosisService } from '../../services/diagnosisService'
+import { getToken } from '../../services/auth'
 import Icon from '../../components/Icon'
 import { API_BASE_URL } from '../../services/config'
+import { getFullImageUrl } from '../../services/request'
 import './index.scss'
 
-// 获取完整的图片URL
-const getFullImageUrl = (url: string): string => {
-  if (!url || typeof url !== 'string') return ''
-  const trimmed = url.trim()
-  if (trimmed.length === 0) return ''
-  if (trimmed.startsWith('http')) return trimmed
-  return `${API_BASE_URL}${trimmed}`
-}
-
 interface DiagnosisRecord {
-  id: number | string
+  id: number
   image_url: string
   disease_name: string
   confidence: number
-  created_at: string
+  description?: string
+  treatment?: string
+  prevention?: string
+  recommended_products?: string
   is_favorite: boolean
+  conversation_id?: number
+  created_at: string
 }
 
 const getConfidenceConfig = (confidence: number) => {
@@ -61,25 +59,58 @@ export default function DiagnosisHistory() {
   const [records, setRecords] = useState<DiagnosisRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'favorite'>('all')
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
 
   const loadRecords = useCallback(async () => {
+    const token = getToken()
+    if (!token) {
+      setRecords([])
+      setLoading(false)
+      return
+    }
     setLoading(true)
     try {
       const favoriteParam = filter === 'favorite' ? true : undefined
       const data = await diagnosisService.getHistory(favoriteParam)
-      setRecords(data)
+      setRecords(data.items || [])
     } catch (err: any) {
-      Taro.showToast({ title: err.message || '加载失败', icon: 'none' })
+      console.error('加载诊断历史失败:', err)
+      // 401 未授权，跳转登录
+      if (err.message?.includes('登录已过期') || err.message?.includes('未授权')) {
+        Taro.showModal({
+          title: '提示',
+          content: '登录已过期，请重新登录',
+          success: () => {
+            Taro.navigateTo({ url: '/pages/login/index' })
+          }
+        })
+      }
+      setRecords([])
     } finally {
       setLoading(false)
     }
   }, [filter])
 
-  useEffect(() => {
-    loadRecords()
+  const checkLoginStatus = useCallback(() => {
+    const token = getToken()
+    setIsLoggedIn(!!token)
+    if (token) {
+      loadRecords()
+    } else {
+      setRecords([])
+      setLoading(false)
+    }
   }, [loadRecords])
 
-  const navigateToDetail = (diagnosisId: number | string) => {
+  useDidShow(() => {
+    checkLoginStatus()
+  })
+
+  useEffect(() => {
+    checkLoginStatus()
+  }, [checkLoginStatus])
+
+  const navigateToDetail = (diagnosisId: number) => {
     Taro.navigateTo({ url: `/pages/diagnosisDetail/index?diagnosisId=${diagnosisId}` })
   }
 
@@ -87,7 +118,7 @@ export default function DiagnosisHistory() {
     Taro.navigateTo({ url: '/pages/diagnosis/index' })
   }
 
-  const handleToggleFavorite = async (id: number | string) => {
+  const handleToggleFavorite = async (id: number) => {
     try {
       const result = await diagnosisService.toggleFavorite(id)
       setRecords(prev => prev.map(r => r.id === id ? { ...r, is_favorite: result.is_favorite } : r))
@@ -96,7 +127,7 @@ export default function DiagnosisHistory() {
     }
   }
 
-  const handleDelete = async (id: number | string) => {
+  const handleDelete = async (id: number) => {
     Taro.showModal({
       title: '确认删除',
       content: '确定要删除这条诊断记录吗？',
@@ -140,14 +171,14 @@ export default function DiagnosisHistory() {
             className={`tab ${filter === 'all' ? 'tab-active' : ''}`}
             onClick={() => setFilter('all')}
           >
-            <Icon name="clipboard" size={18} color={filter === 'all' ? '#f46' : '#999'} />
+            <Icon name="clipboard" size={18} color={filter === 'all' ? '#f46' : '#666'} />
             <Text className={`tab-text ${filter === 'all' ? 'tab-text-active' : ''}`}>全部</Text>
           </View>
           <View
             className={`tab ${filter === 'favorite' ? 'tab-active' : ''}`}
             onClick={() => setFilter('favorite')}
           >
-            <Icon name="star" size={18} color={filter === 'favorite' ? '#f46' : '#999'} />
+            <Icon name="star" size={18} color={filter === 'favorite' ? '#faad14' : '#666'} />
             <Text className={`tab-text ${filter === 'favorite' ? 'tab-text-active-fav' : ''}`}>收藏</Text>
           </View>
         </View>
@@ -165,7 +196,7 @@ export default function DiagnosisHistory() {
         <View className='empty-container'>
           <View className='empty-icon-container'>
             <View className='empty-icon-inner'>
-              <Icon name={filter === 'all' ? 'clipboard' : 'star'} size={48} color="#ccc" />
+              <Icon name={filter === 'all' ? 'clipboard' : 'star'} size={48} color="#999" />
             </View>
           </View>
           <Text className='empty-title'>
@@ -202,10 +233,11 @@ export default function DiagnosisHistory() {
                         className='card-image'
                         src={getFullImageUrl(record.image_url)}
                         mode='aspectFill'
+                        lazyLoad
                       />
                     ) : (
                       <View className='card-image card-image-placeholder'>
-                        <Icon name="image" size={24} color="#ccc" />
+                        <Icon name="image" size={24} color="#999" />
                       </View>
                     )}
                     {record.is_favorite && (
@@ -239,7 +271,7 @@ export default function DiagnosisHistory() {
                       className='favorite-button'
                       onClick={(e) => { e.stopPropagation(); handleToggleFavorite(record.id) }}
                     >
-                      <Icon name="star" size={18} color={record.is_favorite ? '#faad14' : '#ccc'} />
+                      <Icon name="star" size={18} color={record.is_favorite ? '#faad14' : '#666'} />
                     </View>
                     <View
                       className='delete-button'

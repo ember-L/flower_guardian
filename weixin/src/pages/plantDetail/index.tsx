@@ -1,6 +1,7 @@
 import { View, Text, ScrollView, Input } from '@tarojs/components'
 import Taro, { useRouter } from '@tarojs/taro'
 import { useState, useEffect } from 'react'
+import Icon from '../../components/Icon'
 import './index.scss'
 import {
   getUserPlant,
@@ -215,11 +216,11 @@ export default function PlantDetail() {
       {/* 头部 */}
       <View className='header'>
         <View className='header-back' onClick={() => Taro.navigateBack()}>
-          <Text className='icon-back'>&lt;</Text>
+          <Icon name="chevron-left" size={24} color="#333" />
         </View>
         <Text className='header-title'>{plant.nickname || plant.plant_name}</Text>
         <View className='header-delete' onClick={handleDelete}>
-          <Text className='icon-delete'>X</Text>
+          <Icon name="trash" size={20} color="#ff4d4f" />
         </View>
       </View>
 
@@ -227,7 +228,7 @@ export default function PlantDetail() {
         {/* 植物基本信息卡片 */}
         <View className='info-card'>
           <View className='plant-image'>
-            <Text className='plant-image-icon'>~</Text>
+            <Icon name="flower2" size={60} color="rgba(255,255,255,0.3)" />
           </View>
           <View className='info-row'>
             <Text className='plant-name'>{plant.plant_name}</Text>
@@ -282,7 +283,7 @@ export default function PlantDetail() {
               className='add-record-btn'
               onClick={() => { setAddType('care'); setShowAddModal(true) }}
             >
-              <Text className='add-record-icon'>+</Text>
+              <Icon name="plus" size={18} color="#f46" />
               <Text className='add-record-text'>添加养护记录</Text>
             </View>
 
@@ -309,7 +310,7 @@ export default function PlantDetail() {
               className='add-record-btn'
               onClick={() => { setAddType('growth'); setShowAddModal(true) }}
             >
-              <Text className='add-record-icon'>+</Text>
+              <Icon name="plus" size={18} color="#f46" />
               <Text className='add-record-text'>添加生长记录</Text>
             </View>
 
@@ -340,7 +341,7 @@ export default function PlantDetail() {
               className='add-record-btn'
               onClick={() => { setAddType('health'); setShowAddModal(true) }}
             >
-              <Text className='add-record-icon'>+</Text>
+              <Icon name="plus" size={18} color="#f46" />
               <Text className='add-record-text'>添加健康记录</Text>
             </View>
 
@@ -378,7 +379,7 @@ export default function PlantDetail() {
                 添加{addType === 'care' ? '养护' : addType === 'growth' ? '生长' : '健康'}记录
               </Text>
               <View className='modal-close' onClick={() => setShowAddModal(false)}>
-                <Text className='modal-close-text'>X</Text>
+                <Icon name="x" size={24} color="#999" />
               </View>
             </View>
 

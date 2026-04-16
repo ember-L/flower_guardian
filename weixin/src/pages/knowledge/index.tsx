@@ -69,7 +69,7 @@ export default function Knowledge() {
         onClick={() => handleArticleClick(article.id)}
       >
         <View className='article-icon'>
-          <Icon name="sprout" size={20} color="#4CAF50" />
+          <Icon name="sprout" size={20} color="#f46" />
         </View>
         <View className='article-info'>
           <View className='article-category'>
@@ -78,7 +78,7 @@ export default function Knowledge() {
           <Text className='article-title'>{article.title}</Text>
           <Text className='article-summary'>{article.summary}</Text>
         </View>
-        <Icon name="chevron-right" size={18} color="#ccc" />
+        <Icon name="chevron-right" size={18} color="#999" />
       </View>
     )
   }
@@ -89,7 +89,7 @@ export default function Knowledge() {
       {/* 诊断历史概要 */}
       <View className='history-summary'>
         <View className='history-header'>
-          <Icon name="alert-triangle" size={18} color="#F59E0B" />
+          <Icon name="alert-triangle" size={18} color="#faad14" />
           <Text className='history-title'>您的诊断历史</Text>
         </View>
         <Text className='history-count'>
@@ -105,7 +105,7 @@ export default function Knowledge() {
           <View key={record.id || index} className='suggestion-card'>
             <View className='suggestion-header'>
               <View className='suggestion-icon'>
-                <Icon name="alert-triangle" size={18} color="#F59E0B" />
+                <Icon name="alert-triangle" size={18} color="#faad14" />
               </View>
               <Text className='suggestion-name'>{record.disease_name}</Text>
             </View>
@@ -126,7 +126,7 @@ export default function Knowledge() {
 
         {diagnosisHistory.length === 0 && (
           <View className='empty-history'>
-            <Icon name="clipboard" size={40} color="#ccc" />
+            <Icon name="clipboard" size={40} color="#eee" />
             <Text className='empty-history-text'>暂无诊断记录</Text>
             <Text className='empty-history-subtext'>
               进行病害诊断后，将为您生成个性化建议
@@ -138,7 +138,7 @@ export default function Knowledge() {
       {/* 快速入口：查看所有知识 */}
       <View className='view-all-button' onClick={() => setSelectedTab('general')}>
         <Text className='view-all-text'>查看全部养护知识</Text>
-        <Icon name="chevron-right" size={18} color="#4CAF50" />
+        <Icon name="chevron-right" size={18} color="#f46" />
       </View>
     </ScrollView>
   )
@@ -218,7 +218,7 @@ export default function Knowledge() {
           <ScrollView scrollY className='articles-scroll'>
             {filteredArticles.length === 0 ? (
               <View className='empty'>
-                <Icon name="search" size={40} color="#ccc" />
+                <Icon name="search" size={40} color="#999" />
                 <Text className='empty-text'>未找到相关知识</Text>
               </View>
             ) : (

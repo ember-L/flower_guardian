@@ -281,7 +281,7 @@ export default function Reminder() {
           {reminders.length === 0 && (
             <View className='empty-container'>
               <View className='empty-icon-container'>
-                <Icon name="bell" size={48} color="#ccc" />
+                <Icon name="bell" size={48} color="#999" />
               </View>
               <Text className='empty-title'>暂无提醒</Text>
               <Text className='empty-subtitle'>
@@ -309,7 +309,7 @@ export default function Reminder() {
           <View className='tip-card'>
             <View className='tip-header'>
               <View className='tip-icon'>
-                <Icon name="lightbulb" size={20} color="#F59E0B" />
+                <Icon name="lightbulb" size={20} color="#faad14" />
               </View>
               <Text className='tip-title'>智能提醒说明</Text>
             </View>

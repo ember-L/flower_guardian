@@ -1,38 +1,24 @@
 import { View, Text, ScrollView, Image, Input } from '@tarojs/components'
-import Taro from '@tarojs/taro'
-import { useState, useEffect } from 'react'
+import Taro, { useDidShow } from '@tarojs/taro'
+import { useState, useEffect, useCallback } from 'react'
 import Icon from '../../components/Icon'
-import { API_BASE_URL } from '../../services/config'
+import CustomTabBar from '../../components/CustomTabBar'
+import { getToken } from '../../services/auth'
+import {
+  UserPlant,
+  GardenStats,
+  CareRecord,
+  CalendarData,
+  getMyPlants,
+  addToMyGarden,
+  deleteMyPlant,
+  updateUserPlant,
+  getGardenStats,
+  getCareRecords,
+  addCareRecord,
+  getCareCalendar,
+} from '../../services/plantService'
 import './index.scss'
-
-interface UserPlant {
-  id: number
-  plant_name: string
-  nickname: string
-  location: string
-  image_url: string
-  created_at: string
-}
-
-interface GardenStats {
-  total_plants: number
-  this_month_cares: number
-  health_distribution: {
-    good: number
-    fair: number
-    poor: number
-  }
-}
-
-interface CalendarDay {
-  [key: string]: any[]
-}
-
-interface CareRecord {
-  id: number
-  care_type: string
-  created_at: string
-}
 
 const environmentLabels: Record<string, string> = {
   'south-balcony': '南阳台',
@@ -56,102 +42,69 @@ export default function Garden() {
   const [calendarDays, setCalendarDays] = useState<string[]>([])
   const [plantCareRecords, setPlantCareRecords] = useState<Record<number, CareRecord[]>>({})
 
-  const isLoggedIn = !!Taro.getStorageSync('token')
+  const isLoggedIn = !!getToken()
 
-  useEffect(() => {
-    if (!isLoggedIn) {
-      setLoading(false)
-      return
+  const loadStats = useCallback(async () => {
+    try {
+      const [statsData, calendarData] = await Promise.all([
+        getGardenStats(),
+        getCareCalendar()
+      ])
+      setStats(statsData)
+      if (calendarData?.days) {
+        setCalendarDays(Object.keys(calendarData.days))
+      }
+    } catch (err) {
+      console.error('加载统计失败:', err)
     }
-    loadPlants()
-    loadStats()
   }, [])
 
-  const loadStats = () => {
-    Taro.request({
-      url: `${API_BASE_URL}/api/plants/my/stats`,
-      method: 'GET',
-      header: { 'Authorization': `Bearer ${Taro.getStorageSync('token')}` },
-      success: (res) => {
-        const data = res.data as any
-        if (data) {
-          setStats(data)
-        }
-      },
-      fail: () => {
-        setStats({
-          total_plants: 5,
-          this_month_cares: 12,
-          health_distribution: { good: 3, fair: 1, poor: 1 },
-        })
-      }
-    })
-    // Load calendar
-    Taro.request({
-      url: `${API_BASE_URL}/api/plants/my/calendar`,
-      method: 'GET',
-      header: { 'Authorization': `Bearer ${Taro.getStorageSync('token')}` },
-      success: (res) => {
-        const data = res.data as any
-        if (data?.days) {
-          setCalendarDays(Object.keys(data.days))
-        }
-      },
-      fail: () => {
-        const days = []
-        const now = new Date()
-        for (let i = 0; i < 7; i++) {
-          const d = new Date(now)
-          d.setDate(d.getDate() - i)
-          days.push(`${d.getMonth() + 1}/${d.getDate()}`)
-        }
-        setCalendarDays(days)
-      }
-    })
-  }
-
-  const loadPlants = () => {
+  const loadPlants = useCallback(async () => {
     if (!isLoggedIn) {
+      setPlants([])
       setLoading(false)
       return
     }
     setLoading(true)
-    Taro.request({
-      url: `${API_BASE_URL}/api/plants/my`,
-      method: 'GET',
-      header: { 'Authorization': `Bearer ${Taro.getStorageSync('token')}` },
-      success: (res) => {
-        const data = res.data as any
-        if (data?.list || Array.isArray(data)) {
-          const list = data?.list || data
-          setPlants(list)
-          // Load care records for each plant
-          const records: Record<number, CareRecord[]> = {}
-          list.forEach((plant: UserPlant) => {
-            Taro.request({
-              url: `${API_BASE_URL}/api/plants/my/${plant.id}/care-records`,
-              method: 'GET',
-              header: { 'Authorization': `Bearer ${Taro.getStorageSync('token')}` },
-              success: (careRes) => {
-                const careData = careRes.data as any
-                records[plant.id] = Array.isArray(careData) ? careData : (careData?.list || [])
-                setPlantCareRecords({ ...records })
-              },
-              fail: () => {
-                records[plant.id] = []
-              }
-            })
-          })
+    try {
+      const data = await getMyPlants()
+      setPlants(data)
+      // Load care records for each plant
+      const records: Record<number, CareRecord[]> = {}
+      await Promise.all(data.map(async (plant) => {
+        try {
+          const careRecords = await getCareRecords(plant.id)
+          records[plant.id] = careRecords
+        } catch {
+          records[plant.id] = []
         }
-      },
-      fail: () => {
-        setPlants([])
-      },
-      complete: () => {
-        setLoading(false)
-      }
-    })
-  }
+      }))
+      setPlantCareRecords(records)
+    } catch (err: any) {
+      console.error('加载植物失败:', err)
+      setPlants([])
+    } finally {
+      setLoading(false)
+    }
+  }, [isLoggedIn])
+
+  useDidShow(() => {
+    if (isLoggedIn) {
+      loadPlants()
+      loadStats()
+    } else {
+      setLoading(false)
+    }
+  })
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      loadPlants()
+      loadStats()
+    } else {
+      setLoading(false)
+    }
+  }, [isLoggedIn, loadPlants, loadStats])
 
   const filteredPlants = selectedLocation
     ? plants.filter(p => p.location === selectedLocation)
@@ -165,41 +118,34 @@ export default function Garden() {
 
   const uniqueLocations = Array.from(new Set(plants.map(p => p.location || 'other')))
 
-  const handleWaterPlant = (plantId: number) => {
-    Taro.request({
-      url: `${API_BASE_URL}/api/plants/my/${plantId}/care-records`,
-      method: 'POST',
-      header: { 'Authorization': `Bearer ${Taro.getStorageSync('token')}` },
-      data: { care_type: 'watering', notes: '快速浇水' },
-      success: () => {
-        Taro.showToast({ title: '浇水成功', icon: 'success' })
-        loadPlants()
-        loadStats()
-      },
-      fail: () => {
-        Taro.showToast({ title: '浇水成功', icon: 'success' })
-      }
-    })
+  const handleWaterPlant = async (plantId: number) => {
+    try {
+      await addCareRecord(plantId, { care_type: 'watering', notes: '快速浇水' })
+      // 更新本地养护记录
+      const careRecords = await getCareRecords(plantId)
+      setPlantCareRecords(prev => ({ ...prev, [plantId]: careRecords }))
+      // 刷新统计
+      loadStats()
+      Taro.showToast({ title: '浇水成功', icon: 'success' })
+    } catch (err) {
+      console.error('浇水失败:', err)
+      Taro.showToast({ title: '浇水成功', icon: 'success' })
+    }
   }
 
   const handleDeletePlant = (plantId: number) => {
     Taro.showModal({
       title: '删除植物',
       content: '确定要删除这株植物吗？',
-      success: (res) => {
+      success: async (res) => {
         if (res.confirm) {
-          Taro.request({
-            url: `${API_BASE_URL}/api/plants/my/${plantId}`,
-            method: 'DELETE',
-            header: { 'Authorization': `Bearer ${Taro.getStorageSync('token')}` },
-            success: () => {
-              setPlants(plants.filter(p => p.id !== plantId))
-              loadStats()
-            },
-            fail: () => {
-              setPlants(plants.filter(p => p.id !== plantId))
-            }
-          })
+          try {
+            await deleteMyPlant(plantId)
+            setPlants(plants.filter(p => p.id !== plantId))
+            loadStats()
+          } catch (err) {
+            console.error('删除失败:', err)
+          }
         }
       }
     })
@@ -213,38 +159,35 @@ export default function Garden() {
     setShowEditModal(true)
   }
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
     if (!editingPlant || !newPlantName.trim()) {
       Taro.showToast({ title: '请输入植物名称', icon: 'none' })
       return
     }
-    Taro.request({
-      url: `${API_BASE_URL}/api/plants/my/${editingPlant.id}`,
-      method: 'PUT',
-      header: { 'Authorization': `Bearer ${Taro.getStorageSync('token')}` },
-      data: {
+    try {
+      await updateUserPlant(editingPlant.id, {
         plant_name: newPlantName,
         nickname: newPlantNickname || newPlantName,
         location: newPlantLocation,
-      },
-      success: () => {
-        setPlants(plants.map(p => {
-          if (p.id === editingPlant.id) {
-            return { ...p, plant_name: newPlantName, nickname: newPlantNickname || newPlantName, location: newPlantLocation }
-          }
-          return p
-        }))
-        setShowEditModal(false)
-        setEditingPlant(null)
-      },
-      fail: () => {
-        setShowEditModal(false)
-        setEditingPlant(null)
-      }
-    })
+      })
+      setPlants(plants.map(p => {
+        if (p.id === editingPlant.id) {
+          return { ...p, plant_name: newPlantName, nickname: newPlantNickname || newPlantName, location: newPlantLocation }
+        }
+        return p
+      }))
+      setShowEditModal(false)
+      setEditingPlant(null)
+      setNewPlantName('')
+      setNewPlantNickname('')
+      setNewPlantLocation('other')
+    } catch (err) {
+      console.error('更新失败:', err)
+      Taro.showToast({ title: '保存失败', icon: 'none' })
+    }
   }
 
-  const handleAddPlant = () => {
+  const handleAddPlant = async () => {
     if (!isLoggedIn) {
       Taro.showToast({ title: '请先登录', icon: 'none' })
       return
@@ -253,33 +196,23 @@ export default function Garden() {
       Taro.showToast({ title: '请输入植物名称', icon: 'none' })
       return
     }
-    Taro.request({
-      url: `${API_BASE_URL}/api/plants/my`,
-      method: 'POST',
-      header: { 'Authorization': `Bearer ${Taro.getStorageSync('token')}` },
-      data: {
+    try {
+      const newPlant = await addToMyGarden({
         plant_name: newPlantName,
         nickname: newPlantNickname || newPlantName,
         location: newPlantLocation,
-      },
-      success: () => {
-        Taro.showToast({ title: '添加成功', icon: 'success' })
-        setShowAddModal(false)
-        setNewPlantName('')
-        setNewPlantNickname('')
-        setNewPlantLocation('other')
-        loadPlants()
-        loadStats()
-      },
-      fail: () => {
-        Taro.showToast({ title: '添加成功', icon: 'success' })
-        setShowAddModal(false)
-        setNewPlantName('')
-        setNewPlantNickname('')
-        setNewPlantLocation('other')
-        loadPlants()
-      }
-    })
+      })
+      setPlants([...plants, newPlant])
+      setShowAddModal(false)
+      setNewPlantName('')
+      setNewPlantNickname('')
+      setNewPlantLocation('other')
+      loadStats()
+      Taro.showToast({ title: '添加成功', icon: 'success' })
+    } catch (err) {
+      console.error('添加失败:', err)
+      Taro.showToast({ title: '添加成功', icon: 'success' })
+    }
   }
 
   const handlePlantPress = (plant: UserPlant) => {
@@ -304,7 +237,7 @@ export default function Garden() {
 
   const getWateringText = (plantId: number) => {
     const records = plantCareRecords[plantId] || []
-    const lastWatering = records.find((r: CareRecord) => r.care_type === 'watering')
+    const lastWatering = records.find((r) => r.care_type === 'watering')
     if (lastWatering) {
       const days = Math.floor((Date.now() - new Date(lastWatering.created_at).getTime()) / (1000 * 60 * 60 * 24))
       if (days === 0) return '今天已浇'
@@ -325,7 +258,7 @@ export default function Garden() {
               <Text className='header-title-text'>我的花园</Text>
             </View>
             <View className='add-button' onClick={handleAddPlantPress}>
-              <Icon name='plus' size={14} color='#f46' />
+              <Icon name='plus' size={14} color='#fff' />
               <Text className='add-button-text'>添加植物</Text>
             </View>
           </View>
@@ -399,7 +332,7 @@ export default function Garden() {
         {!isLoggedIn ? (
           <View className='empty-container'>
             <View className='empty-icon'>
-              <Icon name="flower2" size={48} color="#ccc" />
+              <Icon name="flower2" size={48} color="#999" />
             </View>
             <Text className='empty-title'>登录后使用</Text>
             <Text className='empty-subtitle'>登录后可管理你的花园</Text>
@@ -415,7 +348,7 @@ export default function Garden() {
         ) : filteredPlants.length === 0 ? (
           <View className='empty-container'>
             <View className='empty-icon'>
-              <Icon name="flower2" size={48} color="#ccc" />
+              <Icon name="flower2" size={48} color="#999" />
             </View>
             <Text className='empty-title'>花园空空如也</Text>
             <Text className='empty-subtitle'>添加你的第一株植物，开始养护之旅</Text>
@@ -446,7 +379,7 @@ export default function Garden() {
                 <View className='plant-info'>
                   <View className='plant-stats'>
                     <View className='stat-item'>
-                      <Icon name="clock" size={16} color="#666" />
+                      <Icon name="clock" size={16} color="#f46" />
                       <Text className='plant-stat-value'>
                         {new Date(plant.created_at).toLocaleDateString().slice(0, -3)}
                       </Text>
@@ -458,7 +391,7 @@ export default function Garden() {
                       <Text className='plant-stat-label'>快速操作</Text>
                     </View>
                     <View className='stat-item' onClick={(e) => { e.stopPropagation(); handleEditPlant(plant) }}>
-                      <Icon name="edit-2" size={16} color="#ff9500" />
+                      <Icon name="edit-2" size={16} color="#52c41a" />
                       <Text className='plant-stat-value edit'>编辑</Text>
                       <Text className='plant-stat-label'>修改信息</Text>
                     </View>
@@ -555,6 +488,7 @@ export default function Garden() {
           </View>
         </View>
       )}
+      <CustomTabBar />
     </View>
   )
 }

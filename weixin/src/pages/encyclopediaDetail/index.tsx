@@ -56,7 +56,7 @@ export default function EncyclopediaDetail() {
     const stars = []
     for (let i = 1; i <= 5; i++) {
       stars.push(
-        <Icon key={i} name="star" size={16} color={i <= level ? '#F59E0B' : '#ddd'} />
+        <Icon key={i} name="star" size={16} color={i <= level ? '#f46' : '#999'} />
       )
     }
     return stars
@@ -88,6 +88,7 @@ export default function EncyclopediaDetail() {
             className='hero-image'
             src={getFullImageUrl(plant.image_url) || 'https://images.unsplash.com/photo-1459411552884-841db9b3cc2a?w=600'}
             mode='aspectFill'
+            lazyLoad
           />
           <View className='hero-overlay' />
         </View>
@@ -117,22 +118,22 @@ export default function EncyclopediaDetail() {
         {/* 养护参数卡片 */}
         <View className='params-grid'>
           <View className='param-card'>
-            <Icon name="sun" size={24} color="#F59E0B" />
+            <Icon name="sun" size={24} color="#faad14" />
             <Text className='param-label'>光照</Text>
             <Text className='param-value'>{plant.light_requirement || '散射光'}</Text>
           </View>
           <View className='param-card'>
-            <Icon name="droplet" size={24} color="#0891B2" />
+            <Icon name="droplet" size={24} color="#007aff" />
             <Text className='param-label'>浇水</Text>
             <Text className='param-value'>{plant.water_requirement || '适中'}</Text>
           </View>
           <View className='param-card'>
-            <Icon name="thermometer" size={24} color="#ef4444" />
+            <Icon name="thermometer" size={24} color="#ff4d4f" />
             <Text className='param-label'>温度</Text>
             <Text className='param-value'>{plant.temperature_range || '15-25°C'}</Text>
           </View>
           <View className='param-card'>
-            <Icon name="wind" size={24} color="#06B6D4" />
+            <Icon name="wind" size={24} color="#52c41a" />
             <Text className='param-label'>湿度</Text>
             <Text className='param-value'>{plant.humidity_range || '50-70%'}</Text>
           </View>

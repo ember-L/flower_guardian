@@ -1,31 +1,23 @@
 import { View, Text, Image, ScrollView } from '@tarojs/components'
-import Taro from '@tarojs/taro'
-import { useState, useEffect } from 'react'
+import Taro, { useDidShow } from '@tarojs/taro'
+import { useState, useEffect, useCallback } from 'react'
 import { diagnosisService } from '../../services/diagnosisService'
 import Icon from '../../components/Icon'
-import { API_BASE_URL } from '../../services/config'
+import { getFullImageUrl } from '../../services/request'
 import './index.scss'
 
-// 获取完整的图片URL
-const getFullImageUrl = (url: string): string => {
-  if (!url || typeof url !== 'string') return ''
-  const trimmed = url.trim()
-  if (trimmed.length === 0) return ''
-  if (trimmed.startsWith('http')) return trimmed
-  return `${API_BASE_URL}${trimmed}`
-}
-
 interface DiagnosisDetail {
-  id: number | string
+  id: number
   image_url: string
   disease_name: string
   confidence: number
-  description: string
-  treatment: string
-  prevention: string
-  recommended_products: string
-  created_at: string
+  description?: string
+  treatment?: string
+  prevention?: string
+  recommended_products?: string
   is_favorite: boolean
+  conversation_id?: number
+  created_at: string
 }
 
 const getConfidenceConfig = (confidence: number) => {
@@ -52,20 +44,29 @@ const formatDate = (dateStr: string) => {
 export default function DiagnosisDetail() {
   const [detail, setDetail] = useState<DiagnosisDetail | null>(null)
   const [loading, setLoading] = useState(true)
+  const [diagnosisId, setDiagnosisId] = useState<number | null>(null)
+
+  useDidShow(() => {
+    const params = Taro.getCurrentInstance().router?.params
+    const id = params?.diagnosisId || params?.id
+    if (id) {
+      setDiagnosisId(Number(id))
+    }
+  })
 
   useEffect(() => {
-    const params = Taro.getCurrentInstance().router?.params
-    if (params?.diagnosisId || params?.id) {
-      loadDetail(params.diagnosisId || params.id)
+    if (diagnosisId) {
+      loadDetail(diagnosisId)
     }
-  }, [])
+  }, [diagnosisId])
 
-  const loadDetail = async (id: string) => {
+  const loadDetail = async (id: number) => {
     setLoading(true)
     try {
-      const data = await diagnosisService.getDetail(id)
+      const data = await diagnosisService.getDiagnosis(id)
       setDetail(data)
     } catch (err: any) {
+      console.error('加载诊断详情失败:', err)
       Taro.showToast({ title: err.message || '加载失败', icon: 'none' })
     } finally {
       setLoading(false)
@@ -120,7 +121,7 @@ export default function DiagnosisDetail() {
         </View>
         <Text className='header-title'>诊断详情</Text>
         <View className='favorite-button' onClick={toggleFavorite}>
-          <Icon name="star" size={20} color={detail.is_favorite ? '#faad14' : '#ccc'} />
+          <Icon name="star" size={20} color={detail.is_favorite ? '#faad14' : '#666'} />
         </View>
       </View>
 
@@ -128,7 +129,7 @@ export default function DiagnosisDetail() {
         {/* 主图区域 */}
         <View className='image-container'>
           {detail.image_url && (
-            <Image className='detail-image' src={getFullImageUrl(detail.image_url)} mode='aspectFill' />
+            <Image className='detail-image' src={getFullImageUrl(detail.image_url)} mode='aspectFill' lazyLoad />
           )}
           {/* 渐变遮罩 */}
           <View className='image-gradient' />
@@ -194,7 +195,7 @@ export default function DiagnosisDetail() {
             <View className='section'>
               <View className='section-header'>
                 <View className='section-icon' style={{ backgroundColor: 'rgba(255, 68, 102, 0.08)' }}>
-                  <Icon name="shield" size={16} color="#ff4466" />
+                  <Icon name="shield" size={16} color="#f46" />
                 </View>
                 <Text className='section-title'>预防措施</Text>
               </View>
@@ -213,7 +214,7 @@ export default function DiagnosisDetail() {
             <View className='section'>
               <View className='section-header'>
                 <View className='section-icon' style={{ backgroundColor: '#e6f2ff' }}>
-                  <Icon name="shopping-cart" size={16} color="#1890ff" />
+                  <Icon name="shopping-cart" size={16} color="#007aff" />
                 </View>
                 <Text className='section-title'>推荐产品</Text>
               </View>
@@ -224,10 +225,15 @@ export default function DiagnosisDetail() {
           )}
 
           {/* AI 问诊卡片 */}
-          <View className='ai-consult-card' onClick={() => Taro.navigateTo({ url: '/pages/consultation/index' })}>
+          <View className='ai-consult-card' onClick={() => {
+            const url = detail.conversation_id
+              ? `/pages/consultation/index?conversationId=${detail.conversation_id}&disease=${encodeURIComponent(detail.disease_name)}`
+              : `/pages/consultation/index?disease=${encodeURIComponent(detail.disease_name)}`
+            Taro.navigateTo({ url })
+          }}>
             <View className='ai-consult-left'>
               <View className='ai-consult-icon' style={{ backgroundColor: 'rgba(255, 68, 102, 0.08)' }}>
-                <Icon name="message-circle" size={18} color="#ff4466" />
+                <Icon name="message-circle" size={18} color="#f46" />
               </View>
               <View className='ai-consult-text'>
                 <Text className='ai-consult-title'>AI 智能问诊</Text>

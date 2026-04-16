@@ -1,6 +1,7 @@
 .page-container {
   min-height: 100vh;
   background: #fafafa;
+  // padding-bottom: 60px;
 }
 
 .scroll-view {
@@ -8,7 +9,7 @@
   height: calc(100vh - 200px);
 }
 
-/* Header */
+/* Header - 圆角设计 */
 .header-gradient {
   background: #f46;
   border-bottom-left-radius: 24px;
@@ -17,7 +18,7 @@
 }
 
 .header {
-  padding: 16px 40px 32px;
+  padding: 16px 40px 40px;
 }
 
 .header-content {
@@ -37,18 +38,12 @@
   margin-right: 16px;
 }
 
-.header-icon-text {
-  font-size: 24px;
-}
-
-.header-text-container {
-  flex: 1;
-}
-
 .header-title {
   font-size: 24px;
   font-weight: bold;
   color: #fff;
+  display: flex;
+  flex-direction: column;
 }
 
 .header-subtitle {
@@ -62,19 +57,17 @@
   padding-bottom: 64px;
 }
 
-/* Search - Floating */
+/* Search - 浮动卡片 */
 .search-container {
   display: flex;
   flex-direction: row;
   align-items: center;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 24px;
-  padding: 0 16px;
-  padding-top: 8px;
-  padding-bottom: 8px;
+  background: #fff;
+  border-radius: 9999px;
+  padding: 8px 16px;
   margin: 0 40px;
-  margin-top: -24px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  margin-top: -20px;
+  box-shadow: 0 4px 16px rgba(244, 68, 102, 0.15);
   position: relative;
   z-index: 1;
 }
@@ -83,14 +76,10 @@
   width: 40px;
   height: 40px;
   border-radius: 20px;
-  background: rgba(244, 68, 102, 0.15);
+  background: rgba(244, 68, 102, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.search-icon {
-  font-size: 20px;
 }
 
 .search-input {
@@ -105,16 +94,10 @@
   color: #999;
 }
 
-.clear-button {
-  padding: 8px;
-  font-size: 16px;
-  color: #999;
-}
-
 /* Section */
 .section {
   margin-top: 24px;
-  padding: 0 40px;
+  padding: 0 20px;
 }
 
 .section-header-row {
@@ -124,10 +107,6 @@
   margin-bottom: 16px;
 }
 
-.section-header-icon {
-  font-size: 18px;
-}
-
 .section-title {
   font-size: 17px;
   font-weight: 600;
@@ -135,13 +114,14 @@
   margin-left: 8px;
 }
 
-/* Difficulty */
+/* Difficulty Filter */
 .difficulty-scroll {
   white-space: nowrap;
 }
 
 .difficulty-container {
   display: inline-flex;
+  flex-direction: row;
   gap: 8px;
   padding-right: 40px;
 }
@@ -157,11 +137,11 @@
   border-style: solid;
   border-color: #eee;
   gap: 4px;
+}
 
-  &.active {
-    background: #f46;
-    border-color: #f46;
-  }
+.difficulty-chip.active {
+  background: #f46;
+  border-color: #f46;
 }
 
 .difficulty-dot {
@@ -174,13 +154,13 @@
   font-size: 12px;
   font-weight: 500;
   color: #666;
-
-  &.active {
-    color: #fff;
-  }
 }
 
-/* Category Grid */
+.difficulty-chip-text.active {
+  color: #fff;
+}
+
+/* Category Grid - 一行三列 */
 .category-grid {
   display: flex;
   flex-direction: row;
@@ -193,9 +173,7 @@
   min-width: 90px;
   background: #fff;
   border-radius: 16px;
-  padding: 8px;
-  padding-top: 16px;
-  padding-bottom: 16px;
+  padding: 16px 8px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -203,11 +181,11 @@
   border-width: 2px;
   border-style: solid;
   border-color: transparent;
+}
 
-  &.selected {
-    border-color: #f46;
-    background: rgba(244, 68, 102, 0.03);
-  }
+.category-card.selected {
+  border-color: #f46;
+  background: rgba(244, 68, 102, 0.05);
 }
 
 .category-icon-wrapper {
@@ -219,14 +197,10 @@
   align-items: center;
   justify-content: center;
   margin-bottom: 8px;
-
-  &.active {
-    background: #f46;
-  }
 }
 
-.category-icon-text {
-  font-size: 24px;
+.category-icon-wrapper.active {
+  background: #f46;
 }
 
 .category-name {
@@ -234,11 +208,11 @@
   font-weight: 500;
   color: #333;
   text-align: center;
+}
 
-  &.active {
-    color: #f46;
-    font-weight: 600;
-  }
+.category-name.active {
+  color: #f46;
+  font-weight: 600;
 }
 
 .category-count {
@@ -250,7 +224,7 @@
 .category-count-text {
   font-size: 13px;
   color: #999;
-  margin-left: 8px;
+  margin-left: 4px;
 }
 
 /* Category Plants Grid */
@@ -274,27 +248,18 @@
 
 .category-plant-image-container {
   width: 100%;
-  height: 0;
-  padding-bottom: 100%;
+  aspect-ratio: 1;
   border-radius: 12px;
   overflow: hidden;
   background: rgba(82, 196, 26, 0.08);
   display: flex;
   align-items: center;
   justify-content: center;
-  position: relative;
 }
 
 .category-plant-image {
   width: 100%;
   height: 100%;
-  position: absolute;
-  top: 0;
-  left: 0;
-}
-
-.category-plant-placeholder {
-  font-size: 28px;
 }
 
 .category-plant-name {
@@ -367,10 +332,6 @@
   justify-content: center;
 }
 
-.plant-placeholder-text {
-  font-size: 32px;
-}
-
 .plant-name {
   font-size: 13px;
   font-weight: 600;
@@ -396,13 +357,31 @@
 }
 
 .difficulty-badge {
-  padding: 2px 8px;
+  padding: 2px 6px;
   border-radius: 8px;
 }
 
 .difficulty-text {
   font-size: 9px;
   font-weight: 600;
+}
+
+/* Hot Badge */
+.hot-badge {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  background: #ff4d4f;
+  padding: 4px 8px;
+  border-radius: 9999px;
+  margin-left: auto;
+  gap: 2px;
+}
+
+.hot-badge-text {
+  font-size: 11px;
+  font-weight: bold;
+  color: #fff;
 }
 
 /* Loading & Empty */
@@ -425,35 +404,10 @@
   align-items: center;
 }
 
-.empty-icon {
-  font-size: 48px;
-}
-
 .empty-text {
   font-size: 15px;
   color: #999;
   margin-top: 16px;
-}
-
-.hot-badge {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  background: #faad14;
-  padding: 4px 8px;
-  border-radius: 9999px;
-  margin-left: auto;
-  gap: 2px;
-}
-
-.hot-badge-icon {
-  font-size: 12px;
-}
-
-.hot-badge-text {
-  font-size: 11px;
-  font-weight: bold;
-  color: #fff;
 }
 
 /* Legend */
@@ -486,10 +440,6 @@
   margin-bottom: 8px;
 }
 
-.legend-icon-text {
-  font-size: 22px;
-}
-
 .legend-label {
   font-size: 13px;
   font-weight: 600;
@@ -502,7 +452,7 @@
   margin-top: 2px;
 }
 
-/* Pitfalls */
+/* Pitfalls - 避坑指南 */
 .pitfall-header {
   display: flex;
   flex-direction: row;
@@ -519,11 +469,6 @@
   align-items: center;
   justify-content: center;
   margin-right: 16px;
-}
-
-.pitfall-header-icon-text {
-  font-size: 20px;
-  color: #fff;
 }
 
 .pitfall-title {
@@ -586,11 +531,6 @@
   margin-top: 2px;
 }
 
-.pitfall-arrow {
-  font-size: 18px;
-  color: #999;
-}
-
 .last-section {
-  margin-bottom: 32px;
+  margin-bottom: 64px;
 }

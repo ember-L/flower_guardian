@@ -1,6 +1,7 @@
 import { View, Text, ScrollView } from '@tarojs/components'
 import Taro, { useRouter } from '@tarojs/taro'
 import { useState, useEffect } from 'react'
+import Icon from '../../components/Icon'
 import './index.scss'
 import { getOrderDetail, cancelOrder, reorder, type Order } from '../../services/storeService'
 
@@ -79,9 +80,20 @@ export default function OrderDetail() {
 
   return (
     <View className='order-detail'>
+      {/* 头部渐变 */}
+      <View className='header-gradient'>
+        <View className='header'>
+          <View className='back-btn' onClick={() => Taro.navigateBack()}>
+            <Icon name="arrow-left" size={24} color="#fff" />
+          </View>
+          <Text className='header-title'>订单详情</Text>
+          <View className='placeholder' />
+        </View>
+      </View>
+
       <ScrollView scrollY className='detail-scroll'>
         {/* 头部 - 订单号和状态 */}
-        <View className='header'>
+        <View className='order-header'>
           <Text className='order-no'>{order.order_no}</Text>
           <View className='status-badge' style={{ backgroundColor: statusInfo.color + '20' }}>
             <Text className='status-text' style={{ color: statusInfo.color }}>

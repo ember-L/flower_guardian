@@ -1,4 +1,4 @@
-import { View, Text, Input } from '@tarojs/components'
+import { View, Text, Input, Image } from '@tarojs/components'
 import Taro, { useRouter } from '@tarojs/taro'
 import { useState } from 'react'
 import { auth } from '../../services/auth'
@@ -23,7 +23,12 @@ export default function Login() {
 
     setIsLoading(true)
     try {
-      await auth.login({ email: email.trim(), password })
+      const result = await auth.login(email.trim(), password)
+      if (!result.success) {
+        Taro.showToast({ title: result.error || '登录失败', icon: 'none' })
+        setIsLoading(false)
+        return
+      }
       Taro.showToast({ title: '登录成功', icon: 'success' })
       setTimeout(() => {
         Taro.navigateBack()
@@ -57,7 +62,7 @@ export default function Login() {
         {/* 标题 */}
         <View className='title-section'>
           <View className='logo-container'>
-            <Icon name="flower" size={40} color="#ff6b9d" />
+            <Image className='logo-image' src='../../assets/logo.png' mode='aspectFit' />
           </View>
           <Text className='title'>欢迎回来</Text>
           <Text className='subtitle'>登录您的账号继续</Text>
@@ -68,7 +73,7 @@ export default function Login() {
           {/* 邮箱 */}
           <View className='input-container'>
             <View className='input-icon'>
-              <Icon name="mail" size={18} color="#999" />
+              <Icon name="mail" size={18} color="#f46" />
             </View>
             <Input
               className='input'
@@ -82,7 +87,7 @@ export default function Login() {
           {/* 密码 */}
           <View className='input-container'>
             <View className='input-icon'>
-              <Icon name="lock" size={18} color="#999" />
+              <Icon name="lock" size={18} color="#f46" />
             </View>
             <Input
               className='input'

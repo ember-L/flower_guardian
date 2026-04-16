@@ -2,6 +2,7 @@ import { View, Text, ScrollView, Image, Input } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import { useState, useEffect } from 'react'
 import Icon from '../../components/Icon'
+import CustomTabBar from '../../components/CustomTabBar'
 import { API_BASE_URL } from '../../services/config'
 import './index.scss'
 
@@ -235,9 +236,17 @@ export default function Index() {
           <View className='decor-circle-2' />
           <View className='decor-circle-3' />
 
+          {/* 浮动叶子装饰 - 与RN保持一致 */}
+          <View className='floating-leaf-1'>
+            <Icon name="leaf" size={40} color="rgba(255,255,255,0.15)" />
+          </View>
+          <View className='floating-leaf-2'>
+            <Icon name="sprout" size={30} color="rgba(255,255,255,0.1)" />
+          </View>
+
           <View className='hero-content'>
             <View className='brand-badge'>
-              <Icon name="leaf" size={24} color="#fff" />
+              <Image src={require('../../assets/logo.png')} style={{ width: '54px', height: '54px' }} mode='aspectFit' />
             </View>
             <View className='hero-text'>
               <Text className='hero-title'>护花使者</Text>
@@ -295,17 +304,19 @@ export default function Index() {
                     </View>
                   ) : (
                     <>
-                      <View className='main-button' onClick={() => handleIdentify('camera')}>
-                        <View className='main-button-inner'>
-                          <Icon name="camera" size={32} color="#fff" />
+                      <View className='pulse-wrapper'>
+                        <View className='main-button' onClick={() => handleIdentify('camera')}>
+                          <View className='main-button-inner'>
+                            <Icon name="camera" size={32} color="#fff" />
+                          </View>
+                          <View className='main-button-glow' />
                         </View>
-                        <View className='main-button-glow' />
                       </View>
                       <Text className='button-hint'>点击拍照识别</Text>
 
                       <View className='gallery-button'>
                         <View className='gallery-button-inner' onClick={() => handleIdentify('album')}>
-                          <Icon name="image" size={20} color="#fff" />
+                          <Icon name="image" size={20} color="#f46" />
                           <Text className='gallery-button-text'>从相册选择</Text>
                         </View>
                       </View>
@@ -324,7 +335,7 @@ export default function Index() {
                 <Text className='result-title'>识别结果</Text>
                 <View className='result-card'>
                   {capturedImageUri ? (
-                    <Image className='result-image' src={capturedImageUri} mode='aspectFill' />
+                    <Image className='result-image' src={capturedImageUri} mode='aspectFill' lazyLoad />
                   ) : (
                     <View className='result-plant-icon'>
                       <Icon name="flower2" size={32} color="#f59e0b" />
@@ -469,7 +480,7 @@ export default function Index() {
                     >
                       <View className='recommend-image' style={{ backgroundColor: plantColor + '20' }}>
                         {plant.image_url ? (
-                          <Image className='recommend-card-image' src={getFullImageUrl(plant.image_url)} mode='aspectFill' />
+                          <Image className='recommend-card-image' src={getFullImageUrl(plant.image_url)} mode='aspectFill' lazyLoad />
                         ) : (
                           <Icon name="leaf" size={32} color={plantColor} />
                         )}
@@ -491,6 +502,7 @@ export default function Index() {
           </View>
         </View>
       </ScrollView>
+      <CustomTabBar />
     </View>
   )
 }

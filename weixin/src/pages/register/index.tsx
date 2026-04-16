@@ -1,4 +1,4 @@
-import { View, Text, Input } from '@tarojs/components'
+import { View, Text, Input, Image } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { useState, useEffect, useRef } from 'react'
 import { auth } from '../../services/auth'
@@ -117,7 +117,7 @@ export default function Register() {
         {/* 标题 */}
         <View className='title-section'>
           <View className='logo-container'>
-            <Icon name="sparkles" size={40} color="#af52de" />
+            <Image className='logo-image' src='../../assets/logo.png' mode='aspectFit' />
           </View>
           <Text className='title'>创建账号</Text>
           <Text className='subtitle'>注册成为护花使者</Text>
@@ -129,7 +129,7 @@ export default function Register() {
           <View className='code-row'>
             <View className='input-container input-flex'>
               <View className='input-icon'>
-                <Icon name="mail" size={18} color="#999" />
+                <Icon name="mail" size={18} color="#f46" />
               </View>
               <Input
                 className='input'
@@ -152,7 +152,7 @@ export default function Register() {
           {/* 验证码 */}
           <View className='input-container'>
             <View className='input-icon'>
-              <Icon name="shield" size={18} color="#999" />
+              <Icon name="shield" size={18} color="#f46" />
             </View>
             <Input
               className='input'
@@ -168,7 +168,7 @@ export default function Register() {
           {/* 用户名 */}
           <View className='input-container'>
             <View className='input-icon'>
-              <Icon name="user" size={18} color="#999" />
+              <Icon name="user" size={18} color="#f46" />
             </View>
             <Input
               className='input'
@@ -182,7 +182,7 @@ export default function Register() {
           {/* 密码 */}
           <View className='input-container'>
             <View className='input-icon'>
-              <Icon name="lock" size={18} color="#999" />
+              <Icon name="lock" size={18} color="#f46" />
             </View>
             <Input
               className='input'
@@ -200,7 +200,7 @@ export default function Register() {
           {/* 确认密码 */}
           <View className='input-container'>
             <View className='input-icon'>
-              <Icon name="lock" size={18} color="#999" />
+              <Icon name="lock" size={18} color="#f46" />
             </View>
             <Input
               className='input'

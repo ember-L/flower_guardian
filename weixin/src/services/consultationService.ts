@@ -1,5 +1,6 @@
 import Taro from '@tarojs/taro'
-import request from './request'
+import request, { getToken } from './request'
+import { API_BASE_URL } from './config'
 
 export interface Message {
   id: string
@@ -34,7 +35,7 @@ export interface DiagnosisContext {
 
 const STORAGE_KEY = '@consultations'
 
-// 调用后端AI代理接口
+// 调用后端AI聊天接口
 export const callAIChat = async (messages: Message[], context?: DiagnosisContext): Promise<string> => {
   let systemContext = ''
 
@@ -54,9 +55,12 @@ export const callAIChat = async (messages: Message[], context?: DiagnosisContext
   }
 
   const response = await Taro.request({
-    url: `${request.toString() || ''}/api/ai/chat`,
+    url: `${API_BASE_URL}/api/ai/chat`,
     method: 'POST',
-    header: { 'Content-Type': 'application/json' },
+    header: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${getToken()}`
+    },
     data: requestBody,
   })
 

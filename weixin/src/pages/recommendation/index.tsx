@@ -129,7 +129,7 @@ export default function Recommendation() {
           </View>
           <View className='header-content'>
             <View className='header-icon'>
-              <Icon name="sparkles" size={28} color="#333" />
+              <Icon name="sparkles" size={28} color="#faad14" />
             </View>
             <Text className='header-title'>新手推荐</Text>
             <Text className='header-subtitle'>回答几个问题，帮你找到适合的植物</Text>
@@ -166,13 +166,13 @@ export default function Recommendation() {
                     onClick={() => setSelectedOption(index)}
                   >
                     <View className={`option-icon ${selectedOption === index ? 'option-icon-selected' : ''}`}>
-                      <Icon name={option.icon} size={20} color={selectedOption === index ? '#f46' : '#666'} />
+                      <Icon name={option.icon} size={20} color={selectedOption === index ? '#fff' : '#f46'} />
                     </View>
                     <Text className={`option-text ${selectedOption === index ? 'option-text-selected' : ''}`}>
                       {option.label}
                     </Text>
                     {selectedOption === index && (
-                      <Icon name="check-circle" size={18} color="#52c41a" />
+                      <Icon name="check-circle" size={18} color="#fff" />
                     )}
                   </View>
                 ))}
@@ -242,14 +242,14 @@ export default function Recommendation() {
               ))
             ) : (
               <View className='empty-result'>
-                <Icon name="search" size={40} color="#ccc" />
+                <Icon name="search" size={40} color="#999" />
                 <Text className='empty-text'>暂无推荐，请尝试其他条件</Text>
               </View>
             )}
 
             {/* 重新测试 */}
             <View className='restart-button' onClick={handleRestart}>
-              <Icon name="refresh-cw" size={20} color="#666" />
+              <Icon name="refresh-cw" size={20} color="#f46" />
               <Text className='restart-button-text'>重新测试</Text>
             </View>
           </View>

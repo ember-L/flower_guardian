@@ -1,6 +1,7 @@
 import { View, Text, ScrollView, Input, Image } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { useState, useEffect } from 'react'
+import Icon from '../../components/Icon'
 import './index.scss'
 import { getMyPlants, createDiary, uploadDiaryImages, type Plant } from '../../services/diaryService'
 
@@ -122,12 +123,12 @@ export default function WriteDiary() {
       <View className='header-gradient'>
         <View className='header'>
           <View className='close-btn' onClick={() => Taro.navigateBack()}>
-            <Text className='close-icon'>X</Text>
+            <Icon name="x" size={20} color="#999" />
           </View>
 
           <View className='header-center'>
             <View className='header-icon-badge'>
-              <Text className='header-icon-text'>~</Text>
+              <Icon name="flower2" size={16} color="#f46" />
             </View>
             <Text className='header-title'>记录生长</Text>
           </View>
@@ -147,7 +148,7 @@ export default function WriteDiary() {
         <View className='section'>
           <View className='section-header'>
             <View className='section-icon-box'>
-              <Text className='section-icon-text'>~</Text>
+              <Icon name="sprout" size={14} color="#52c41a" />
             </View>
             <Text className='section-title'>选择植物</Text>
           </View>
@@ -155,13 +156,13 @@ export default function WriteDiary() {
           {plants.length === 0 ? (
             <View className='empty-card' onClick={() => Taro.navigateTo({ url: '/pages/garden/index' })}>
               <View className='empty-icon-wrap'>
-                <Text className='empty-icon'>+</Text>
+                <Icon name="plus" size={24} color="#999" />
               </View>
               <View className='empty-content'>
                 <Text className='empty-title'>还没有植物</Text>
                 <Text className='empty-desc'>点击添加你的第一株植物</Text>
               </View>
-              <Text className='chevron-right'>&gt;</Text>
+              <Icon name="chevron-right" size={20} color="#999" />
             </View>
           ) : (
             <ScrollView scrollX className='plant-scroll'>
@@ -173,7 +174,7 @@ export default function WriteDiary() {
                     onClick={() => setSelectedPlantId(plant.id)}
                   >
                     <View className={`plant-chip-icon ${selectedPlantId === plant.id ? 'active' : ''}`}>
-                      <Text className='chip-leaf'>*</Text>
+                      <Icon name="leaf" size={12} color="#52c41a" />
                     </View>
                     <Text className={`plant-chip-text ${selectedPlantId === plant.id ? 'active' : ''}`}>
                       {plant.name || '植物'}
@@ -189,7 +190,7 @@ export default function WriteDiary() {
         <View className='section'>
           <View className='section-header'>
             <View className='section-icon-box accent'>
-              <Text className='section-icon-text'>~</Text>
+              <Icon name="camera" size={14} color="#f46" />
             </View>
             <Text className='section-title'>拍照记录</Text>
             <Text className='image-count'>{images.length}/9</Text>
@@ -200,14 +201,14 @@ export default function WriteDiary() {
               <View key={index} className='image-wrapper'>
                 <Image className='image' src={uri} mode='aspectFill' />
                 <View className='remove-btn' onClick={() => handleRemoveImage(index)}>
-                  <Text className='remove-icon'>X</Text>
+                  <Icon name="x" size={12} color="#fff" />
                 </View>
               </View>
             ))}
             {images.length < 9 && (
               <View className='add-btn' onClick={handleAddImage}>
                 <View className='add-icon-wrap'>
-                  <Text className='add-icon'>~</Text>
+                  <Icon name="plus" size={20} color="#999" />
                 </View>
                 <Text className='add-text'>添加照片</Text>
               </View>
@@ -219,7 +220,7 @@ export default function WriteDiary() {
         <View className='section'>
           <View className='section-header'>
             <View className='section-icon-box secondary'>
-              <Text className='section-icon-text'>~</Text>
+              <Icon name="trending-up" size={14} color="#52c41a" />
             </View>
             <Text className='section-title'>生长数据</Text>
             <Text className='optional-tag'>选填</Text>
@@ -229,7 +230,7 @@ export default function WriteDiary() {
             <View className='growth-card'>
               <View className='growth-label-row'>
                 <View className='growth-icon-box accent-light'>
-                  <Text className='growth-icon-text'>~</Text>
+                  <Icon name="ruler" size={12} color="#f46" />
                 </View>
                 <Text className='growth-label'>株高</Text>
               </View>
@@ -249,7 +250,7 @@ export default function WriteDiary() {
             <View className='growth-card'>
               <View className='growth-label-row'>
                 <View className='growth-icon-box secondary-light'>
-                  <Text className='growth-icon-text'>*</Text>
+                  <Icon name="leaf" size={12} color="#52c41a" />
                 </View>
                 <Text className='growth-label'>叶片数</Text>
               </View>
@@ -272,7 +273,7 @@ export default function WriteDiary() {
         <View className='section'>
           <View className='section-header'>
             <View className='section-icon-box dark'>
-              <Text className='section-icon-text'>~</Text>
+              <Icon name="edit-2" size={14} color="#333" />
             </View>
             <Text className='section-title'>养护笔记</Text>
             <Text className='optional-tag'>选填</Text>
@@ -289,7 +290,7 @@ export default function WriteDiary() {
             />
             <View className='char-count-wrap'>
               <View className='char-count-left'>
-                <Text className='char-count'>~ {content.length}/500</Text>
+                <Text className='char-count'>{content.length}/500</Text>
               </View>
             </View>
           </View>
@@ -299,7 +300,7 @@ export default function WriteDiary() {
         <View className='decoration'>
           <View className='decoration-line' />
           <View className='decoration-icon'>
-            <Text className='decoration-icon-text'>~</Text>
+            <Icon name="flower2" size={16} color="#f46" />
           </View>
           <View className='decoration-line' />
         </View>

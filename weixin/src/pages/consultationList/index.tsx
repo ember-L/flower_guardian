@@ -98,7 +98,7 @@ export default function ConsultationList() {
         {conversations.length === 0 ? (
           <View className='empty'>
             <View className='empty-icon-container'>
-              <Icon name="message-circle" size={48} color="#ccc" />
+              <Icon name="message-circle" size={48} color="#ff6b88" />
             </View>
             <Text className='empty-text'>暂无问诊记录</Text>
             <Text className='empty-subtext'>点击右上角开始新对话</Text>
@@ -133,7 +133,7 @@ export default function ConsultationList() {
                     </Text>
                     <Text className='chat-count'>{messageCount} 条消息</Text>
                   </View>
-                  <Icon name="chevron-right" size={18} color="#ccc" />
+                  <Icon name="chevron-right" size={18} color="#999" />
                 </View>
               )
             })}

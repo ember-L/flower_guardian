@@ -2,56 +2,49 @@ import { View, Text, ScrollView, Image } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import { useState, useEffect } from 'react'
 import Icon from '../../components/Icon'
+import CustomTabBar from '../../components/CustomTabBar'
+import { getToken, getUserProfile, logout } from '../../services/auth'
+import { getGardenStats, GardenStats } from '../../services/plantService'
 import { API_BASE_URL } from '../../services/config'
 import './index.scss'
-
-interface UserProfile {
-  id: number
-  username: string
-  nickname: string
-  avatar_url: string
-  level: number
-  points: number
-  created_at: string
-}
-
-interface UserStats {
-  total_plants: number
-  total_cares: number
-  total_recognitions: number
-}
 
 interface MenuItem {
   id: string
   label: string
+  subtitle: string
   icon: string
   color: string
   url: string
 }
 
 const menuItems: MenuItem[] = [
-  { id: 'orders', label: '我的订单', icon: 'package', color: '#007aff', url: '/pages/orders/index' },
-  { id: 'favorites', label: '我的收藏', icon: 'heart', color: '#ff2d55', url: '/pages/favorites/index' },
-  { id: 'care-history', label: '养护记录', icon: 'clipboard', color: '#34c759', url: '/pages/careHistory/index' },
-  { id: 'achievements', label: '成就徽章', icon: 'trophy', color: '#ff9500', url: '/pages/achievements/index' },
-  { id: 'settings', label: '通知设置', icon: 'bell', color: '#5856d6', url: '/pages/notificationSettings/index' },
-  { id: 'about', label: '关于我们', icon: 'info', color: '#8e8e93', url: '/pages/about/index' },
-  { id: 'feedback', label: '意见反馈', icon: 'message-circle', color: '#5ac8fa', url: '/pages/feedback/index' },
-  { id: 'help', label: '帮助中心', icon: 'help-circle', color: '#ffcc00', url: '/pages/help/index' },
+  { id: 'diary', label: '养花日记', subtitle: '记录植物成长', icon: 'book-open', color: '#52c41a', url: '/pages/diary/index' },
+  { id: 'diagnosis', label: '病症诊断', subtitle: 'AI诊断病虫害', icon: 'stethoscope', color: '#ff4d4f', url: '/pages/diagnosis/index' },
+  { id: 'diagnosisHistory', label: '诊断历史', subtitle: '查看历史诊断记录', icon: 'clipboard', color: '#1890ff', url: '/pages/diagnosisHistory/index' },
+  { id: 'recommendation', label: '新手推荐', subtitle: '场景问答选植物', icon: 'sparkles', color: '#faad14', url: '/pages/recommendation/index' },
+  { id: 'reminder', label: '提醒管理', subtitle: '智能提醒设置', icon: 'bell', color: '#f46', url: '/pages/reminder/index' },
+  { id: 'address', label: '地址管理', subtitle: '收货地址管理', icon: 'map-pin', color: '#52c41a', url: '/pages/address/index' },
+  { id: 'settings', label: '设置', subtitle: '偏好设置', icon: 'settings', color: '#999', url: '/pages/settings/index' },
+  { id: 'help', label: '帮助反馈', subtitle: '联系我们', icon: 'help-circle', color: '#999', url: '/pages/help/index' },
 ]
 
-const levelNames: Record<number, string> = {
-  1: '植物新手',
-  2: '园艺学徒',
-  3: '养护达人',
-  4: '植物专家',
-  5: '园艺大师',
+// 计算用户等级
+const getUserLevel = (plantCount: number) => {
+  if (plantCount >= 20) return { level: 10, title: '植物大师' }
+  if (plantCount >= 15) return { level: 9, title: '绿植达人' }
+  if (plantCount >= 10) return { level: 8, title: '种植专家' }
+  if (plantCount >= 7) return { level: 7, title: '养护高手' }
+  if (plantCount >= 5) return { level: 6, title: '园丁之星' }
+  if (plantCount >= 3) return { level: 5, title: '进阶园丁' }
+  if (plantCount >= 2) return { level: 4, title: '新手园丁' }
+  if (plantCount >= 1) return { level: 3, title: '种花新手' }
+  return { level: 1, title: '养花小白' }
 }
 
 export default function Profile() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
-  const [userStats, setUserStats] = useState<UserStats | null>(null)
+  const [displayUser, setDisplayUser] = useState<any>(null)
+  const [stats, setStats] = useState<GardenStats | null>(null)
   const [loading, setLoading] = useState(true)
 
   useDidShow(() => {
@@ -63,72 +56,48 @@ export default function Profile() {
   }, [])
 
   const checkLoginStatus = () => {
-    const token = Taro.getStorageSync('token')
+    const token = getToken()
     if (token) {
       setIsLoggedIn(true)
       loadUserProfile()
-      loadUserStats()
+      loadGardenStats()
     } else {
       setIsLoggedIn(false)
+      setDisplayUser(null)
+      setStats(null)
       setLoading(false)
     }
   }
 
-  const loadUserProfile = () => {
-    Taro.request({
-      url: `${API_BASE_URL}/api/user/profile`,
-      method: 'GET',
-      header: { 'Authorization': `Bearer ${Taro.getStorageSync('token')}` },
-      success: (res) => {
-        const data = res.data as any
-        if (data) {
-          setUserProfile({
-            id: data.id,
-            username: data.username || '',
-            nickname: data.nickname || data.username || '植物爱好者',
-            avatar_url: data.avatar_url || '',
-            level: data.level || 1,
-            points: data.points || 0,
-            created_at: data.created_at || '',
-          })
-        }
-      },
-      fail: () => {
-        setUserProfile({
-          id: 0,
-          username: '',
-          nickname: '植物爱好者',
-          avatar_url: '',
-          level: 1,
-          points: 0,
-          created_at: '',
+  const loadUserProfile = async () => {
+    try {
+      const data = await getUserProfile()
+      if (data) {
+        setDisplayUser({
+          id: data.id,
+          username: data.username || '',
+          nickname: data.nickname || data.username || '',
+          avatar: data.avatar_url || '',
         })
-      },
-      complete: () => {
-        setLoading(false)
       }
-    })
+    } catch (error) {
+      console.error('获取用户信息失败:', error)
+      setDisplayUser(null)
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const loadUserStats = () => {
-    Taro.request({
-      url: `${API_BASE_URL}/api/user/stats`,
-      method: 'GET',
-      header: { 'Authorization': `Bearer ${Taro.getStorageSync('token')}` },
-      success: (res) => {
-        const data = res.data as any
-        if (data) {
-          setUserStats(data)
-        }
-      },
-      fail: () => {
-        setUserStats({
-          total_plants: 3,
-          total_cares: 28,
-          total_recognitions: 15,
-        })
+  const loadGardenStats = async () => {
+    try {
+      const data = await getGardenStats()
+      if (data) {
+        setStats(data)
       }
-    })
+    } catch (error) {
+      console.error('获取花园统计失败:', error)
+      setStats(null)
+    }
   }
 
   const handleLogin = () => {
@@ -141,11 +110,10 @@ export default function Profile() {
       content: '确定要退出登录吗？',
       success: (res) => {
         if (res.confirm) {
-          Taro.removeStorageSync('token')
-          Taro.removeStorageSync('userInfo')
+          logout()
           setIsLoggedIn(false)
-          setUserProfile(null)
-          setUserStats(null)
+          setDisplayUser(null)
+          setStats(null)
           Taro.showToast({ title: '已退出登录', icon: 'success' })
         }
       }
@@ -172,90 +140,107 @@ export default function Profile() {
     Taro.navigateTo({ url: '/pages/editProfile/index' })
   }
 
+  const plantCount = stats?.total_plants || 0
+  const userLevel = getUserLevel(plantCount)
+
+  // 获取头像完整URL
+  const getAvatarUrl = (avatar: string) => {
+    if (!avatar || typeof avatar !== 'string') return ''
+    const trimmed = avatar.trim()
+    if (trimmed.length === 0) return ''
+    if (trimmed.startsWith('http')) return trimmed
+    return `${API_BASE_URL}${trimmed}`
+  }
+
   return (
     <View className='page-container'>
       <ScrollView scrollY className='scroll-view'>
         {/* User Info Section */}
         <View className='user-info-section'>
           <View className='user-info-content'>
-            {isLoggedIn && userProfile ? (
-              <View className='user-row'>
-                <View className='avatar-container'>
-                  {userProfile.avatar_url ? (
-                    <Image className='avatar' src={userProfile.avatar_url} mode='aspectFill' />
-                  ) : (
-                    <View className='avatar-placeholder'>
-                      <Text className='avatar-text'>
-                        {(userProfile.nickname || userProfile.username || 'U').slice(0, 1)}
-                      </Text>
-                    </View>
-                  )}
-                  <View className='level-badge'>
-                    <Text className='level-badge-text'>Lv.{userProfile.level}</Text>
-                  </View>
-                </View>
-                <View className='user-text'>
-                  <View className='name-row'>
-                    <Text className='username'>{userProfile.nickname || userProfile.username}</Text>
-                    <View className='edit-profile' onClick={handleEditProfile}>
-                      <Icon name="edit-2" size={16} color="#999" />
+            {isLoggedIn && displayUser ? (
+              <>
+                <View className='profile-row'>
+                  <View className='avatar-container'>
+                    {displayUser.avatar ? (
+                      <Image className='avatar' src={getAvatarUrl(displayUser.avatar)} mode='aspectFill' />
+                    ) : (
+                      <View className='avatar-placeholder'>
+                        <Icon name="user" size={40} color="#fff" />
+                      </View>
+                    )}
+                    <View className='avatar-badge'>
+                      <Icon name="sparkles" size={14} color="#faad14" />
                     </View>
                   </View>
-                  <View className='level-row'>
-                    <Text className='level-name'>{levelNames[userProfile.level] || '植物新手'}</Text>
-                    <Text className='points-text'>{userProfile.points} 积分</Text>
+                  <View className='profile-info'>
+                    <View className='name-row'>
+                      <Text className='username'>{displayUser.nickname || displayUser.username || '养花小白'}</Text>
+                      <View className='level-badge'>
+                        <Text className='level-text'>Lv.{userLevel.level} {userLevel.title}</Text>
+                      </View>
+                    </View>
+                    <Text className='plant-count'>已养护 {plantCount} 盆植物</Text>
                   </View>
                 </View>
-              </View>
+              </>
             ) : (
-              <View className='user-row' onClick={handleLogin}>
-                <View className='avatar-container'>
-                  <View className='avatar-placeholder'>
-                    <Icon name="user" size={24} color="#ccc" />
-                  </View>
-                </View>
-                <View className='user-text'>
-                  <Text className='login-hint'>点击登录</Text>
-                  <Text className='login-subhint'>登录后享受更多功能</Text>
-                </View>
-                <Icon name="chevron-right" size={16} color="#ccc" />
+              <View className='login-button' onClick={handleLogin}>
+                <Icon name="user" size={36} color="#f46" />
+                <Text className='login-button-text'>点击登录</Text>
+                <Text className='login-button-subtext'>登录后可保存植物和记录</Text>
               </View>
             )}
           </View>
         </View>
 
         {/* Stats Card */}
-        {isLoggedIn && userStats && (
+        {isLoggedIn && stats && (
           <View className='stats-card'>
-            <View className='stat-item' onClick={() => Taro.switchTab({ url: '/pages/garden/index' })}>
-              <Text className='stat-value'>{userStats.total_plants}</Text>
-              <Text className='stat-label'>我的植物</Text>
+            <View className='stat-item'>
+              <View className='stat-icon' style={{ backgroundColor: 'rgba(244, 68, 102, 0.1)' }}>
+                <Icon name="clock" size={18} color="#f46" />
+              </View>
+              <Text className='stat-number'>{stats.this_month_cares || 0}</Text>
+              <Text className='stat-label'>本月养护</Text>
             </View>
             <View className='stat-divider' />
-            <View className='stat-item' onClick={() => Taro.navigateTo({ url: '/pages/careHistory/index' })}>
-              <Text className='stat-value'>{userStats.total_cares}</Text>
-              <Text className='stat-label'>养护次数</Text>
+            <View className='stat-item'>
+              <View className='stat-icon' style={{ backgroundColor: 'rgba(82, 196, 26, 0.1)' }}>
+                <Icon name="check-circle" size={18} color="#52c41a" />
+              </View>
+              <Text className='stat-number'>{stats.health_distribution?.good || 0}</Text>
+              <Text className='stat-label'>健康植物</Text>
             </View>
             <View className='stat-divider' />
-            <View className='stat-item' onClick={() => Taro.switchTab({ url: '/pages/index/index' })}>
-              <Text className='stat-value'>{userStats.total_recognitions}</Text>
-              <Text className='stat-label'>识别次数</Text>
+            <View className='stat-item'>
+              <View className='stat-icon' style={{ backgroundColor: 'rgba(250, 173, 20, 0.1)' }}>
+                <Icon name="heart" size={18} color="#faad14" />
+              </View>
+              <Text className='stat-number'>{stats.health_distribution?.fair || 0}</Text>
+              <Text className='stat-label'>正常植物</Text>
             </View>
           </View>
         )}
 
-        {/* Menu Items */}
+        {/* Menu Section */}
         <View className='menu-section'>
+          <Text className='menu-section-title'>功能入口</Text>
           <View className='menu-list'>
             {menuItems.map((item, index) => (
-              <View key={item.id} className='menu-item' onClick={() => handleMenuPress(item)}>
-                <View className='menu-item-left'>
-                  <View className='menu-icon' style={{ backgroundColor: item.color }}>
-                    <Icon name={item.icon as any} size={20} color="#fff" />
-                  </View>
-                  <Text className='menu-label'>{item.label}</Text>
+              <View
+                key={item.id}
+                className={`menu-item ${index < menuItems.length - 1 ? 'menu-item-border' : ''}`}
+                onClick={() => handleMenuPress(item)}
+              >
+                <View className='menu-icon' style={{ backgroundColor: item.color + '20' }}>
+                  <Icon name={item.icon as any} size={20} color={item.color} />
                 </View>
-                <Icon name="chevron-right" size={16} color="#ccc" />
+                <View className='menu-content'>
+                  <Text className='menu-title'>{item.label}</Text>
+                  <Text className='menu-subtitle'>{item.subtitle}</Text>
+                </View>
+                <Icon name="chevron-right" size={18} color="#999" />
               </View>
             ))}
           </View>
@@ -273,9 +258,10 @@ export default function Profile() {
         {/* Footer */}
         <View className='footer'>
           <Text className='footer-text'>护花使者 v1.0.0</Text>
-          <Text className='footer-subtext'>用心呵护每一株绿植</Text>
+          <Text className='footer-subtext'>让养花不再凭感觉</Text>
         </View>
       </ScrollView>
+      <CustomTabBar />
     </View>
   )
 }

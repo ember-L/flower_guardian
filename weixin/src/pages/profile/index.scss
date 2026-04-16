@@ -1,20 +1,17 @@
 .page-container {
   min-height: 100vh;
   background: #fafafa;
+  padding-bottom: 160px;
 }
 
 .scroll-view {
   height: 100vh;
 }
 
-/* User Info Section */
+/* User Info Section - 与RN保持一致 */
 .user-info-section {
-  background: #f46;
-  padding: 0 40px;
-  padding-top: 60px;
-  padding-bottom: 60px;
-  border-bottom-left-radius: 24px;
-  border-bottom-right-radius: 24px;
+  background: #fff;
+  padding: 24px 24px 15px;
 }
 
 .user-info-content {
@@ -22,7 +19,7 @@
   flex-direction: column;
 }
 
-.user-row {
+.profile-row {
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -30,57 +27,83 @@
 
 .avatar-container {
   position: relative;
-  margin-right: 32px;
+  align-items: center;
+  justify-content: center;
 }
 
 .avatar {
   width: 80px;
   height: 80px;
   border-radius: 40px;
-  border-width: 3px;
-  border-style: solid;
-  border-color: rgba(255, 255, 255, 0.4);
-  box-shadow: 0 4px 12px rgba(244, 68, 102, 0.4);
+  background: #f46;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 8px rgba(244, 68, 102, 0.3);
+  overflow: hidden;
+}
+
+.avatar-image {
+  width: 80px;
+  height: 80px;
+  border-radius: 40px;
 }
 
 .avatar-placeholder {
   width: 80px;
   height: 80px;
   border-radius: 40px;
-  background: rgba(255, 255, 255, 0.2);
-  border-width: 3px;
-  border-style: solid;
-  border-color: rgba(255, 255, 255, 0.4);
+  background: #f46;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(244, 68, 102, 0.4);
+  box-shadow: 0 4px 8px rgba(244, 68, 102, 0.3);
 }
 
-.avatar-text {
-  font-size: 40px;
-  color: #fff;
-}
-
-.level-badge {
+.avatar-badge {
   position: absolute;
-  bottom: 0;
-  right: 0;
-  background: #faad14;
-  padding: 2px 12px;
-  border-radius: 12px;
+  bottom: -2px;
+  right: -2px;
+  width: 28px;
+  height: 28px;
+  border-radius: 14px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border-width: 2px;
   border-style: solid;
-  border-color: #f46;
+  border-color: #fff;
 }
 
-.level-badge-text {
-  font-size: 12px;
+.login-button {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 0;
+}
+
+.login-button-text {
+  font-size: 20px;
   font-weight: bold;
-  color: #fff;
+  color: #f46;
+  margin-top: 8px;
+  text-align: center;
 }
 
-.user-text {
+.login-button-subtext {
+  font-size: 14px;
+  color: #666;
+  margin-top: 4px;
+  text-align: center;
+  display: block;
+  width: 100%;
+}
+
+.profile-info {
+  margin-left: 20px;
+  align-items: flex-start;
   flex: 1;
 }
 
@@ -88,73 +111,42 @@
   display: flex;
   flex-direction: row;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .username {
   font-size: 22px;
   font-weight: bold;
-  color: #fff;
+  color: #333;
 }
 
-.edit-profile {
-  width: 32px;
-  height: 32px;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.2);
-  display: flex;
+.level-badge {
+  background: #faad14;
+  padding: 4px 16px;
+  border-radius: 12px;
   align-items: center;
-  justify-content: center;
-  margin-left: 12px;
+  margin-top: 8px;
 }
 
-.edit-profile-text {
-  font-size: 16px;
+.level-text {
   color: #fff;
-}
-
-.level-row {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  margin-top: 4px;
-  gap: 8px;
-}
-
-.level-name {
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.85);
-  font-weight: 500;
-}
-
-.points-text {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.7);
+  font-weight: 600;
 }
 
-/* Login State */
-.login-hint {
-  font-size: 20px;
-  font-weight: bold;
-  color: #fff;
-}
-
-.login-subhint {
+.plant-count {
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.7);
+  color: #999;
   margin-top: 4px;
 }
 
-.login-arrow {
-  font-size: 24px;
-  color: rgba(255, 255, 255, 0.6);
-}
-
-/* Stats Card */
+/* Stats Card - 与RN保持一致，使用重叠效果 */
 .stats-card {
   display: flex;
   flex-direction: row;
+  margin: -20px 20px 0;
   background: #fff;
-  margin: -24px 40px 0;
   border-radius: 16px;
   padding: 16px;
   box-shadow: 0 4px 20px rgba(244, 68, 102, 0.15);
@@ -169,56 +161,65 @@
   align-items: center;
 }
 
-.stat-value {
+.stat-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.stat-number {
   font-size: 20px;
   font-weight: bold;
-  color: #f46;
+  color: #333;
 }
 
 .stat-label {
   font-size: 12px;
-  color: #666;
+  color: #999;
   margin-top: 2px;
 }
 
 .stat-divider {
-  width: 2px;
+  width: 1px;
   background: #eee;
 }
 
-/* Menu Section */
+/* Menu Section - 与RN保持一致 */
 .menu-section {
-  padding: 0 40px;
   margin-top: 24px;
-}
-
-.menu-list {
+  margin: 24px 20px 0;
   background: #fff;
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
 }
 
+.menu-section-title {
+  padding: 16px 16px 8px;
+  color: #faad14;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.menu-list {
+  /* 继承 menu-section 的样式 */
+}
+
 .menu-item {
   display: flex;
   flex-direction: row;
   align-items: center;
-  justify-content: space-between;
-  padding: 16px;
-  border-bottom-width: 1px;
-  border-bottom-style: solid;
-  border-bottom-color: #fafafa;
-
-  &:last-child {
-    border-bottom-width: 0;
-  }
+  padding: 16px 20px;
 }
 
-.menu-item-left {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 12px;
+.menu-item-border {
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+  border-bottom-color: #eee;
 }
 
 .menu-icon {
@@ -228,33 +229,36 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-right: 12px;
 }
 
-.menu-icon-text {
-  font-size: 18px;
+.menu-content {
+  flex: 1;
 }
 
-.menu-label {
+.menu-title {
   font-size: 15px;
-  color: #333;
   font-weight: 500;
+  color: #333;
+  display: flex;
+  flex-direction: column;
 }
 
-.menu-arrow {
-  font-size: 18px;
-  color: #ccc;
+.menu-subtitle {
+  font-size: 13px;
+  color: #999;
+  margin-top: 2px;
 }
 
-/* Logout */
+/* Logout - 与RN保持一致 */
 .logout-section {
-  padding: 0 40px;
-  margin-top: 16px;
+  margin: 20px 20px 0;
 }
 
 .logout-button {
   background: rgba(255, 77, 79, 0.1);
   border-radius: 12px;
-  padding: 12px;
+  padding: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -271,7 +275,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 24px 0 64px;
+  padding: 32px 0 64px;
 }
 
 .footer-text {
@@ -280,7 +284,7 @@
 }
 
 .footer-subtext {
-  font-size: 12px;
+  font-size: 13px;
   color: #ccc;
   margin-top: 4px;
 }

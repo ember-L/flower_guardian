@@ -81,7 +81,7 @@ export interface HealthRecord {
 export interface GardenStats {
   total_plants: number
   this_month_cares: number
-  health_distribution: { good: number; fair: number; sick: number }
+  health_distribution: { good: number; fair: number; poor: number }
   location_distribution: Record<string, number>
 }
 
@@ -193,4 +193,12 @@ export const autoSetupReminders = async (plantId: number) => {
 // 获取即将到期的提醒
 export const getUpcomingReminders = async (days = 7) => {
   return request({ url: '/api/plants/my/reminders/upcoming', data: { days } })
+}
+
+// 获取养护日历
+export interface CalendarData {
+  days: Record<string, CareRecord[]>
+}
+export const getCareCalendar = async (): Promise<CalendarData> => {
+  return request<CalendarData>({ url: '/api/plants/my/calendar' })
 }

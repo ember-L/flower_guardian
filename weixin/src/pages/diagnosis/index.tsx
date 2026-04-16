@@ -3,6 +3,7 @@ import Taro from '@tarojs/taro'
 import { useState } from 'react'
 import { recognitionService } from '../../services/recognitionService'
 import Icon from '../../components/Icon'
+import logoPng from '../../assets/logo.png'
 import './index.scss'
 
 interface DiagnosisResult {
@@ -107,7 +108,7 @@ export default function Diagnosis() {
           </View>
           <View className='header-content'>
             <View className='header-icon'>
-              <Icon name="flower" size={28} color="#fff" />
+              <Image className='header-logo' src={logoPng} mode='aspectFit' />
             </View>
             <Text className='header-title'>病症诊断</Text>
             <Text className='header-subtitle'>AI智能识别病虫害</Text>
@@ -132,7 +133,7 @@ export default function Diagnosis() {
             {/* 次要按钮 */}
             <View className='secondary-btn' onClick={() => handleDiagnose('album')}>
               <View className='secondary-btn-icon'>
-                <Icon name="image" size={20} color="#666" />
+                <Icon name="image" size={20} color="#f46" />
               </View>
               <View className='secondary-btn-text'>
                 <Text className='secondary-btn-title'>相册选择</Text>
@@ -157,17 +158,17 @@ export default function Diagnosis() {
             {/* 快捷入口 */}
             <View className='quick-actions'>
               <View className='quick-action' onClick={() => Taro.navigateTo({ url: '/pages/diagnosisHistory/index' })}>
-                <Icon name="clipboard" size={20} color="#666" />
+                <Icon name="clipboard" size={20} color="#52c41a" />
                 <Text className='quick-action-text'>诊断历史</Text>
                 <Text className='arrow-icon-xs'>&gt;</Text>
               </View>
               <View className='quick-action' onClick={() => Taro.navigateTo({ url: '/pages/consultation/index' })}>
-                <Icon name="message-circle" size={20} color="#666" />
+                <Icon name="message-circle" size={20} color="#007aff" />
                 <Text className='quick-action-text'>问诊室</Text>
                 <Text className='arrow-icon-xs'>&gt;</Text>
               </View>
               <View className='quick-action' onClick={() => Taro.navigateTo({ url: '/pages/knowledge/index' })}>
-                <Icon name="book-open" size={20} color="#666" />
+                <Icon name="book-open" size={20} color="#f46" />
                 <Text className='quick-action-text'>养护知识</Text>
                 <Text className='arrow-icon-xs'>&gt;</Text>
               </View>
@@ -179,7 +180,7 @@ export default function Diagnosis() {
         {isLoading && (
           <View className='loading-wrapper'>
             <View className='loading-circle'>
-              <Icon name="bug" size={40} color="#333" />
+              <Icon name="bug" size={40} color="#f46" />
             </View>
             <Text className='loading-title'>AI正在分析...</Text>
             <Text className='loading-desc'>正在识别病虫害特征</Text>
@@ -189,7 +190,7 @@ export default function Diagnosis() {
                 <Text className='loading-step-text'>图像上传完成</Text>
               </View>
               <View className='loading-step'>
-                <Icon name="loader" size={18} color="#faad14" />
+                <Icon name="loader" size={18} color="#f46" />
                 <Text className='loading-step-text'>AI模型分析中</Text>
               </View>
             </View>
@@ -252,7 +253,7 @@ export default function Diagnosis() {
               <View className='result-item'>
                 <View className='result-item-header'>
                   <View className='result-item-icon' style={{ backgroundColor: '#e6f2ff' }}>
-                    <Icon name="search" size={16} color="#1890ff" />
+                    <Icon name="search" size={16} color="#007aff" />
                   </View>
                   <Text className='result-item-label'>病害类型</Text>
                 </View>
@@ -279,7 +280,7 @@ export default function Diagnosis() {
                 <View className='result-item'>
                   <View className='result-item-header'>
                     <View className='result-item-icon' style={{ backgroundColor: 'rgba(255, 68, 102, 0.08)' }}>
-                      <Icon name="shield" size={16} color="#ff4466" />
+                      <Icon name="shield" size={16} color="#f46" />
                     </View>
                     <Text className='result-item-label'>预防措施</Text>
                   </View>
@@ -304,7 +305,7 @@ export default function Diagnosis() {
             {/* 操作按钮 */}
             <View className='action-buttons'>
               <View className='retry-btn' onClick={handleReDiagnose}>
-                <Icon name="camera" size={20} color="#666" />
+                <Icon name="camera" size={20} color="#f46" />
                 <Text className='retry-btn-text'>再次诊断</Text>
               </View>
               <View className='consult-btn' onClick={() => Taro.navigateTo({ url: '/pages/consultation/index' })}>

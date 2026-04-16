@@ -1,13 +1,33 @@
+// 主题常量
+$primary: #f46;
+$primary-light: #ff6b88;
+$background: #fafafa;
+$surface: #ffffff;
+$text: #333333;
+$text-secondary: #666666;
+$text-tertiary: #999999;
+$border: #eeeeee;
+$success: #52c41a;
+$error: #ff4d4f;
+$warning: #faad14;
+
+// 间距
+$xs: 8px;
+$sm: 12px;
+$md: 16px;
+$lg: 20px;
+$xl: 24px;
+
 .address-page {
   min-height: 100vh;
-  background: #fafafa;
+  background: $background;
 }
 
 /* 渐变头部 - borderBottomRadius:24 */
 .header-gradient {
-  background: #f46;
-  border-bottom-left-radius: 48px;
-  border-bottom-right-radius: 48px;
+  background: $primary;
+  border-bottom-left-radius: 24px;
+  border-bottom-right-radius: 24px;
   overflow: hidden;
 }
 
@@ -16,29 +36,23 @@
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
-  padding: 40px;
+  padding: $lg $xl;
   padding-top: 60px;
-  padding-bottom: 40px;
+  padding-bottom: $xl;
 }
 
 .back-btn {
-  width: 72px;
-  height: 72px;
-  border-radius: 36px;
+  width: 36px;
+  height: 36px;
+  border-radius: 18px;
   background: rgba(255, 255, 255, 0.2);
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
-.back-btn-text {
-  font-size: 36px;
-  color: #ffffff;
-  font-weight: 300;
-}
-
 .header-title {
-  font-size: 48px;
+  font-size: 24px;
   font-weight: bold;
   color: #ffffff;
   flex: 1;
@@ -46,19 +60,13 @@
 }
 
 .add-btn-header {
-  width: 72px;
-  height: 72px;
-  border-radius: 36px;
+  width: 36px;
+  height: 36px;
+  border-radius: 18px;
   background: rgba(255, 255, 255, 0.2);
   display: flex;
   justify-content: center;
   align-items: center;
-}
-
-.add-btn-header-text {
-  font-size: 40px;
-  color: #ffffff;
-  font-weight: 300;
 }
 
 /* 列表 */
@@ -67,46 +75,46 @@
 }
 
 .list-content {
-  padding: 32px;
+  padding: $md;
 }
 
 /* 地址卡片 */
 .address-card {
-  background: #ffffff;
-  border-radius: 24px;
-  padding: 32px;
-  margin-bottom: 32px;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+  background: $surface;
+  border-radius: 12px;
+  padding: $md;
+  margin-bottom: $md;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
 }
 
 .address-info {
-  margin-bottom: 16px;
+  margin-bottom: $sm;
 }
 
 .default-badge {
-  background: #f46;
-  padding: 4px 16px;
-  border-radius: 8px;
+  background: $primary;
+  padding: 2px 8px;
+  border-radius: 4px;
   align-self: flex-start;
-  margin-bottom: 8px;
+  margin-bottom: $xs;
 }
 
 .default-text {
   color: #ffffff;
-  font-size: 24px;
+  font-size: 12px;
 }
 
 .name {
-  font-size: 32px;
+  font-size: 16px;
   font-weight: 600;
-  color: #333333;
-  margin-bottom: 8px;
+  color: $text;
+  margin-bottom: 4px;
 }
 
 .address {
-  font-size: 28px;
-  color: #666666;
-  line-height: 40px;
+  font-size: 14px;
+  color: $text-secondary;
+  line-height: 20px;
 }
 
 /* 操作按钮 */
@@ -114,16 +122,16 @@
   display: flex;
   flex-direction: row;
   justify-content: flex-end;
-  margin-top: 16px;
-  gap: 32px;
+  margin-top: $sm;
+  gap: $lg;
 }
 
 .action-text {
-  color: #f46;
-  font-size: 28px;
+  color: $primary;
+  font-size: 14px;
 
   &.delete {
-    color: #ff4d4f;
+    color: $error;
   }
 }
 
@@ -136,8 +144,8 @@
 }
 
 .loading-text {
-  font-size: 28px;
-  color: #999999;
+  font-size: 14px;
+  color: $text-tertiary;
 }
 
 /* 空状态 */
@@ -150,19 +158,19 @@
 }
 
 .empty-text {
-  font-size: 32px;
-  color: #999999;
+  font-size: 16px;
+  color: $text-tertiary;
 }
 
 .add-btn {
-  margin-top: 32px;
-  padding: 24px 48px;
-  background: #f46;
-  border-radius: 48px;
+  margin-top: $md;
+  padding: $sm $lg;
+  background: $primary;
+  border-radius: 24px;
 }
 
 .add-btn-text {
   color: #ffffff;
   font-weight: 600;
-  font-size: 30px;
+  font-size: 15px;
 }

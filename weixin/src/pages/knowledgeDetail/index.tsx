@@ -25,7 +25,7 @@ export default function KnowledgeDetail() {
   if (!article) {
     return (
       <View className='page-empty'>
-        <Icon name="file-text" size={40} color="#ccc" />
+        <Icon name="file-text" size={40} color="#999" />
         <Text className='empty-text'>文章未找到</Text>
       </View>
     )

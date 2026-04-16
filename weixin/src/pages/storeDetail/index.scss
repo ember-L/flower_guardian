@@ -12,162 +12,163 @@ $error: #ff4d4f;
 $warning: #faad14;
 
 // 间距
-$xs: 8px;    // 4 * 2
-$sm: 16px;   // 8 * 2
-$md: 32px;   // 16 * 2
-$lg: 40px;   // 20 * 2
-$xl: 48px;   // 24 * 2
+$xs: 8px;
+$sm: 12px;
+$md: 16px;
+$lg: 20px;
+$xl: 24px;
 
 .store-detail {
   min-height: 100vh;
   background: $background;
   display: flex;
   flex-direction: column;
+  position: relative;
 }
 
 .loading-text {
-  font-size: 28px;
+  font-size: 14px;
   color: $text-tertiary;
   text-align: center;
   padding-top: 200px;
 }
 
-.detail-scroll {
-  flex: 1;
-  height: calc(100vh - 100px);
+/* 返回按钮 - 与RN一致 */
+.back-btn {
+  position: absolute;
+  top: 48px;
+  left: 16px;
+  z-index: 10;
+  width: 40px;
+  height: 40px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* 商品图片 - RN: width: '100%', height: 300 */
+.detail-scroll {
+  flex: 1;
+}
+
+/* 商品图片 - 与RN一致 */
 .product-image {
   width: 100%;
-  height: 600px;  // 300 * 2
+  height: 300px;
   background: $background;
 }
 
-/* 商品信息 - RN: padding: spacing.md, backgroundColor: white, marginBottom: spacing.md */
+/* 商品信息 - 与RN一致 */
 .info {
   padding: $md;
   background: $surface;
   margin-bottom: $md;
 }
 
-/* RN: fontSize: 20, fontWeight: 'bold', color: text */
 .name {
-  font-size: 40px;  // 20 * 2
+  font-size: 20px;
   font-weight: bold;
   color: $text;
 }
 
-/* RN: fontSize: 24, fontWeight: 'bold', color: primary, marginVertical: spacing.sm */
 .price {
-  font-size: 48px;  // 24 * 2
+  font-size: 24px;
   font-weight: bold;
   color: $primary;
-  margin-top: $sm;
-  margin-bottom: $sm;
+  margin: $sm 0;
 }
 
-/* RN: fontSize: 14, color: text-tertiary */
 .stock {
-  font-size: 28px;  // 14 * 2
+  font-size: 14px;
   color: $text-tertiary;
 }
 
-/* RN: fontSize: 14, color: text-secondary, marginTop: spacing.md, lineHeight: 20 */
 .description {
-  font-size: 28px;  // 14 * 2
+  font-size: 14px;
   color: $text-secondary;
   margin-top: $md;
-  line-height: 40px;  // 20 * 2
+  line-height: 20px;
 }
 
-/* 表单 - RN: padding: spacing.md, backgroundColor: white */
+/* 表单 - 与RN一致 */
 .form {
   padding: $md;
   background: $surface;
 }
 
-/* RN: fontSize: 16, fontWeight: '600', marginBottom: spacing.md */
 .section-title {
-  font-size: 32px;  // 16 * 2
+  font-size: 16px;
   font-weight: 600;
   margin-bottom: $md;
 }
 
-/* RN: marginBottom: spacing.md */
 .input-row {
   margin-bottom: $md;
 }
 
-/* RN: fontSize: 14, color: text-secondary, marginBottom: spacing.xs */
 .label {
-  font-size: 28px;  // 14 * 2
+  font-size: 14px;
   color: $text-secondary;
-  margin-bottom: $xs;  // 4 * 2
+  margin-bottom: $xs;
   display: block;
 }
 
-/* RN: borderWidth: 1, borderColor: border, borderRadius: 8, padding: spacing.sm */
 .input {
-  border: 2px solid $border;
-  border-radius: 16px;  // 8 * 2
-  padding: $sm;
-  font-size: 28px;
+  border: 1px solid $border;
+  border-radius: 8px;
+  padding: 12px $sm;
+  font-size: 14px;
   color: $text;
-  box-sizing: border-box;
   width: 100%;
+  box-sizing: border-box;
+  min-height: 44px;
 }
 
 .input-placeholder {
   color: $text-tertiary;
 }
 
-/* RN: height: 80, textAlignVertical: 'top' */
 .text-area {
-  height: 160px;  // 80 * 2
+  height: 80px;
 }
 
-/* 配送选项 - RN: flexDirection: 'row', gap: spacing.sm */
 .delivery-options {
   display: flex;
   gap: $sm;
 }
 
-/* RN: flex: 1, padding: spacing.sm, borderWidth: 1, borderColor: border, borderRadius: 8, alignItems: 'center' */
 .option {
   flex: 1;
   padding: $sm;
-  border: 2px solid $border;
-  border-radius: 16px;  // 8 * 2
+  border: 1px solid $border;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-/* RN: borderColor: primary, backgroundColor: primary */
 .option-active {
   border-color: $primary;
   background: $primary;
 }
 
-/* RN: color: text-secondary */
 .option-text {
-  font-size: 28px;  // 14 * 2
+  font-size: 14px;
   color: $text-secondary;
 }
 
-/* RN: color: white */
 .option-text-active {
   color: $surface;
 }
 
-/* 地址选择器 - RN: flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderWidth: 1, borderColor: border, borderRadius: 8, padding: spacing.sm */
 .address-selector {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border: 2px solid $border;
-  border-radius: 16px;  // 8 * 2
+  border: 1px solid $border;
+  border-radius: 8px;
   padding: $sm;
   background: $surface;
 }
@@ -176,92 +177,70 @@ $xl: 48px;   // 24 * 2
   flex: 1;
 }
 
-/* RN: fontSize: 14, color: text, fontWeight: '500' */
 .address-text {
-  font-size: 28px;  // 14 * 2
+  font-size: 14px;
   color: $text;
   font-weight: 500;
 }
 
-/* RN: fontSize: 12, color: text-secondary, marginTop: 2 */
 .address-detail {
-  font-size: 24px;  // 12 * 2
+  font-size: 12px;
   color: $text-secondary;
-  margin-top: 4px;
+  margin-top: 2px;
 }
 
-/* RN: fontSize: 14, color: text-tertiary */
 .placeholder-text {
-  font-size: 28px;  // 14 * 2
+  font-size: 14px;
   color: $text-tertiary;
 }
 
-.chevron-right {
-  font-size: 40px;
-  color: $text-tertiary;
-  margin-left: $sm;
-}
-
-/* RN: flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: primary, borderRadius: 8, padding: spacing.sm, borderStyle: 'dashed' */
 .add-address-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2px dashed $primary;
-  border-radius: 16px;  // 8 * 2
+  border: 1px dashed $primary;
+  border-radius: 8px;
   padding: $sm;
 }
 
-.add-icon {
-  font-size: 36px;
-  color: $primary;
-}
-
-/* RN: fontSize: 14, color: primary, marginLeft: spacing.xs */
 .add-address-text {
-  font-size: 28px;  // 14 * 2
+  font-size: 14px;
   color: $primary;
-  margin-left: $xs;  // 4 * 2
+  margin-left: $xs;
 }
 
-/* RN: marginTop: spacing.sm, borderWidth: 1, borderColor: border, borderRadius: 8, backgroundColor: white, maxHeight: 200 */
 .address-list {
   margin-top: $sm;
-  border: 2px solid $border;
-  border-radius: 16px;  // 8 * 2
+  border: 1px solid $border;
+  border-radius: 8px;
   background: $surface;
-  max-height: 400px;  // 200 * 2
+  max-height: 200px;
   overflow-y: auto;
 }
 
-/* RN: flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: spacing.sm, borderBottomWidth: 1, borderBottomColor: border */
 .address-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: $sm;
-  border-bottom: 2px solid $border;
+  border-bottom: 1px solid $border;
 }
 
-/* RN: backgroundColor: primary + '10' */
 .address-item-selected {
-  background: rgba(255, 68, 102, 0.06);
+  background: rgba(255, 68, 102, 0.1);
 }
 
-/* RN: backgroundColor: primary, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 */
 .default-tag {
   background: $primary;
-  padding: 4px 12px;  // 2*2, 6*2
-  border-radius: 8px;  // 4 * 2
+  padding: 2px 6px;
+  border-radius: 4px;
 }
 
-/* RN: color: white, fontSize: 10 */
 .default-tag-text {
   color: $surface;
-  font-size: 20px;  // 10 * 2
+  font-size: 10px;
 }
 
-/* RN: flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: spacing.sm */
 .add-new-address {
   display: flex;
   align-items: center;
@@ -269,24 +248,16 @@ $xl: 48px;   // 24 * 2
   padding: $sm;
 }
 
-.add-icon-sm {
-  font-size: 32px;
-  color: $primary;
-}
-
-/* RN: fontSize: 14, color: primary, marginLeft: spacing.xs */
 .add-new-address-text {
-  font-size: 28px;  // 14 * 2
+  font-size: 14px;
   color: $primary;
-  margin-left: $xs;  // 4 * 2
+  margin-left: $xs;
 }
 
-/* 底部留白 */
 .bottom-spacer {
-  height: 120px;
+  height: 80px;
 }
 
-/* 提交订单按钮 - RN: backgroundColor: primary, padding: spacing.md, alignItems: 'center' */
 .order-button {
   background: $primary;
   padding: $md;
@@ -301,14 +272,12 @@ $xl: 48px;   // 24 * 2
   z-index: 100;
 }
 
-/* RN: opacity: 0.6 */
 .order-button-disabled {
   opacity: 0.6;
 }
 
-/* RN: color: white, fontSize: 16, fontWeight: '600' */
 .order-button-text {
   color: $surface;
-  font-size: 32px;  // 16 * 2
+  font-size: 16px;
   font-weight: 600;
 }

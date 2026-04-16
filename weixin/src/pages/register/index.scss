@@ -37,18 +37,25 @@
 }
 
 .logo-container {
-  width: 160rpx;
-  height: 160rpx;
+  width: 200rpx;
+  height: 200rpx;
   border-radius: 48rpx;
-  background: rgba(250, 173, 20, 0.08);
+  background: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
   margin-bottom: 40rpx;
+  overflow: hidden;
+  box-shadow: 0 8rpx 24rpx rgba(255, 68, 102, 0.15);
 }
 
 .logo-emoji {
   font-size: 80rpx;
+}
+
+.logo-image {
+  width: 160rpx;
+  height: 160rpx;
 }
 
 .title {

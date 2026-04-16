@@ -1,7 +1,26 @@
 /* PlantDetail - 匹配RN PlantDetailScreen样式 */
+$primary: #f46;
+$primary-light: #ff6b88;
+$background: #fafafa;
+$surface: #ffffff;
+$text: #333333;
+$text-secondary: #666666;
+$text-tertiary: #999999;
+$border: #eeeeee;
+$success: #52c41a;
+$error: #ff4d4f;
+$warning: #faad14;
+
+// 间距
+$xs: 8px;
+$sm: 12px;
+$md: 16px;
+$lg: 20px;
+$xl: 24px;
+
 .plant-detail {
   min-height: 100vh;
-  background: #fafafa;
+  background: $background;
 }
 
 .page-loading {
@@ -9,12 +28,12 @@
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background: #fafafa;
+  background: $background;
 }
 
 .loading-text {
-  font-size: 32px;
-  color: #666666;
+  font-size: 14px;
+  color: $text-secondary;
 }
 
 /* 头部 */
@@ -22,25 +41,19 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px;
-  border-bottom: 1px solid #eeeeee;
-  background: #ffffff;
+  padding: $md $lg;
+  border-bottom: 1px solid $border;
+  background: $surface;
 }
 
 .header-back {
   padding: 4px;
 }
 
-.icon-back {
-  font-size: 36px;
-  color: #333333;
-  font-weight: bold;
-}
-
 .header-title {
-  font-size: 36px;
+  font-size: 18px;
   font-weight: bold;
-  color: #333333;
+  color: $text;
   flex: 1;
   text-align: center;
 }
@@ -49,206 +62,189 @@
   padding: 4px;
 }
 
-.icon-delete {
-  font-size: 32px;
-  color: #ff4d4f;
-  font-weight: bold;
-}
-
 .content {
   height: calc(100vh - 68px);
 }
 
 /* 信息卡片 */
 .info-card {
-  margin: 20px;
-  background: #ffffff;
-  border-radius: 32px;
+  margin: $lg;
+  background: $surface;
+  border-radius: 16px;
   overflow: hidden;
 }
 
 .plant-image {
-  height: 360px;
-  background: #f46;
+  height: 180px;
+  background: $primary;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.plant-image-icon {
-  font-size: 120px;
-  color: rgba(255, 255, 255, 0.3);
-}
-
 .info-row {
-  padding: 16px;
+  padding: $md;
 }
 
 .plant-name {
-  font-size: 40px;
+  font-size: 20px;
   font-weight: bold;
-  color: #333333;
+  color: $text;
 }
 
 .plant-type {
-  font-size: 28px;
-  color: #666666;
-  margin-top: 4px;
+  font-size: 14px;
+  color: $text-secondary;
+  margin-top: 2px;
 }
 
 /* 位置选择 */
 .location-section {
-  padding: 16px;
+  padding: $md;
   padding-top: 0;
 }
 
 .location-title {
-  font-size: 28px;
-  color: #666666;
-  margin-bottom: 8px;
+  font-size: 14px;
+  color: $text-secondary;
+  margin-bottom: 4px;
 }
 
 .location-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: $xs;
 }
 
 .location-chip {
-  padding: 8px 16px;
-  border-radius: 32px;
-  background: #fafafa;
+  padding: $xs $md;
+  border-radius: 16px;
+  background: $background;
 
   &.active {
-    background: #f46;
+    background: $primary;
   }
 }
 
 .location-chip-text {
-  font-size: 24px;
-  color: #666666;
+  font-size: 12px;
+  color: $text-secondary;
 
   &.active {
-    color: #ffffff;
+    color: $surface;
   }
 }
 
 /* Tab 切换 */
 .tabs {
   display: flex;
-  margin: 0 20px 16px;
+  margin: 0 $lg $md;
 }
 
 .tab {
   flex: 1;
-  padding: 16px 0;
+  padding: $md 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-bottom: 4px solid transparent;
+  border-bottom: 2px solid transparent;
 
   &.active {
-    border-bottom-color: #f46;
+    border-bottom-color: $primary;
   }
 }
 
 .tab-text {
-  font-size: 28px;
-  color: #999999;
+  font-size: 14px;
+  color: $text-tertiary;
 
   &.active {
-    color: #f46;
+    color: $primary;
     font-weight: 600;
   }
 }
 
 /* Tab 内容 */
 .tab-content {
-  padding: 0 20px 64px;
+  padding: 0 $lg 64px;
 }
 
 .add-record-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 16px;
-  border: 2px solid #f46;
-  border-radius: 24px;
-  margin-bottom: 16px;
-}
-
-.add-record-icon {
-  font-size: 32px;
-  color: #f46;
-  font-weight: bold;
+  gap: $xs;
+  padding: $md;
+  border: 1px solid $primary;
+  border-radius: 12px;
+  margin-bottom: $md;
 }
 
 .add-record-text {
-  color: #f46;
+  color: $primary;
   font-weight: 500;
-  font-size: 28px;
+  font-size: 14px;
 }
 
 .empty-text {
   text-align: center;
-  color: #999999;
-  padding: 48px 0;
-  font-size: 28px;
+  color: $text-tertiary;
+  padding: 24px 0;
+  font-size: 14px;
 }
 
 /* 记录卡片 */
 .record-card {
-  background: #ffffff;
-  border-radius: 24px;
-  padding: 16px;
-  margin-bottom: 8px;
+  background: $surface;
+  border-radius: 12px;
+  padding: $md;
+  margin-bottom: $xs;
 }
 
 .record-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 .record-type {
-  font-size: 32px;
+  font-size: 16px;
   font-weight: 600;
-  color: #333333;
+  color: $text;
 }
 
 .record-date {
-  font-size: 24px;
-  color: #999999;
+  font-size: 12px;
+  color: $text-tertiary;
 }
 
 .record-notes {
-  font-size: 28px;
-  color: #666666;
-  margin-top: 4px;
+  font-size: 14px;
+  color: $text-secondary;
+  margin-top: 2px;
 }
 
 /* 生长统计 */
 .growth-stats {
   display: flex;
-  gap: 16px;
+  gap: $md;
 }
 
 .growth-stat {
-  font-size: 28px;
-  color: #666666;
+  font-size: 14px;
+  color: $text-secondary;
 }
 
 /* 健康状态徽章 */
 .status-badge {
-  padding: 4px 16px;
-  border-radius: 16px;
+  padding: 2px 8px;
+  border-radius: 8px;
 }
 
 .status-badge-text {
-  font-size: 24px;
-  color: #ffffff;
+  font-size: 12px;
+  color: $surface;
 }
 
 /* 底部弹窗 */
@@ -266,10 +262,10 @@
 }
 
 .modal-content {
-  background: #ffffff;
-  border-top-left-radius: 48px;
-  border-top-right-radius: 48px;
-  padding: 20px;
+  background: $surface;
+  border-top-left-radius: 24px;
+  border-top-right-radius: 24px;
+  padding: $lg;
   width: 100%;
   max-height: 80vh;
   overflow-y: auto;
@@ -279,79 +275,75 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: $lg;
 }
 
 .modal-title {
-  font-size: 36px;
+  font-size: 18px;
   font-weight: bold;
-  color: #333333;
+  color: $text;
 }
 
 .modal-close {
-  padding: 8px;
-}
-
-.modal-close-text {
-  font-size: 36px;
-  color: #999999;
+  padding: 4px;
 }
 
 .input-label {
-  font-size: 28px;
-  color: #666666;
-  margin-bottom: 8px;
-  margin-top: 16px;
+  font-size: 14px;
+  color: $text-secondary;
+  margin-bottom: 4px;
+  margin-top: $md;
 }
 
 .form-input {
-  background: #fafafa;
-  border: 2px solid #eeeeee;
-  border-radius: 24px;
-  padding: 16px;
-  font-size: 28px;
-  color: #333333;
-  margin-bottom: 8px;
+  background: $background;
+  border: 1px solid $border;
+  border-radius: 12px;
+  padding: $md;
+  font-size: 14px;
+  color: $text;
+  margin-bottom: 4px;
+  min-height: 44px;
 }
 
 .type-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: $xs;
 }
 
 .type-chip {
-  padding: 16px;
-  border-radius: 40px;
-  background: #fafafa;
+  padding: $sm $md;
+  border-radius: 20px;
+  background: $background;
 
   &.active {
-    background: #f46;
+    background: $primary;
   }
 }
 
 .type-chip-text {
-  font-size: 28px;
-  color: #666666;
+  font-size: 14px;
+  color: $text-secondary;
 
   &.active {
-    color: #ffffff;
+    color: $surface;
   }
 }
 
 .submit-btn {
-  background: #f46;
-  padding: 16px;
-  border-radius: 24px;
+  background: $primary;
+  padding: $md;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: 20px;
+  margin-top: $lg;
 }
 
 .submit-btn-text {
-  color: #ffffff;
-  font-size: 32px;
+  color: $surface;
+  font-size: 16px;
   font-weight: 600;
 }
 

@@ -1,6 +1,7 @@
 .page-container {
   min-height: 100vh;
   background: #fafafa;
+  padding-bottom: 160px;
 }
 
 .main-scroll {
@@ -47,6 +48,22 @@
   left: 20px;
 }
 
+/* 浮动叶子装饰 - 与RN保持一致 */
+.floating-leaf-1 {
+  position: absolute;
+  top: 80px;
+  right: 30px;
+  animation: float-up-down 3s ease-in-out infinite;
+}
+
+.floating-leaf-2 {
+  position: absolute;
+  top: 150px;
+  left: 20px;
+  animation: float-up-down 3s ease-in-out infinite;
+  animation-delay: 1s;
+}
+
 .hero-content {
   display: flex;
   align-items: center;
@@ -58,6 +75,7 @@
   height: 64px;
   border-radius: 20px;
   background: #fff;
+  display: flex;
   align-items: center;
   justify-content: center;
   border-width: 2px;
@@ -72,6 +90,8 @@
 
 .hero-text {
   margin-left: 16px;
+  display: flex;
+  flex-direction: column;
 }
 
 .hero-title {
@@ -132,13 +152,13 @@
 
 /* Main Content */
 .main-content {
-  padding: 0 40px;
+  padding: 0 20px;
   margin-top: -50px;
   position: relative;
   z-index: 1;
 }
 
-/* Identify Card */
+/* Identify Card - 入场动画与RN保持一致 */
 .identify-card {
   background: #fff;
   border-radius: 24px;
@@ -148,13 +168,15 @@
   border-width: 1px;
   border-style: solid;
   border-color: rgba(244, 68, 102, 0.08);
+  animation: slide-up 0.5s ease-out;
+  overflow: hidden;
 }
 
 .identify-header {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 45px;
 }
 
 .identify-badge {
@@ -195,6 +217,18 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  margin-top: 40px;
+}
+
+/* 脉动动画容器 */
+.pulse-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: pulse 1.5s ease-in-out infinite;
+  overflow: visible;
+  position: relative;
+  z-index: 1;
 }
 
 .loading-container {
@@ -225,6 +259,26 @@
   to { transform: rotate(360deg); }
 }
 
+/* Pulse Animation - 与RN端保持一致 */
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+/* Float Animation - 浮动效果 */
+@keyframes float-up-down {
+  0% { transform: translateY(0); opacity: 0.5; }
+  50% { transform: translateY(-8px); opacity: 0.8; }
+  100% { transform: translateY(0); opacity: 0.5; }
+}
+
+/* Slide in animation for identify card */
+@keyframes slide-up {
+  from { transform: translateY(30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
 .loading-text {
   font-size: 16px;
   font-weight: 600;
@@ -244,48 +298,49 @@
   align-items: center;
   justify-content: center;
   position: relative;
+  flex-shrink: 0;
+  z-index: 2;
 }
 
 .main-button-inner {
-  width: 120px;
-  height: 120px;
-  border-radius: 60px;
-  background: #f46;
+  width: 240rpx;
+  height: 240rpx;
+  min-width: 240rpx;
+  min-height: 240rpx;
+  max-width: 240rpx;
+  max-height: 240rpx;
+  border-radius: 120px;
+  background-color: #f46;
+  display: flex;
   align-items: center;
   justify-content: center;
-  border-width: 4px;
-  border-style: solid;
-  border-color: rgba(255, 255, 255, 0.3);
+  border: 4rpx solid rgba(255, 255, 255, 0.3);
+  overflow: hidden;
+  box-sizing: border-box;
+  flex-shrink: 0;
   position: relative;
-  z-index: 1;
-}
-
-.main-button-icon {
-  font-size: 36px;
+  z-index: 3;
 }
 
 .main-button-glow {
   position: absolute;
-  width: 140px;
-  height: 140px;
-  border-radius: 70px;
+  width: 280rpx;
+  height: 280rpx;
+  border-radius: 140px;
   background: rgba(244, 68, 102, 0.12);
   z-index: 0;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
 }
 
 .button-hint {
   font-size: 14px;
   color: #666;
-  margin-top: 16px;
+  margin-top: 40px;
 }
 
 .gallery-button {
   width: 100%;
-  margin-top: 20px;
-  padding-top: 16px;
+  margin-top: 24px;
+  padding-top: 20px;
   border-top-width: 1px;
   border-top-style: solid;
   border-top-color: #eee;
@@ -296,7 +351,7 @@
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  padding: 16px;
+  padding: 16px 0;
   border-width: 1.5px;
   border-style: solid;
   border-color: #f46;
@@ -539,6 +594,7 @@
   width: 44px;
   height: 44px;
   border-radius: 14px;
+  display: flex;
   align-items: center;
   justify-content: center;
   margin-bottom: 8px;

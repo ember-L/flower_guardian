@@ -98,7 +98,7 @@ export default function AddressEdit() {
       <View className='header-gradient'>
         <View className='header'>
           <View className='back-btn' onClick={() => Taro.navigateBack()}>
-            <Text className='back-btn-text'>{'<'}</Text>
+            <Icon name="arrow-left" size={24} color="#fff" />
           </View>
           <Text className='header-title'>{isEdit ? '编辑地址' : '新增地址'}</Text>
           <View className='placeholder' />

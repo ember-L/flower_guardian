@@ -1,3 +1,4 @@
+// 问诊对话页面 - 带打字机效果
 import { View, Text, ScrollView, Input } from '@tarojs/components'
 import Taro, { useRouter } from '@tarojs/taro'
 import { useState, useEffect, useRef, useCallback } from 'react'
@@ -6,6 +7,7 @@ import Icon from '../../components/Icon'
 import {
   getConversation,
   sendMessage,
+  createConversation,
   getWelcomeMessage,
   type Conversation,
   type Message,
@@ -17,6 +19,58 @@ definePageConfig({
   navigationBarTextStyle: 'black',
 })
 
+// 打字机效果组件
+function TypewriterText({
+  text,
+  onComplete,
+  onTypingChange
+}: {
+  text: string
+  onComplete?: () => void
+  onTypingChange?: (displayText: string) => void
+}) {
+  const [displayText, setDisplayText] = useState('')
+  const [isComplete, setIsComplete] = useState(false)
+  const intervalRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    // 重置状态
+    setDisplayText('')
+    setIsComplete(false)
+
+    // 打字速度 (毫秒)
+    const typeSpeed = 20
+    let currentIndex = 0
+
+    intervalRef.current = setInterval(() => {
+      if (currentIndex < text.length) {
+        currentIndex++
+        setDisplayText(text.substring(0, currentIndex))
+        onTypingChange?.(text.substring(0, currentIndex))
+      } else {
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current)
+        }
+        setIsComplete(true)
+        onComplete?.()
+      }
+    }, typeSpeed)
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current)
+      }
+    }
+  }, [text, onComplete, onTypingChange])
+
+  return (
+    <Text className='message-text'>
+      {displayText}
+      {!isComplete && <Text className='cursor'>|</Text>}
+    </Text>
+  )
+}
+
 export default function Consultation() {
   const router = useRouter()
   const conversationId = router.params.id || ''
@@ -25,6 +79,8 @@ export default function Consultation() {
   const [isLoading, setIsLoading] = useState(false)
   const [isTyping, setIsTyping] = useState(false)
   const [typingMessageId, setTypingMessageId] = useState<string | null>(null)
+  const [displayingMessageId, setDisplayingMessageId] = useState<string | null>(null)
+  const [displayingContent, setDisplayingContent] = useState('')
   const scrollRef = useRef<any>(null)
 
   useEffect(() => {
@@ -35,12 +91,8 @@ export default function Consultation() {
     try {
       let conv = await getConversation(conversationId)
       if (!conv) {
-        conv = {
-          id: conversationId || 'new-' + Date.now(),
-          title: '新对话',
-          messages: [getWelcomeMessage()],
-          updatedAt: Date.now(),
-        }
+        conv = createConversation()
+        conv.messages = [getWelcomeMessage()]
       }
       setConversation(conv)
     } catch (err) {
@@ -48,24 +100,30 @@ export default function Consultation() {
     }
   }
 
-  const scrollToBottom = () => {
+  const scrollToBottom = useCallback(() => {
     setTimeout(() => {
       if (scrollRef.current) {
         scrollRef.current.scrollTop = 99999
       }
     }, 100)
-  }
+  }, [])
 
   useEffect(() => {
     if (conversation) {
       scrollToBottom()
     }
-  }, [conversation?.messages?.length])
+  }, [conversation?.messages?.length, displayingContent])
 
   const handleTypingComplete = useCallback(() => {
     setTypingMessageId(null)
+    setDisplayingMessageId(null)
+    setDisplayingContent('')
     setIsTyping(false)
     setIsLoading(false)
+  }, [])
+
+  const handleTypingChange = useCallback((text: string) => {
+    setDisplayingContent(text)
   }, [])
 
   const handleSend = async () => {
@@ -104,17 +162,18 @@ export default function Consultation() {
       const updated = await sendMessage(conversation, text)
       const aiMessage = updated.messages[updated.messages.length - 1]
 
+      // 移除pending消息，用真实消息替换
       setConversation(prev => {
         if (!prev) return prev
-        const messages = prev.messages.map(msg =>
-          msg.id === pendingAiMessageId ? aiMessage : msg
-        )
+        const messages = prev.messages.filter(msg => msg.id !== pendingAiMessageId)
+        messages.push(aiMessage)
         return { ...prev, messages }
       })
 
+      // 开始打字机效果
       setTypingMessageId(aiMessage.id)
+      setDisplayingMessageId(aiMessage.id)
       setIsLoading(false)
-      setIsTyping(false)
     } catch (error) {
       console.error('发送失败', error)
       setConversation(prev => {
@@ -172,8 +231,8 @@ export default function Consultation() {
               return { ...prev, messages }
             })
             setTypingMessageId(aiMessage.id)
+            setDisplayingMessageId(aiMessage.id)
             setIsLoading(false)
-            setIsTyping(false)
           }).catch(() => {
             setConversation(prev => {
               if (!prev) return prev
@@ -187,6 +246,18 @@ export default function Consultation() {
         }
       },
     })
+  }
+
+  const handleNewChat = () => {
+    const newConv = createConversation()
+    newConv.messages = [getWelcomeMessage()]
+    setConversation(newConv)
+    setInputText('')
+    setIsLoading(false)
+    setIsTyping(false)
+    setTypingMessageId(null)
+    setDisplayingMessageId(null)
+    setDisplayingContent('')
   }
 
   // 简单Markdown渲染
@@ -238,7 +309,7 @@ export default function Consultation() {
     return (
       <View className='welcome-container'>
         <View className='welcome-icon'>
-          <Icon name="message-circle" size={32} color="#4CAF50" />
+          <Icon name="message-circle" size={40} color="#f46" />
         </View>
         <Text className='welcome-title'>AI 植物医生</Text>
         <Text className='welcome-text'>{welcomeMsg.content}</Text>
@@ -250,6 +321,20 @@ export default function Consultation() {
 
   return (
     <View className='container'>
+      {/* 头部 */}
+      <View className='header'>
+        <View className='back-btn' onClick={() => Taro.navigateBack()}>
+          <Icon name="chevron-left" size={24} color="#333" />
+        </View>
+        <View className='header-center'>
+          <Text className='header-title'>AI 问诊</Text>
+          {isTyping && <Text className='header-subtitle'>正在输入...</Text>}
+        </View>
+        <View className='new-chat-btn' onClick={handleNewChat}>
+          <Icon name="edit-2" size={20} color="#f46" />
+        </View>
+      </View>
+
       {/* 消息列表 */}
       <ScrollView
         scrollY
@@ -262,8 +347,8 @@ export default function Consultation() {
           <View className={messages.length === 0 ? 'message-list-empty' : ''}>
             {messages.map((msg: Message) => {
               const isUser = msg.role === 'user'
-              const isTypingMsg = !isUser && msg.id === typingMessageId
               const isPending = !isUser && !msg.content
+              const isDisplaying = !isUser && msg.id === displayingMessageId
 
               return (
                 <View
@@ -271,7 +356,12 @@ export default function Consultation() {
                   className={`message-bubble ${isUser ? 'user-message' : 'ai-message'}`}
                 >
                   <View className={`message-content ${isUser ? 'user-message-content' : ''}`}>
-                    {!isUser && <Text className='ai-name-prefix'>护花使者</Text>}<Icon name="flower" size={14} color="#4CAF50" />
+                    {!isUser && (
+                      <View className='ai-name-row'>
+                        <Text className='ai-name-prefix'>护花使者</Text>
+                        <Icon name="flower" size={14} color="#f46" />
+                      </View>
+                    )}
                     {msg.imageUri && (
                       <View className='message-image'>
                         <Icon name="image" size={20} color="#999" />
@@ -279,14 +369,16 @@ export default function Consultation() {
                     )}
                     {isPending ? (
                       <View className='typing-indicator'>
-                        <Text className='typing-dot'>·</Text>
-                        <Text className='typing-dot typing-dot-mid'>·</Text>
-                        <Text className='typing-dot'>·</Text>
+                        <View className='typing-dot' />
+                        <View className='typing-dot typing-dot-mid' />
+                        <View className='typing-dot' />
                       </View>
-                    ) : isTypingMsg ? (
-                      <Text className='message-text'>
-                        {msg.content}<Text className='cursor'>|</Text>
-                      </Text>
+                    ) : isDisplaying ? (
+                      <TypewriterText
+                        text={msg.content}
+                        onComplete={handleTypingComplete}
+                        onTypingChange={handleTypingChange}
+                      />
                     ) : isUser ? (
                       <Text className='message-text user-message-text'>{msg.content}</Text>
                     ) : (
@@ -304,7 +396,7 @@ export default function Consultation() {
       {/* 输入区域 */}
       <View className='input-container'>
         <View className='attach-btn' onClick={handleChooseImage}>
-          <Icon name="image" size={22} color="#666" />
+          <Icon name="image" size={22} color="#f46" />
         </View>
         <View className='input-wrapper'>
           <Input

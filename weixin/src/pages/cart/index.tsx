@@ -132,6 +132,7 @@ export default function Cart() {
                     className='product-image'
                     src={item.product_image && item.product_image.trim().length > 0 ? item.product_image : 'https://via.placeholder.com/80'}
                     mode='aspectFill'
+                    lazyLoad
                   />
                   <View className='item-info'>
                     <Text className='product-name'>{item.product_name}</Text>

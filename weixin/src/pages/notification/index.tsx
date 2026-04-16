@@ -129,7 +129,7 @@ export default function Notification() {
       {notifications.length === 0 ? (
         <View className='empty-container'>
           <View className='empty-icon'>
-            <Icon name="bell-off" size={48} color="#ccc" />
+            <Icon name="bell-off" size={48} color="#999" />
           </View>
           <Text className='empty-title'>暂无通知</Text>
           <Text className='empty-subtitle'>
@@ -146,7 +146,7 @@ export default function Notification() {
                 onClick={() => handleNotificationPress(item)}
               >
                 <View className='notification-icon'>
-                  <Icon name={getNotifIcon(item.data.type) as any} size={20} color="#4CAF50" />
+                  <Icon name={getNotifIcon(item.data.type) as any} size={20} color="#f46" />
                 </View>
                 <View className='notification-content'>
                   <Text className='notification-title'>{item.title}</Text>

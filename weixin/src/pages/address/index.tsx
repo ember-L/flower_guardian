@@ -1,6 +1,7 @@
 import { View, Text, ScrollView } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import { useState, useEffect } from 'react'
+import Icon from '../../components/Icon'
 import './index.scss'
 import {
   getAddresses,
@@ -76,11 +77,11 @@ export default function Address() {
       <View className='header-gradient'>
         <View className='header'>
           <View className='back-btn' onClick={() => Taro.navigateBack()}>
-            <Text className='back-btn-text'>{'<'}</Text>
+            <Icon name="arrow-left" size={24} color="#fff" />
           </View>
           <Text className='header-title'>收货地址</Text>
           <View className='add-btn-header' onClick={handleAdd}>
-            <Text className='add-btn-header-text'>+</Text>
+            <Icon name="plus" size={24} color="#fff" />
           </View>
         </View>
       </View>

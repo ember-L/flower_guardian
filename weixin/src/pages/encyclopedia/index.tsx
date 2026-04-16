@@ -2,6 +2,7 @@ import { View, Text, ScrollView, Image, Input } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { useState, useEffect } from 'react'
 import Icon from '../../components/Icon'
+import CustomTabBar from '../../components/CustomTabBar'
 import { API_BASE_URL } from '../../services/config'
 import './index.scss'
 
@@ -194,7 +195,7 @@ export default function Encyclopedia() {
           {/* Search Bar - Floating */}
           <View className='search-container'>
             <View className='search-icon-wrapper'>
-              <Icon name="search" size={18} color="#999" />
+              <Icon name="search" size={18} color="#f46" />
             </View>
             <Input
               className='search-input'
@@ -213,7 +214,7 @@ export default function Encyclopedia() {
           {/* Difficulty Filter */}
           <View className='section'>
             <View className='section-header-row'>
-              <Icon name="trending-up" size={18} color="#333" />
+              <Icon name="activity" size={18} color="#f46" />
               <Text className='section-title'>难度筛选</Text>
             </View>
             <ScrollView scrollX className='difficulty-scroll'>
@@ -242,7 +243,7 @@ export default function Encyclopedia() {
           {/* Category Grid */}
           <View className='section'>
             <View className='section-header-row'>
-              <Icon name="grid" size={18} color="#333" />
+              <Icon name="grid" size={18} color="#f46" />
               <Text className='section-title'>植物分类</Text>
             </View>
             <View className='category-grid'>
@@ -276,7 +277,7 @@ export default function Encyclopedia() {
           {selectedCategory && plants.length > 0 && (
             <View className='section'>
               <View className='section-header-row'>
-                <Icon name="tag" size={18} color="#333" />
+                <Icon name="tag" size={18} color="#f46" />
                 <Text className='section-title'>
                   {categories.find(c => c.value === selectedCategory)?.name || selectedCategory}
                 </Text>
@@ -291,7 +292,7 @@ export default function Encyclopedia() {
                   >
                     <View className='category-plant-image-container'>
                       {plant.image_url ? (
-                        <Image className='category-plant-image' src={getFullImageUrl(plant.image_url)} mode='aspectFill' />
+                        <Image className='category-plant-image' src={getFullImageUrl(plant.image_url)} mode='aspectFill' lazyLoad />
                       ) : (
                         <Icon name="leaf" size={32} color="#10b981" />
                       )}
@@ -309,7 +310,7 @@ export default function Encyclopedia() {
               <Icon name="star" size={18} color="#faad14" />
               <Text className='section-title'>热门植物</Text>
               <View className='hot-badge'>
-                <Icon name="trending-up" size={14} color="#ff4d4f" />
+                <Icon name="trending-up" size={12} color="#fff" />
                 <Text className='hot-badge-text'>TOP 10</Text>
               </View>
             </View>
@@ -331,7 +332,7 @@ export default function Encyclopedia() {
                       </View>
                       <View className='plant-image-container'>
                         {plant.image_url ? (
-                          <Image className='plant-image' src={getFullImageUrl(plant.image_url)} mode='aspectFill' />
+                          <Image className='plant-image' src={getFullImageUrl(plant.image_url)} mode='aspectFill' lazyLoad />
                         ) : (
                           <View className='plant-image-placeholder'>
                             <Icon name="leaf" size={32} color="#10b981" />
@@ -353,7 +354,7 @@ export default function Encyclopedia() {
               </ScrollView>
             ) : (
               <View className='empty-container'>
-                <Icon name="file-text" size={48} color="#ccc" />
+                <Icon name="file-text" size={48} color="#999" />
                 <Text className='empty-text'>暂无植物数据</Text>
               </View>
             )}
@@ -362,35 +363,35 @@ export default function Encyclopedia() {
           {/* Legend */}
           <View className='section'>
             <View className='section-header-row'>
-              <Icon name="info" size={18} color="#333" />
+              <Icon name="info" size={18} color="#f46" />
               <Text className='section-title'>养护图标说明</Text>
             </View>
             <View className='legend-card'>
               <View className='legend-grid'>
                 <View className='legend-item'>
-                  <View className='legend-icon' style={{ backgroundColor: 'rgba(250, 173, 20, 0.2)' }}>
-                    <Icon name="sun" size={20} color="#faad14" />
+                  <View className='legend-icon' style={{ backgroundColor: 'rgba(250, 173, 20, 0.15)' }}>
+                    <Icon name="sun" size={22} color="#faad14" />
                   </View>
                   <Text className='legend-label'>喜阳</Text>
                   <Text className='legend-desc'>喜充足光照</Text>
                 </View>
                 <View className='legend-item'>
-                  <View className='legend-icon' style={{ backgroundColor: 'rgba(0, 122, 255, 0.2)' }}>
-                    <Icon name="cloud-rain" size={20} color="#007aff" />
+                  <View className='legend-icon' style={{ backgroundColor: 'rgba(24, 144, 255, 0.15)' }}>
+                    <Icon name="cloud-rain" size={22} color="#007aff" />
                   </View>
                   <Text className='legend-label'>喜湿</Text>
                   <Text className='legend-desc'>喜湿润环境</Text>
                 </View>
                 <View className='legend-item'>
-                  <View className='legend-icon' style={{ backgroundColor: 'rgba(82, 196, 26, 0.2)' }}>
-                    <Icon name="thermometer" size={20} color="#52c41a" />
+                  <View className='legend-icon' style={{ backgroundColor: 'rgba(82, 196, 26, 0.15)' }}>
+                    <Icon name="thermometer" size={22} color="#52c41a" />
                   </View>
                   <Text className='legend-label'>耐寒</Text>
                   <Text className='legend-desc'>耐低温</Text>
                 </View>
                 <View className='legend-item'>
-                  <View className='legend-icon' style={{ backgroundColor: 'rgba(255, 77, 79, 0.2)' }}>
-                    <Icon name="alert-triangle" size={20} color="#ff4d4f" />
+                  <View className='legend-icon' style={{ backgroundColor: 'rgba(255, 77, 79, 0.15)' }}>
+                    <Icon name="alert-circle" size={22} color="#ff4d4f" />
                   </View>
                   <Text className='legend-label'>有毒</Text>
                   <Text className='legend-desc'>需注意安全</Text>
@@ -403,7 +404,7 @@ export default function Encyclopedia() {
           <View className='section last-section'>
             <View className='pitfall-header'>
               <View className='pitfall-header-icon'>
-                <Icon name="alert-triangle" size={20} color="#ff4d4f" />
+                <Icon name="alert-triangle" size={20} color="#fff" />
               </View>
               <View>
                 <Text className='pitfall-title'>避坑指南</Text>
@@ -420,13 +421,14 @@ export default function Encyclopedia() {
                     <Text className='pitfall-item-title'>{pitfall.title}</Text>
                     <Text className='pitfall-item-desc'>{pitfall.desc}</Text>
                   </View>
-                  <Icon name="chevron-right" size={16} color="#ccc" />
+                  <Icon name="chevron-right" size={16} color="#999" />
                 </View>
               ))}
             </View>
           </View>
         </View>
       </ScrollView>
+      <CustomTabBar />
     </View>
   )
 }

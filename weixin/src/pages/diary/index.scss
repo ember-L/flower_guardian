@@ -1,30 +1,29 @@
-/* Diary - 匹配RN DiaryScreen样式 */
+/* Diary - 与RN DiaryScreen样式保持一致 */
 .diary-page {
   min-height: 100vh;
   background: #fafafa;
+  display: flex;
+  flex-direction: column;
 }
 
-/* Header */
+/* Header - 与RN一致 */
 .header {
   display: flex;
+  flex-direction: row;
   align-items: center;
-  padding: 8px 16px;
-  background: #ffffff;
-  border-bottom: 1px solid #eeeeee;
+  padding: 12px 16px;
+  background: #fff;
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+  border-bottom-color: #eee;
 }
 
 .header-back {
-  width: 88px;
-  height: 88px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.icon-back {
-  font-size: 36px;
-  color: #333333;
-  font-weight: bold;
 }
 
 .header-center {
@@ -35,94 +34,82 @@
 }
 
 .header-title {
-  font-size: 36px;
+  font-size: 18px;
   font-weight: 700;
-  color: #333333;
+  color: #333;
 }
 
 .header-subtitle {
-  font-size: 24px;
-  color: #666666;
-  margin-top: 4px;
+  font-size: 12px;
+  color: #999;
+  margin-top: 2px;
 }
 
 .header-right {
-  width: 88px;
-  display: flex;
+  width: 40px;
   align-items: flex-end;
-  justify-content: flex-end;
 }
 
 .write-btn {
-  width: 72px;
-  height: 72px;
-  border-radius: 36px;
+  width: 36px;
+  height: 36px;
+  border-radius: 18px;
   background: #f46;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(244, 68, 102, 0.3);
 }
 
-.write-btn-icon {
-  font-size: 32px;
-  color: #ffffff;
-  font-weight: bold;
-}
-
-/* Tabs */
+/* Tabs - 与RN一致 */
 .tabs-container {
-  background: #ffffff;
+  background: #fff;
   padding: 8px 16px;
 }
 
 .tabs {
   display: flex;
+  flex-direction: row;
   background: #fafafa;
-  border-radius: 16px;
+  border-radius: 12px;
   padding: 4px;
 }
 
 .tab {
   flex: 1;
   display: flex;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
-  padding: 16px;
-  border-radius: 12px;
-  gap: 8px;
-
-  &.active {
-    background: #ffffff;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  }
+  padding: 8px 12px;
+  border-radius: 8px;
+  gap: 4px;
+  position: relative;
 }
 
-.tab-icon {
-  font-size: 28px;
-  color: #666666;
-
-  .active & {
-    color: #f46;
-  }
+.tab.active {
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
 }
 
 .tab-text {
-  font-size: 28px;
+  font-size: 14px;
   font-weight: 500;
-  color: #666666;
-
-  &.active {
-    color: #f46;
-    font-weight: 600;
-  }
+  color: #999;
 }
 
-/* Plant Filter */
+.tab-text.active {
+  color: #f46;
+  font-weight: 600;
+}
+
+/* Plant Filter - 与RN一致 */
 .plant-filter-container {
-  background: #ffffff;
+  background: #fff;
   padding: 8px 16px;
-  border-bottom: 1px solid #eeeeee;
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+  border-bottom-color: #eee;
 }
 
 .plant-filter-scroll {
@@ -132,48 +119,54 @@
 
 .plant-filter-chips {
   display: inline-flex;
-  gap: 16px;
+  flex-direction: row;
+  gap: 8px;
   padding-right: 16px;
 }
 
 .plant-filter-chip {
-  padding: 8px 16px;
-  border-radius: 9999px;
+  padding: 4px 12px;
+  border-radius: 16px;
   background: #fafafa;
-  border: 2px solid #eeeeee;
+  border-width: 1px;
+  border-style: solid;
+  border-color: #eee;
+}
 
-  &.active {
-    background: #f46;
-    border-color: #f46;
-  }
+.plant-filter-chip.active {
+  background: #f46;
+  border-color: #f46;
 }
 
 .plant-filter-text {
-  font-size: 26px;
-  color: #666666;
+  font-size: 13px;
+  color: #999;
+}
 
-  &.active {
-    color: #ffffff;
-    font-weight: 600;
-  }
+.plant-filter-text.active {
+  color: #fff;
+  font-weight: 600;
 }
 
 /* Loading */
 .loading-container {
   flex: 1;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: 16px;
+  gap: 8px;
+  padding: 64px 0;
 }
 
 .loading-text {
-  font-size: 28px;
-  color: #666666;
+  font-size: 14px;
+  color: #999;
 }
 
 /* Scroll */
 .diary-scroll {
+  flex: 1;
   height: calc(100vh - 200px);
 }
 
@@ -182,164 +175,162 @@
   padding: 16px;
 }
 
-/* Empty State */
+/* Empty State - 与RN一致 */
 .empty-state {
   flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: 48px;
+  padding: 0 32px;
 }
 
 .empty-icon-container {
-  width: 200px;
-  height: 200px;
-  border-radius: 100px;
+  width: 100px;
+  height: 100px;
+  border-radius: 50px;
   background: #fafafa;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 32px;
-}
-
-.empty-icon {
-  font-size: 80px;
-  color: #b3b3b3;
+  margin-bottom: 16px;
 }
 
 .empty-title {
-  font-size: 36px;
+  font-size: 18px;
   font-weight: 600;
-  color: #333333;
-  margin-bottom: 8px;
+  color: #333;
+  margin-bottom: 4px;
 }
 
 .empty-subtitle {
-  font-size: 28px;
-  color: #666666;
+  font-size: 14px;
+  color: #999;
   text-align: center;
-  margin-bottom: 48px;
+  margin-bottom: 24px;
 }
 
 .empty-btn {
   display: flex;
+  flex-direction: row;
   align-items: center;
-  gap: 16px;
-  padding: 16px 48px;
+  gap: 8px;
+  padding: 12px 24px;
   background: #f46;
-  border-radius: 9999px;
-  box-shadow: 0 4px 16px rgba(244, 68, 102, 0.3);
+  border-radius: 24px;
+  box-shadow: 0 2px 8px rgba(244, 68, 102, 0.3);
 }
 
 .empty-btn-text {
-  font-size: 30px;
+  font-size: 15px;
   font-weight: 600;
-  color: #ffffff;
+  color: #fff;
 }
 
-/* Diary Card */
+/* Diary Card - 与RN一致 */
 .diary-card {
-  background: #ffffff;
+  background: #fff;
   border-radius: 16px;
   padding: 16px;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-  border: 1px solid #eeeeee;
+  border-width: 1px;
+  border-style: solid;
+  border-color: #eee;
 }
 
 .diary-header {
   display: flex;
+  flex-direction: row;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .diary-user {
   display: flex;
+  flex-direction: row;
   align-items: center;
-  gap: 16px;
+  gap: 8px;
 }
 
 .diary-avatar {
-  width: 72px;
-  height: 72px;
-  border-radius: 36px;
+  width: 36px;
+  height: 36px;
+  border-radius: 18px;
   background: rgba(82, 196, 26, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.avatar-icon {
-  font-size: 28px;
-  color: #52c41a;
-}
-
 .diary-plant-name {
-  font-size: 30px;
+  font-size: 15px;
   font-weight: 600;
-  color: #333333;
+  color: #333;
 }
 
 .diary-date {
-  font-size: 24px;
-  color: #999999;
-  margin-top: 4px;
+  font-size: 12px;
+  color: #bbb;
+  margin-top: 2px;
 }
 
 .growth-badge {
   display: flex;
+  flex-direction: row;
   align-items: center;
-  gap: 8px;
-  background: #f6ffed;
-  padding: 4px 16px;
+  gap: 4px;
+  background: rgba(82, 196, 26, 0.1);
+  padding: 4px 8px;
   border-radius: 8px;
 }
 
 .growth-badge-text {
-  font-size: 22px;
+  font-size: 11px;
   font-weight: 600;
   color: #52c41a;
 }
 
 .diary-content {
-  font-size: 30px;
-  color: #666666;
-  line-height: 44px;
-  margin-bottom: 16px;
+  font-size: 15px;
+  color: #666;
+  line-height: 22px;
+  margin-bottom: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
-  overflow: hidden;
 }
 
 /* Image Gallery */
 .image-gallery {
   display: flex;
-  gap: 8px;
-  margin-bottom: 16px;
+  flex-direction: row;
+  gap: 4px;
+  margin-bottom: 12px;
   position: relative;
 }
 
 .gallery-image {
-  width: 160px;
-  height: 160px;
-  border-radius: 12px;
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
   background: #fafafa;
+}
 
-  &.single {
-    width: 100%;
-    height: 360px;
-  }
+.gallery-image.single {
+  width: 100%;
+  height: 180px;
 }
 
 .more-images-overlay {
   position: absolute;
   right: 0;
-  width: 160px;
-  height: 160px;
-  border-radius: 12px;
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
   background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
@@ -347,63 +338,59 @@
 }
 
 .more-images-text {
-  font-size: 32px;
+  font-size: 16px;
   font-weight: 600;
-  color: #ffffff;
+  color: #fff;
 }
 
 /* Diary Footer */
 .diary-footer {
   display: flex;
+  flex-direction: row;
   align-items: center;
-  padding-top: 16px;
-  border-top: 1px solid #f5f5f5;
+  padding-top: 12px;
+  border-top-width: 1px;
+  border-top-style: solid;
+  border-top-color: #eee;
 }
 
 .stat-item {
   display: flex;
+  flex-direction: row;
   align-items: center;
-  gap: 12px;
-  margin-right: 48px;
-}
-
-.stat-icon {
-  font-size: 24px;
-  color: #b3b3b3;
+  gap: 6px;
+  margin-right: 24px;
 }
 
 .stat-text {
-  font-size: 26px;
-  color: #999999;
+  font-size: 13px;
+  color: #999;
 }
 
 .delete-btn {
   margin-left: auto;
-  padding: 8px;
+  padding: 4px;
 }
 
-.delete-icon {
-  font-size: 24px;
-  color: #ff4d4f;
-  font-weight: bold;
-}
-
-/* Plant Card */
+/* Plant Card - 与RN一致 */
 .plant-card {
   display: flex;
+  flex-direction: row;
   align-items: center;
-  background: #ffffff;
+  background: #fff;
   border-radius: 16px;
   padding: 16px;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-  border: 1px solid #eeeeee;
+  border-width: 1px;
+  border-style: solid;
+  border-color: #eee;
 }
 
 .plant-icon {
-  width: 96px;
-  height: 96px;
-  border-radius: 48px;
+  width: 48px;
+  height: 48px;
+  border-radius: 24px;
   background: rgba(82, 196, 26, 0.2);
   display: flex;
   align-items: center;
@@ -411,65 +398,43 @@
   margin-right: 16px;
 }
 
-.plant-icon-text {
-  font-size: 40px;
-  color: #52c41a;
-}
-
 .plant-info {
   flex: 1;
 }
 
 .plant-card-name {
-  font-size: 32px;
+  font-size: 16px;
   font-weight: 600;
-  color: #333333;
-  margin-bottom: 4px;
+  color: #333;
+  margin-bottom: 2px;
 }
 
 .plant-hint {
-  font-size: 26px;
-  color: #999999;
+  font-size: 13px;
+  color: #999;
 }
 
 .plant-delete-btn {
-  padding: 8px;
-  margin-right: 8px;
-}
-
-.plant-delete-icon {
-  font-size: 32px;
-  color: #ff4d4f;
-  font-weight: bold;
-}
-
-.chevron-right {
-  font-size: 36px;
-  color: #b3b3b3;
+  padding: 4px;
+  margin-right: 4px;
 }
 
 /* FAB */
 .fab {
   position: fixed;
-  right: 32px;
-  bottom: calc(160px + env(safe-area-inset-bottom));
-  width: 112px;
-  height: 112px;
-  border-radius: 56px;
+  right: 16px;
+  bottom: 80px;
+  width: 56px;
+  height: 56px;
+  border-radius: 28px;
   background: #f46;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 24px rgba(244, 68, 102, 0.4);
+  box-shadow: 0 4px 12px rgba(244, 68, 102, 0.4);
   z-index: 100;
 }
 
-.fab-icon {
-  font-size: 48px;
-  color: #ffffff;
-  font-weight: 300;
-}
-
 .bottom-spacer {
-  height: 80px;
+  height: 100px;
 }

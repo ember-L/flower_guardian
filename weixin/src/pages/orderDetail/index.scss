@@ -12,11 +12,11 @@ $error: #ff4d4f;
 $warning: #faad14;
 
 // 间距
-$xs: 8px;    // 4 * 2
-$sm: 16px;   // 8 * 2
-$md: 32px;   // 16 * 2
-$lg: 40px;   // 20 * 2
-$xl: 48px;   // 24 * 2
+$xs: 8px;
+$sm: 12px;
+$md: 16px;
+$lg: 20px;
+$xl: 24px;
 
 .order-detail {
   min-height: 100vh;
@@ -33,110 +33,136 @@ $xl: 48px;   // 24 * 2
 }
 
 .loading-text {
-  font-size: 28px;
+  font-size: 14px;
   color: $text-tertiary;
+}
+
+/* 头部渐变 */
+.header-gradient {
+  background: $primary;
+  border-bottom-left-radius: 24px;
+  border-bottom-right-radius: 24px;
+  overflow: hidden;
+}
+
+.header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding: $lg $xl;
+  padding-top: 60px;
+  padding-bottom: $lg;
+}
+
+.back-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header-title {
+  font-size: 24px;
+  font-weight: bold;
+  color: #fff;
+  flex: 1;
+  text-align: center;
+}
+
+.placeholder {
+  width: 36px;
 }
 
 .detail-scroll {
   flex: 1;
 }
 
-/* RN: padding: spacing.md, backgroundColor: white */
-.header {
+.order-header {
   padding: $md;
   background: $surface;
 }
 
-/* RN: fontSize: 16, fontFamily: 'monospace', color: text */
 .order-no {
-  font-size: 32px;  // 16 * 2
+  font-size: 16px;
   font-family: monospace;
   color: $text;
 }
 
-/* RN: alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12, marginTop: spacing.xs */
 .status-badge {
   align-self: flex-start;
-  padding: 8px 24px;  // 4*2, 12*2
-  border-radius: 24px;  // 12 * 2
+  padding: 2px 12px;
+  border-radius: 12px;
   margin-top: $xs;
 }
 
-/* RN: fontSize: 14, fontWeight: '600' */
 .status-text {
-  font-size: 28px;  // 14 * 2
+  font-size: 14px;
   font-weight: 600;
 }
 
-/* RN: backgroundColor: white, marginTop: spacing.sm, padding: spacing.md */
 .section {
   background: $surface;
   margin-top: $sm;
   padding: $md;
 }
 
-/* RN: fontSize: 16, fontWeight: '600', color: text, marginBottom: spacing.sm */
 .section-title {
-  font-size: 32px;  // 16 * 2
+  font-size: 16px;
   font-weight: 600;
   color: $text;
   margin-bottom: $sm;
 }
 
-/* RN: flexDirection: 'row', paddingVertical: spacing.xs */
 .item-row {
   display: flex;
   padding: $xs 0;
   align-items: center;
 }
 
-/* RN: flex: 1, fontSize: 14, color: text */
 .item-name {
   flex: 1;
-  font-size: 28px;  // 14 * 2
+  font-size: 14px;
   color: $text;
 }
 
-/* RN: fontSize: 14, color: text-secondary, marginRight: spacing.md */
 .item-qty {
-  font-size: 28px;  // 14 * 2
+  font-size: 14px;
   color: $text-secondary;
   margin-right: $md;
 }
 
-/* RN: fontSize: 14, fontWeight: '600' */
 .item-price {
-  font-size: 28px;  // 14 * 2
+  font-size: 14px;
   font-weight: 600;
 }
 
-/* RN: flexDirection: 'row', justifyContent: 'space-between', marginTop: spacing.sm, paddingTop: spacing.sm, borderTopWidth: 1, borderTopColor: background */
 .total-row {
   display: flex;
   justify-content: space-between;
   margin-top: $sm;
   padding-top: $sm;
-  border-top: 2px solid $background;
+  border-top: 1px solid $background;
 }
 
-/* RN: fontSize: 16, fontWeight: '600' */
 .total-label {
-  font-size: 32px;  // 16 * 2
+  font-size: 16px;
   font-weight: 600;
 }
 
-/* RN: fontSize: 18, fontWeight: 'bold', color: primary */
 .total-amount {
-  font-size: 36px;  // 18 * 2
+  font-size: 18px;
   font-weight: bold;
   color: $primary;
 }
 
-/* RN: fontSize: 14, color: text-secondary, marginBottom: 4 */
 .info-text {
-  font-size: 28px;  // 14 * 2
+  font-size: 14px;
   color: $text-secondary;
-  margin-bottom: 8px;  // 4 * 2
+  margin-bottom: 4px;
   display: block;
 }
 
@@ -144,13 +170,13 @@ $xl: 48px;   // 24 * 2
   height: 160px;
 }
 
-/* RN: flexDirection: 'row', padding: spacing.md, backgroundColor: white, borderTopWidth: 1, borderTopColor: background */
+/* 底部操作按钮 */
 .footer {
   display: flex;
   padding: $md;
   padding-bottom: calc(#{$md} + env(safe-area-inset-bottom));
   background: $surface;
-  border-top: 2px solid $background;
+  border-top: 1px solid $background;
   position: fixed;
   bottom: 0;
   left: 0;
@@ -158,41 +184,37 @@ $xl: 48px;   // 24 * 2
   z-index: 100;
 }
 
-/* RN: flex: 1, paddingVertical: 12, borderRadius: 24, borderWidth: 1, borderColor: error, marginRight: spacing.sm */
 .cancel-btn {
   flex: 1;
-  padding: 24px 0;  // 12 * 2
-  border-radius: 48px;  // 24 * 2
-  border: 2px solid $error;
+  padding: 12px 0;
+  border-radius: 24px;
+  border: 1px solid $error;
   margin-right: $sm;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-/* RN: color: error, textAlign: 'center', fontWeight: '600' */
 .cancel-btn-text {
   color: $error;
   text-align: center;
   font-weight: 600;
-  font-size: 28px;
+  font-size: 14px;
 }
 
-/* RN: flex: 1, paddingVertical: 12, borderRadius: 24, backgroundColor: primary */
 .reorder-btn {
   flex: 1;
-  padding: 24px 0;  // 12 * 2
-  border-radius: 48px;  // 24 * 2
+  padding: 12px 0;
+  border-radius: 24px;
   background: $primary;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-/* RN: color: white, textAlign: 'center', fontWeight: '600' */
 .reorder-btn-text {
   color: $surface;
   text-align: center;
   font-weight: 600;
-  font-size: 28px;
+  font-size: 14px;
 }

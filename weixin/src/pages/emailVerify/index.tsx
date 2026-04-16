@@ -65,7 +65,7 @@ export default function EmailVerify() {
 
       <View className='content'>
         <View className='icon-container'>
-          <Icon name="mail" size={40} color="#333" />
+          <Icon name="mail" size={40} color="#f46" />
         </View>
         <Text className='title'>邮箱验证</Text>
         <Text className='subtitle'>请输入发送到您邮箱的验证码</Text>
@@ -73,7 +73,7 @@ export default function EmailVerify() {
         <View className='form'>
           <View className='input-container'>
             <View className='input-icon'>
-              <Icon name="mail" size={18} color="#999" />
+              <Icon name="mail" size={18} color="#f46" />
             </View>
             <Input
               className='input'
@@ -86,7 +86,7 @@ export default function EmailVerify() {
 
           <View className='input-container'>
             <View className='input-icon'>
-              <Icon name="shield" size={18} color="#999" />
+              <Icon name="shield" size={18} color="#f46" />
             </View>
             <Input
               className='input'

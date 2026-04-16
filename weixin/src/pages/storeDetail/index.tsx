@@ -1,19 +1,11 @@
 import { View, Text, ScrollView, Image, Input } from '@tarojs/components'
 import Taro, { useRouter } from '@tarojs/taro'
 import { useState, useEffect } from 'react'
+import Icon from '../../components/Icon'
 import './index.scss'
-import { API_BASE_URL } from '../../services/config'
+import { getFullImageUrl } from '../../services/request'
 import { getProductDetail, createOrder, type Product } from '../../services/storeService'
 import { getAddresses, type Address } from '../../services/addressService'
-
-// 获取完整的图片URL
-const getFullImageUrl = (url: string): string => {
-  if (!url || typeof url !== 'string') return ''
-  const trimmed = url.trim()
-  if (trimmed.length === 0) return ''
-  if (trimmed.startsWith('http')) return trimmed
-  return `${API_BASE_URL}${trimmed}`
-}
 
 export default function StoreDetail() {
   const router = useRouter()
@@ -120,6 +112,11 @@ export default function StoreDetail() {
 
   return (
     <View className='store-detail'>
+      {/* 返回按钮 */}
+      <View className='back-btn' onClick={() => Taro.navigateBack()}>
+        <Icon name="arrow-left" size={24} color="#333" />
+      </View>
+
       <ScrollView scrollY className='detail-scroll'>
         {/* 商品图片 */}
         <Image
@@ -196,14 +193,14 @@ export default function StoreDetail() {
                   ) : (
                     <Text className='placeholder-text'>请选择收货地址</Text>
                   )}
-                  <Text className='chevron-right'>›</Text>
+                  <Icon name="chevron-right" size={20} color="#999" />
                 </View>
               ) : (
                 <View
                   className='add-address-btn'
                   onClick={() => Taro.navigateTo({ url: '/pages/addressEdit/index' })}
                 >
-                  <Text className='add-icon'>+</Text>
+                  <Icon name="plus" size={18} color="#f46" />
                   <Text className='add-address-text'>添加收货地址</Text>
                 </View>
               )}
@@ -235,7 +232,7 @@ export default function StoreDetail() {
                       Taro.navigateTo({ url: '/pages/addressEdit/index' })
                     }}
                   >
-                    <Text className='add-icon-sm'>+</Text>
+                    <Icon name="plus" size={16} color="#f46" />
                     <Text className='add-new-address-text'>添加新地址</Text>
                   </View>
                 </View>

@@ -4,9 +4,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**护花使者 (Flower Guardian)** is a plant care management mobile app with AI-powered plant/pest recognition. The project consists of three main components:
+**护花使者 (Flower Guardian)** is a plant care management mobile app with AI-powered plant/pest recognition. The project consists of four main components:
 
-- **APP/**: React Native mobile app (iOS/Android)
+- **weixin/**: UniApp/WeChat mini-program mobile app (active development)
+- **APP/**: React Native mobile app (legacy)
 - **backend/**: FastAPI Python backend with PostgreSQL
 - **web/**: Next.js admin dashboard
 
@@ -30,7 +31,18 @@ uvicorn app.main:app --reload --port 8000
 docker-compose up -d
 ```
 
-### Mobile App (React Native)
+### Mobile App - WeChat/UniApp (weixin/)
+```bash
+cd weixin
+
+# Install dependencies
+npm install
+
+# Development (UniApp uses its own CLI)
+# See weixin/package.json for available scripts
+```
+
+### Mobile App - React Native (APP/) [Legacy]
 ```bash
 cd APP
 
@@ -82,31 +94,35 @@ docker-compose logs -f
 ```
 backend/app/
 ├── api/endpoints/     # API route handlers
-│   ├── users.py       # Authentication
-│   ├── plants.py      # Plant management
+│   ├── users.py       # Authentication, user management
+│   ├── plants.py      # Plant library management
 │   ├── reminders.py   # Care reminders
 │   ├── diaries.py     # Plant journals
 │   ├── recognition.py # Plant CV inference
 │   ├── diagnosis.py  # Pest diagnosis
 │   ├── products.py   # E-commerce products
 │   ├── orders.py     # Order management
+│   ├── cart.py       # Shopping cart
+│   ├── payments.py   # Payment processing
 │   ├── chat.py       # AI conversation
+│   ├── ai_chat.py    # AI plant doctor (DashScope)
+│   ├── weather.py     # Weather API integration
 │   └── admin_*/      # Admin endpoints
 ├── core/             # Config, DB, security
 ├── models/           # SQLAlchemy ORM models
 ├── schemas/          # Pydantic request/response models
-├── services/         # Business logic, CV inference
+├── services/         # Business logic, CV inference, AI
 └── tasks/            # APScheduler scheduled tasks
 ```
 
-### Mobile App (React Native)
+### Mobile App (weixin/UniApp)
 ```
-APP/src/
-├── screens/          # Screen components
-├── components/       # Reusable UI components
-├── navigation/       # React Navigation setup (AppNavigator.tsx)
-├── services/        # API client (Axios)
-└── contexts/        # React Context providers
+weixin/src/
+├── pages/            # Page components
+├── components/       # Reusable UI components (Icon, CustomTabBar)
+├── services/        # API client (Taro request wrapper)
+├── data/            # Static data (plantClasses)
+└── types/           # TypeScript type definitions
 ```
 
 ### Web Admin (Next.js)
@@ -130,12 +146,13 @@ web/src/app/admin/
 - Database migrations: add columns via raw SQL if needed
 
 ### AI Services
-- **DashScope API** (阿里云): Used for AI plant doctor conversations
+- **DashScope API** (阿里云): Used for AI plant doctor conversations via `ai_chat.py`
 - **Dual YOLO Models**: Plant recognition + pest/disease recognition in `backend/models/`
+- Models loaded on startup via `app/services/recognition.py` and `app/services/pest_recognition.py`
 
 ### Scheduled Tasks (APScheduler)
 Located in `backend/app/tasks/`:
-- `reminder_tasks.py`: Daily reminders (09:00), overdue reminders (every 3 hours)
+- `reminder_tasks.py`: Daily reminders (09:00), overdue reminders (every 3 hours), weather refresh (every 6 hours)
 - Test push: `python -c "from app.tasks.reminder_tasks import test_push; import asyncio; asyncio.run(test_push(user_id=1))"`
 
 ### Authentication
@@ -144,18 +161,20 @@ Located in `backend/app/tasks/`:
 
 ## Mobile App Key Patterns
 
-### Navigation
-- Custom navigation in `APP/src/navigation/AppNavigator.tsx`
-- Uses state-based routing (no React Navigation stack)
-- Sub-pages defined in `SubPageName` type
+### WeChat/UniApp (weixin/)
+- Uses Taro request wrapper for API calls (`weixin/src/services/request.ts`)
+- Custom Icon component with IconPark icons (`weixin/src/components/Icon/`)
+- Custom tab bar implementation (`weixin/src/components/CustomTabBar/`)
+- State-based routing (no React Navigation stack)
 
 ### API Services
-- Services in `APP/src/services/` use Axios with auth interceptors
-- Auth token stored via AsyncStorage
+- Services use Taro request wrapper with auth interceptors
+- Auth token stored via storage
 
-### State Management
-- Local state with useState/useEffect
-- Use `isLoggedIn` prop to gate authenticated features
+### Icon System
+- IconPark icons stored in `weixin/src/components/Icon/iconPaths.ts`
+- Custom emoji additions in `weixin/src/components/Icon/ionicons.ts`
+- Icon component in `weixin/src/components/Icon/index.tsx`
 
 ## CV Model Architecture
 
@@ -169,13 +188,14 @@ Models are stored in `backend/models/` (PyTorch .pt and ONNX formats).
 
 ### Core
 - `POST /api/users/login` - User login
-- `POST /api/plants` - Add user plant
+- `POST /api/users/register` - User registration
+- `POST /api/plants/my` - Add user plant
 - `GET /api/plants/my` - Get user's plants
 - `POST /api/recognition/plant` - Plant image recognition
 - `POST /api/diagnosis/full` - Pest/disease diagnosis
 
 ### AI & Chat
-- `POST /api/ai/chat` - AI plant doctor
+- `POST /api/ai/chat` - AI plant doctor (DashScope)
 - `POST /api/chat/conversations` - Create conversation
 - `GET /api/chat/conversations/{id}` - Get conversation with messages
 - `POST /api/chat/conversations/{id}/messages` - Send message
@@ -183,6 +203,11 @@ Models are stored in `backend/models/` (PyTorch .pt and ONNX formats).
 ### Reminders
 - `GET /api/reminders` - Get user's reminders
 - `POST /api/reminders` - Create reminder
+
+### Products & Orders
+- `GET /api/products` - Get product list
+- `GET /api/cart` - Get shopping cart
+- `POST /api/orders` - Create order
 
 ## Environment Variables
 
@@ -195,15 +220,14 @@ Models are stored in `backend/models/` (PyTorch .pt and ONNX formats).
 | HEFENG_KEY | 和风天气 API Key |
 
 ### Mobile App
-When connecting to backend from iOS Simulator, use host machine's IP instead of localhost.
-Config in `APP/src/services/config.ts`
+When connecting to backend from iOS Simulator/WeChat DevTools, use host machine's IP instead of localhost.
+Config in `weixin/config/dev.js` and `weixin/config/prod.js`
 
 ## Common Tasks
 
 ### Database Schema Changes
 When adding new columns to existing tables:
 ```python
-# Direct SQL via Python
 from sqlalchemy import create_engine, text
 engine = create_engine('postgresql://flower_user:flower_password@localhost:5555/flower_guardian')
 with engine.connect() as conn:
@@ -218,7 +242,12 @@ python3 -c "from app.tasks.reminder_tasks import send_daily_reminders; import as
 ```
 
 ### Mobile App Connect to Backend
-Edit `APP/src/services/config.ts`:
-```typescript
-export const API_BASE_URL = 'http://192.168.1.x:8000';
+Edit `weixin/config/dev.js`:
+```javascript
+API_BASE_URL: 'http://192.168.1.x:8000'
+```
+
+### Check Model Status
+```bash
+curl http://localhost:8000/models/status
 ```

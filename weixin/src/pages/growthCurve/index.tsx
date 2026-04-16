@@ -1,6 +1,7 @@
 import { View, Text, ScrollView } from '@tarojs/components'
 import Taro, { useRouter } from '@tarojs/taro'
 import { useState, useEffect } from 'react'
+import Icon from '../../components/Icon'
 import './index.scss'
 import { getDiaries, getMyPlants, type Diary, type Plant } from '../../services/diaryService'
 
@@ -166,7 +167,7 @@ export default function GrowthCurve() {
       {/* 头部 */}
       <View className='header'>
         <View className='header-btn' onClick={() => Taro.navigateBack()}>
-          <Text className='icon-back'>&lt;</Text>
+          <Icon name="arrow-left" size={24} color="#333" />
         </View>
         <Text className='header-title'>生长曲线</Text>
         <View className='header-btn' />
@@ -224,7 +225,7 @@ export default function GrowthCurve() {
             {/* 高度变化 */}
             <View className='chart-section'>
               <View className='chart-title-row'>
-                <Text className='chart-title-icon'>~</Text>
+                <Icon name="ruler" size={16} color="#f46" />
                 <Text className='chart-title'> 高度变化 (cm)</Text>
               </View>
               <View className='chart-card'>
@@ -235,7 +236,7 @@ export default function GrowthCurve() {
             {/* 叶片数量 */}
             <View className='chart-section'>
               <View className='chart-title-row'>
-                <Text className='chart-title-icon leaf'>*</Text>
+                <Icon name="leaf" size={16} color="#52c41a" />
                 <Text className='chart-title'> 叶片数量</Text>
               </View>
               <View className='chart-card'>

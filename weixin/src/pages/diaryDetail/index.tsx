@@ -1,8 +1,10 @@
 import { View, Text, ScrollView, Image } from '@tarojs/components'
 import Taro, { useRouter } from '@tarojs/taro'
 import { useState, useEffect } from 'react'
+import Icon from '../../components/Icon'
 import './index.scss'
 import { getDiary, deleteDiary, type Diary } from '../../services/diaryService'
+import { getFullImageUrl } from '../../services/request'
 
 export default function DiaryDetail() {
   const router = useRouter()
@@ -81,11 +83,11 @@ export default function DiaryDetail() {
       {/* 头部 */}
       <View className='header'>
         <View className='header-btn' onClick={() => Taro.navigateBack()}>
-          <Text className='icon-back'>&lt;</Text>
+          <Icon name="arrow-left" size={24} color="#333" />
         </View>
         <Text className='header-title'>日记详情</Text>
         <View className='header-btn' onClick={handleDelete}>
-          <Text className='icon-delete'>X</Text>
+          <Icon name="trash" size={20} color="#ff4d4f" />
         </View>
       </View>
 
@@ -94,7 +96,7 @@ export default function DiaryDetail() {
         <View className='info'>
           <View className='plant-info'>
             <View className='avatar'>
-              <Text className='avatar-icon'>~</Text>
+              <Icon name="flower2" size={16} color="#52c41a" />
             </View>
             <View>
               <Text className='plant-name'>{diary.plant_name || '我的植物'}</Text>
@@ -108,13 +110,13 @@ export default function DiaryDetail() {
           <View className='growth-data'>
             {diary.height && (
               <View className='growth-item'>
-                <Text className='growth-icon'>~</Text>
+                <Icon name="ruler" size={14} color="#52c41a" />
                 <Text className='growth-value'>{diary.height} cm</Text>
               </View>
             )}
             {diary.leaf_count && (
               <View className='growth-item'>
-                <Text className='growth-icon'>*</Text>
+                <Icon name="leaf" size={14} color="#52c41a" />
                 <Text className='growth-value'>{diary.leaf_count} 片叶子</Text>
               </View>
             )}
@@ -127,9 +129,9 @@ export default function DiaryDetail() {
             {diary.images.length === 1 && typeof diary.images[0] === 'string' && diary.images[0].trim().length > 0 ? (
               <Image
                 className='single-image'
-                src={diary.images[0]}
+                src={getFullImageUrl(diary.images[0])}
                 mode='aspectFill'
-                onClick={() => handlePreviewImage(diary.images[0])}
+                onClick={() => handlePreviewImage(getFullImageUrl(diary.images[0]))}
               />
             ) : (
               <ScrollView scrollX className='images-scroll'>
@@ -138,9 +140,9 @@ export default function DiaryDetail() {
                     <Image
                       key={index}
                       className='thumbnail'
-                      src={uri}
+                      src={getFullImageUrl(uri)}
                       mode='aspectFill'
-                      onClick={() => handlePreviewImage(uri)}
+                      onClick={() => handlePreviewImage(getFullImageUrl(uri))}
                     />
                   ) : null
                 ))}
@@ -158,7 +160,7 @@ export default function DiaryDetail() {
 
         {/* 对比按钮 */}
         <View className='compare-btn' onClick={() => Taro.showToast({ title: '对比功能开发中', icon: 'none' })}>
-          <Text className='compare-icon'>&gt;</Text>
+          <Icon name="git-compare" size={16} color="#f46" />
           <Text className='compare-btn-text'>与上次记录对比</Text>
         </View>
       </ScrollView>

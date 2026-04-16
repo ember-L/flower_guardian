@@ -1,9 +1,11 @@
 import { View, Text, ScrollView, Image } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import { useState, useEffect, useCallback } from 'react'
+import Icon from '../../components/Icon'
 import './index.scss'
 import { getDiaries, getMyPlants, deleteDiary, type Diary, type Plant } from '../../services/diaryService'
 import { deleteMyPlant } from '../../services/plantService'
+import { getFullImageUrl } from '../../services/request'
 
 interface DisplayDiary {
   id: number | string
@@ -31,7 +33,7 @@ const formatDate = (dateString: string): { date: string; label: string } => {
 
   return {
     date: `${date.getMonth() + 1}/${date.getDate()}`,
-    label: `${date.getMonth()}月${date.getDate()}日`,
+    label: `${date.getMonth() + 1}月${date.getDate()}日`,
   }
 }
 
@@ -162,79 +164,70 @@ export default function Diary() {
   const getCurrentPlantName = () => {
     if (selectedTab === 0 && selectedPlantFilter !== null) {
       const plant = plants.find(p => p.id === selectedPlantFilter)
-      return plant?.name || '该植物'
+      return plant?.name || plant?.nickname || '该植物'
     }
     return null
   }
 
   const currentPlantName = getCurrentPlantName()
 
-  // Loading state
-  if (loading) {
-    return (
-      <View className='diary-page'>
-        {renderHeader()}
-        {renderTabs()}
-        <View className='loading-container'>
-          <Text className='loading-text'>加载中...</Text>
-        </View>
+  const renderHeader = () => (
+    <View className='header'>
+      <View className='header-back' onClick={() => Taro.navigateBack()}>
+        <Icon name="arrow-left" size={24} color="#333" />
       </View>
-    )
-  }
-
-  function renderHeader() {
-    return (
-      <View className='header'>
-        <View className='header-back'>
-          <Text className='icon-back'>&lt;</Text>
-        </View>
-        <View className='header-center'>
-          <Text className='header-title'>
-            {selectedTab === 0
-              ? currentPlantName || '养花日记'
-              : '生长记录'}
-          </Text>
-          <Text className='header-subtitle'>
-            {selectedTab === 0
-              ? currentPlantName ? `记录${currentPlantName}的成长` : '记录植物的成长点滴'
-              : '查看植物生长趋势'}
-          </Text>
-        </View>
-        <View className='header-right'>
-          {selectedTab === 0 && (
-            <View className='write-btn' onClick={handleWriteDiary}>
-              <Text className='write-btn-icon'>+</Text>
-            </View>
-          )}
-        </View>
+      <View className='header-center'>
+        <Text className='header-title'>
+          {selectedTab === 0
+            ? currentPlantName || '养花日记'
+            : '生长记录'}
+        </Text>
+        <Text className='header-subtitle'>
+          {selectedTab === 0
+            ? currentPlantName ? `记录${currentPlantName}的成长` : '记录植物的成长点滴'
+            : '查看植物生长趋势'}
+        </Text>
       </View>
-    )
-  }
-
-  function renderTabs() {
-    return (
-      <View className='tabs-container'>
-        <View className='tabs'>
-          <View
-            className={`tab ${selectedTab === 0 ? 'active' : ''}`}
-            onClick={() => setSelectedTab(0)}
-          >
-            <Text className='tab-icon'>~</Text>
-            <Text className={`tab-text ${selectedTab === 0 ? 'active' : ''}`}>我的日记</Text>
+      <View className='header-right'>
+        {selectedTab === 0 && (
+          <View className='write-btn' onClick={handleWriteDiary}>
+            <Icon name="plus" size={18} color="#fff" />
           </View>
-          <View
-            className={`tab ${selectedTab === 1 ? 'active' : ''}`}
-            onClick={() => setSelectedTab(1)}
-          >
-            <Text className='tab-icon'>~</Text>
-            <Text className={`tab-text ${selectedTab === 1 ? 'active' : ''}`}>生长记录</Text>
-          </View>
+        )}
+      </View>
+    </View>
+  )
+
+  const renderTabs = () => (
+    <View className='tabs-container'>
+      <View className='tabs'>
+        <View
+          className={`tab ${selectedTab === 0 ? 'active' : ''}`}
+          onClick={() => setSelectedTab(0)}
+        >
+          <Icon
+            name="book"
+            size={16}
+            color={selectedTab === 0 ? '#f46' : '#999'}
+          />
+          <Text className={`tab-text ${selectedTab === 0 ? 'active' : ''}`}>我的日记</Text>
+        </View>
+        <View
+          className={`tab ${selectedTab === 1 ? 'active' : ''}`}
+          onClick={() => setSelectedTab(1)}
+        >
+          <Icon
+            name="trending-up"
+            size={16}
+            color={selectedTab === 1 ? '#f46' : '#999'}
+          />
+          <Text className={`tab-text ${selectedTab === 1 ? 'active' : ''}`}>生长记录</Text>
         </View>
       </View>
-    )
-  }
+    </View>
+  )
 
-  function renderPlantFilter() {
+  const renderPlantFilter = () => {
     if (plants.length === 0) return null
     return (
       <View className='plant-filter-container'>
@@ -265,91 +258,113 @@ export default function Diary() {
     )
   }
 
-  function renderDiaryCard(diary: DisplayDiary) {
-    return (
-      <View
-        key={diary.id}
-        className='diary-card'
-        onClick={() => handleDiaryPress(diary)}
-      >
-        {/* Header */}
-        <View className='diary-header'>
-          <View className='diary-user'>
-            <View className='diary-avatar'>
-              <Text className='avatar-icon'>~</Text>
-            </View>
-            <View>
-              <Text className='diary-plant-name'>{diary.plantName}</Text>
-              <Text className='diary-date'>{diary.dateLabel}</Text>
-            </View>
+  const renderDiaryCard = (diary: DisplayDiary) => (
+    <View
+      key={diary.id}
+      className='diary-card'
+      onClick={() => handleDiaryPress(diary)}
+    >
+      <View className='diary-header'>
+        <View className='diary-user'>
+          <View className='diary-avatar'>
+            <Icon name="flower2" size={16} color="#52c41a" />
           </View>
-          {diary.compareWithPrevious && (
-            <View className='growth-badge'>
-              <Text className='growth-badge-text'>^ 新变化</Text>
+          <View>
+            <Text className='diary-plant-name'>{diary.plantName}</Text>
+            <Text className='diary-date'>{diary.dateLabel}</Text>
+          </View>
+        </View>
+        {diary.compareWithPrevious && (
+          <View className='growth-badge'>
+            <Icon name="trending-up" size={10} color="#52c41a" />
+            <Text className='growth-badge-text'>新变化</Text>
+          </View>
+        )}
+      </View>
+
+      <Text className='diary-content' numberOfLines={3}>{diary.content}</Text>
+
+      {diary.images && diary.images.length > 0 && (
+        <View className='image-gallery'>
+          {diary.images.slice(0, 3).map((uri, index) => (
+            uri && typeof uri === 'string' && uri.trim().length > 0 ? (
+              <Image
+                key={index}
+                className={`gallery-image ${diary.images.length === 1 ? 'single' : ''}`}
+                src={getFullImageUrl(uri)}
+                mode='aspectFill'
+              />
+            ) : null
+          ))}
+          {diary.images.length > 3 && (
+            <View className='more-images-overlay'>
+              <Text className='more-images-text'>+{diary.images.length - 3}</Text>
             </View>
           )}
         </View>
+      )}
 
-        {/* Content */}
-        <Text className='diary-content'>{diary.content}</Text>
-
-        {/* Images */}
-        {diary.images && diary.images.length > 0 && (
-          <View className='image-gallery'>
-            {diary.images.slice(0, 3).map((uri, index) => (
-              uri && typeof uri === 'string' && uri.trim().length > 0 ? (
-                <Image
-                  key={index}
-                  className={`gallery-image ${diary.images.length === 1 ? 'single' : ''}`}
-                  src={uri}
-                  mode='aspectFill'
-                />
-              ) : null
-            ))}
-            {diary.images.length > 3 && (
-              <View className='more-images-overlay'>
-                <Text className='more-images-text'>+{diary.images.length - 3}</Text>
-              </View>
-            )}
-          </View>
-        )}
-
-        {/* Footer */}
-        <View className='diary-footer'>
-          <View className='stat-item'>
-            <Text className='stat-icon'>~</Text>
-            <Text className='stat-text'>{diary.likes}</Text>
-          </View>
-          <View className='stat-item'>
-            <Text className='stat-icon'>~</Text>
-            <Text className='stat-text'>{diary.comments}</Text>
-          </View>
-          <View className='delete-btn' onClick={(e) => { e.stopPropagation(); handleDeleteDiary(diary) }}>
-            <Text className='delete-icon'>X</Text>
-          </View>
+      <View className='diary-footer'>
+        <View className='stat-item'>
+          <Icon name="heart" size={14} color="#999" />
+          <Text className='stat-text'>{diary.likes}</Text>
+        </View>
+        <View className='stat-item'>
+          <Icon name="message-circle" size={14} color="#999" />
+          <Text className='stat-text'>{diary.comments}</Text>
+        </View>
+        <View className='delete-btn' onClick={(e) => { e.stopPropagation(); handleDeleteDiary(diary) }}>
+          <Icon name="trash" size={14} color="#ff4d4f" />
         </View>
       </View>
-    )
-  }
+    </View>
+  )
 
-  function renderPlantCard(plant: Plant) {
+  const renderPlantCard = (plant: Plant) => (
+    <View
+      key={plant.id}
+      className='plant-card'
+      onClick={() => handleGrowthRecordPress(plant.id)}
+    >
+      <View className='plant-icon'>
+        <Icon name="flower2" size={24} color="#52c41a" />
+      </View>
+      <View className='plant-info'>
+        <Text className='plant-card-name'>{plant.name}</Text>
+        <Text className='plant-hint'>点击查看生长曲线</Text>
+      </View>
+      <View className='plant-delete-btn' onClick={(e) => { e.stopPropagation(); handleDeletePlant(plant) }}>
+        <Icon name="trash" size={18} color="#ff4d4f" />
+      </View>
+      <Icon name="chevron-right" size={20} color="#999" />
+    </View>
+  )
+
+  const renderEmptyState = (icon: string, title: string, subtitle: string, showButton = false) => (
+    <View className='empty-state'>
+      <View className='empty-icon-container'>
+        <Icon name={icon} size={48} color="#999" />
+      </View>
+      <Text className='empty-title'>{title}</Text>
+      <Text className='empty-subtitle'>{subtitle}</Text>
+      {showButton && (
+        <View className='empty-btn' onClick={handleWriteDiary}>
+          <Icon name="plus" size={18} color="#fff" />
+          <Text className='empty-btn-text'>写第一篇日记</Text>
+        </View>
+      )}
+    </View>
+  )
+
+  // Loading state
+  if (loading) {
     return (
-      <View
-        key={plant.id}
-        className='plant-card'
-        onClick={() => handleGrowthRecordPress(plant.id)}
-      >
-        <View className='plant-icon'>
-          <Text className='plant-icon-text'>~</Text>
+      <View className='diary-page'>
+        {renderHeader()}
+        {renderTabs()}
+        <View className='loading-container'>
+          <Text className='loading-text'>加载中...</Text>
         </View>
-        <View className='plant-info'>
-          <Text className='plant-card-name'>{plant.name}</Text>
-          <Text className='plant-hint'>点击查看生长曲线</Text>
-        </View>
-        <View className='plant-delete-btn' onClick={(e) => { e.stopPropagation(); handleDeletePlant(plant) }}>
-          <Text className='plant-delete-icon'>X</Text>
-        </View>
-        <Text className='chevron-right'>&gt;</Text>
       </View>
     )
   }
@@ -363,16 +378,7 @@ export default function Diary() {
         {renderPlantFilter()}
         <ScrollView scrollY className='diary-scroll'>
           {diaries.length === 0 ? (
-            <View className='empty-state'>
-              <View className='empty-icon-container'>
-                <Text className='empty-icon'>~</Text>
-              </View>
-              <Text className='empty-title'>暂无日记</Text>
-              <Text className='empty-subtitle'>开始记录植物的成长故事</Text>
-              <View className='empty-btn' onClick={handleWriteDiary}>
-                <Text className='empty-btn-text'>+ 写第一篇日记</Text>
-              </View>
-            </View>
+            renderEmptyState('book', '暂无日记', '开始记录植物的成长故事', true)
           ) : (
             <View className='list'>
               {diaries.map(diary => renderDiaryCard(diary))}
@@ -382,7 +388,7 @@ export default function Diary() {
         </ScrollView>
         {diaries.length > 0 && (
           <View className='fab' onClick={handleWriteDiary}>
-            <Text className='fab-icon'>+</Text>
+            <Icon name="plus" size={24} color="#fff" />
           </View>
         )}
       </View>
@@ -396,13 +402,7 @@ export default function Diary() {
       {renderTabs()}
       <ScrollView scrollY className='diary-scroll'>
         {plants.length === 0 ? (
-          <View className='empty-state'>
-            <View className='empty-icon-container'>
-              <Text className='empty-icon'>~</Text>
-            </View>
-            <Text className='empty-title'>暂无植物</Text>
-            <Text className='empty-subtitle'>添加植物后即可记录生长数据</Text>
-          </View>
+          renderEmptyState('sprout', '暂无植物', '添加植物后即可记录生长数据')
         ) : (
           <View className='list'>
             {plants.map(plant => renderPlantCard(plant))}

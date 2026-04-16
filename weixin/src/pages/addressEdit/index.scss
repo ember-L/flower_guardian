@@ -1,6 +1,26 @@
+// 主题常量
+$primary: #f46;
+$primary-light: #ff6b88;
+$background: #fafafa;
+$surface: #ffffff;
+$text: #333333;
+$text-secondary: #666666;
+$text-tertiary: #999999;
+$border: #eeeeee;
+$success: #52c41a;
+$error: #ff4d4f;
+$warning: #faad14;
+
+// 间距
+$xs: 8px;
+$sm: 12px;
+$md: 16px;
+$lg: 20px;
+$xl: 24px;
+
 .address-edit-page {
   min-height: 100vh;
-  background: #fafafa;
+  background: $background;
   display: flex;
   flex-direction: column;
 }
@@ -10,19 +30,19 @@
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: #fafafa;
+  background: $background;
 }
 
 .loading-text {
-  font-size: 28px;
-  color: #999999;
+  font-size: 14px;
+  color: $text-tertiary;
 }
 
 /* 渐变头部 - borderBottomRadius:24 */
 .header-gradient {
-  background: #f46;
-  border-bottom-left-radius: 48px;
-  border-bottom-right-radius: 48px;
+  background: $primary;
+  border-bottom-left-radius: 24px;
+  border-bottom-right-radius: 24px;
   overflow: hidden;
 }
 
@@ -31,29 +51,23 @@
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
-  padding: 40px;
+  padding: $lg $xl;
   padding-top: 60px;
-  padding-bottom: 40px;
+  padding-bottom: $xl;
 }
 
 .back-btn {
-  width: 72px;
-  height: 72px;
-  border-radius: 36px;
+  width: 36px;
+  height: 36px;
+  border-radius: 18px;
   background: rgba(255, 255, 255, 0.2);
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
-.back-btn-text {
-  font-size: 36px;
-  color: #ffffff;
-  font-weight: 300;
-}
-
 .header-title {
-  font-size: 48px;
+  font-size: 24px;
   font-weight: bold;
   color: #ffffff;
   flex: 1;
@@ -61,45 +75,46 @@
 }
 
 .placeholder {
-  width: 72px;
+  width: 36px;
 }
 
 /* 表单 */
 .form {
   flex: 1;
-  padding: 32px;
+  padding: $md;
   height: calc(100vh - 200px - 120px);
 }
 
 .input-group {
-  margin-bottom: 32px;
+  margin-bottom: $md;
 }
 
 .label {
-  font-size: 28px;
-  color: #666666;
-  margin-bottom: 16px;
+  font-size: 14px;
+  color: $text-secondary;
+  margin-bottom: $xs;
   display: block;
 }
 
 .input {
-  border: 2px solid #eeeeee;
-  border-radius: 16px;
-  padding: 24px;
-  font-size: 32px;
-  color: #333333;
-  background: #ffffff;
+  border: 1px solid $border;
+  border-radius: 8px;
+  padding: $sm;
+  font-size: 16px;
+  color: $text;
+  background: $surface;
   width: 100%;
   box-sizing: border-box;
+  min-height: 44px;
 }
 
 .input-placeholder {
-  color: #999999;
-  font-size: 32px;
+  color: $text-tertiary;
+  font-size: 14px;
 }
 
 .text-area {
-  min-height: 160px;
+  min-height: 80px;
   width: 100%;
   box-sizing: border-box;
 }
@@ -109,42 +124,35 @@
   display: flex;
   flex-direction: row;
   align-items: center;
-  margin-bottom: 32px;
+  margin-bottom: $md;
 }
 
 .checkbox {
-  width: 44px;
-  height: 44px;
-  border-radius: 8px;
-  border: 4px solid #f46;
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  border: 2px solid $primary;
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-right: 16px;
+  margin-right: $sm;
 
   &.checked {
-    background: #f46;
+    background: $primary;
   }
 }
 
-.checkbox-check {
-  font-size: 24px;
-  color: #ffffff;
-  font-weight: bold;
-  line-height: 1;
-}
-
 .checkbox-label {
-  font-size: 28px;
-  color: #333333;
+  font-size: 14px;
+  color: $text;
 }
 
 /* 保存按钮 */
 .save-btn {
-  background: #f46;
-  padding: 32px;
-  margin: 32px;
-  border-radius: 48px;
+  background: $primary;
+  padding: $md;
+  margin: $md;
+  border-radius: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -156,6 +164,6 @@
 
 .save-btn-text {
   color: #ffffff;
-  font-size: 32px;
+  font-size: 16px;
   font-weight: 600;
 }

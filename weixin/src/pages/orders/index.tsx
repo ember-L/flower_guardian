@@ -1,6 +1,7 @@
 import { View, Text, ScrollView } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import { useState, useEffect } from 'react'
+import Icon from '../../components/Icon'
 import './index.scss'
 import { getMyOrders, type Order } from '../../services/storeService'
 
@@ -51,7 +52,7 @@ export default function Orders() {
       <View className='header-gradient'>
         <View className='header'>
           <View className='back-btn' onClick={() => Taro.navigateBack()}>
-            <Text className='back-icon'>&lt;</Text>
+            <Icon name="arrow-left" size={24} color="#fff" />
           </View>
           <Text className='header-title'>我的订单</Text>
           <View className='placeholder' />

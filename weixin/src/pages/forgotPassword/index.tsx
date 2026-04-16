@@ -105,7 +105,7 @@ export default function ForgotPassword() {
           {/* 标题 */}
           <View className='title-section'>
             <View className='icon-container'>
-              <Icon name="lock" size={40} color="#333" />
+              <Icon name="lock" size={40} color="#f46" />
             </View>
             <Text className='title'>忘记密码</Text>
             <Text className='subtitle'>
@@ -119,7 +119,7 @@ export default function ForgotPassword() {
               <>
                 <View className='input-container'>
                   <View className='input-icon'>
-                    <Icon name="mail" size={18} color="#999" />
+                    <Icon name="mail" size={18} color="#f46" />
                   </View>
                   <Input
                     className='input'
@@ -143,7 +143,7 @@ export default function ForgotPassword() {
               <>
                 <View className='input-container'>
                   <View className='input-icon'>
-                    <Icon name="shield" size={18} color="#999" />
+                    <Icon name="shield" size={18} color="#f46" />
                   </View>
                   <Input
                     className='input'
@@ -163,7 +163,7 @@ export default function ForgotPassword() {
 
                 <View className='input-container'>
                   <View className='input-icon'>
-                    <Icon name="lock" size={18} color="#999" />
+                    <Icon name="lock" size={18} color="#f46" />
                   </View>
                   <Input
                     className='input'
@@ -180,7 +180,7 @@ export default function ForgotPassword() {
 
                 <View className='input-container'>
                   <View className='input-icon'>
-                    <Icon name="lock" size={18} color="#999" />
+                    <Icon name="lock" size={18} color="#f46" />
                   </View>
                   <Input
                     className='input'

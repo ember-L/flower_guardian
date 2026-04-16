@@ -124,12 +124,22 @@ export const logout = () => {
 
 // 获取用户资料
 export const getUserProfile = async (): Promise<any> => {
+  const token = getToken()
+  if (!token) {
+    throw new Error('未登录')
+  }
   const response = await Taro.request({
     url: `${API_BASE_URL}/api/users/me`,
-    header: { 'Authorization': `Bearer ${getToken()}` },
+    header: { 'Authorization': `Bearer ${token}` },
   })
   if (response.statusCode === 200) return response.data
-  throw new Error('获取用户信息失败')
+  if (response.statusCode === 401) {
+    // Token过期或无效，清除本地登录状态
+    logout()
+    throw new Error('登录已过期，请重新登录')
+  }
+  const errorData = response.data as any
+  throw new Error(errorData?.detail || '获取用户信息失败')
 }
 
 // 检查认证状态（供外部调用）
