@@ -124,6 +124,8 @@
   font-weight: bold;
   color: #ffffff;
   margin-bottom: 4rpx;
+  display: flex;
+  flex-direction: column;
 }
 
 .primary-btn-desc {
@@ -173,6 +175,8 @@
   font-weight: 600;
   color: #333333;
   margin-bottom: 4rpx;
+  display: flex;
+  flex-direction: column;
 }
 
 .secondary-btn-desc {

@@ -117,10 +117,12 @@ export default function Store() {
                 </View>
                 <View className='product-info'>
                   <Text className='product-name' numberOfLines={1}>{item.name}</Text>
-                  <Text className='product-price'>¥{item.price}</Text>
-                  <Text className='product-stock'>
-                    {item.stock > 0 ? `库存: ${item.stock}` : '缺货'}
-                  </Text>
+                  <View className='product-price-row'>
+                    <Text className='product-price'>¥{item.price}</Text>
+                    <Text className='product-stock'>
+                      {item.stock > 0 ? `库存: ${item.stock}` : '缺货'}
+                    </Text>
+                  </View>
                 </View>
               </View>
             ))}

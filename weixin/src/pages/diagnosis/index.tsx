@@ -2,6 +2,8 @@ import { View, Text, Image, ScrollView } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { useState } from 'react'
 import { recognitionService } from '../../services/recognitionService'
+import { createConversationToBackend, DiagnosisContext } from '../../services/consultationService'
+import { getToken } from '../../services/auth'
 import Icon from '../../components/Icon'
 import logoPng from '../../assets/logo.png'
 import './index.scss'
@@ -52,15 +54,17 @@ export default function Diagnosis() {
 
       setCapturedImage(tempFilePath)
 
-      const result = await recognitionService.diagnosePest({ imageUrl: tempFilePath })
+      const result = await recognitionService.diagnosePest(tempFilePath)
+      // 兼容RN端返回格式 { diagnosis: {...}, recommendations: {...} }
+      const diagnosisData = result.diagnosis || result
       setDiagnosisResult({
-        name: result.diseaseName || result.name || '未知',
-        confidence: result.confidence,
-        type: result.type || 'disease',
-        severity: result.severity || (result.confidence >= 0.8 ? 'high' : result.confidence >= 0.5 ? 'medium' : 'low'),
-        treatment: result.treatment || '',
-        prevention: result.prevention || '',
-        recommendations: result.recommendations,
+        name: diagnosisData.disease_name || diagnosisData.name || '未知',
+        confidence: diagnosisData.confidence || 0,
+        type: diagnosisData.type || 'disease',
+        severity: diagnosisData.severity || (diagnosisData.confidence >= 0.8 ? 'high' : diagnosisData.confidence >= 0.5 ? 'medium' : 'low'),
+        treatment: diagnosisData.treatment || '',
+        prevention: diagnosisData.prevention || '',
+        recommendations: result.recommendations || { immediate: diagnosisData.treatment || '' },
       })
     } catch (err: any) {
       Taro.showToast({ title: err.message || '识别失败，请重试', icon: 'none' })
@@ -86,6 +90,57 @@ export default function Diagnosis() {
   const handleReDiagnose = () => {
     setDiagnosisResult(null)
     setCapturedImage(null)
+  }
+
+  const handleAIConsult = async () => {
+    if (!diagnosisResult) return
+
+    const isLoggedIn = !!getToken()
+
+    // 构建诊断上下文
+    const diagnosisContext: DiagnosisContext = {
+      currentDiagnosis: {
+        name: diagnosisResult.name,
+        type: diagnosisResult.type,
+        severity: diagnosisResult.severity,
+        confidence: diagnosisResult.confidence,
+      },
+    }
+
+    // 需要登录才能创建对话
+    if (!isLoggedIn) {
+      Taro.showModal({
+        title: '提示',
+        content: '登录后可使用AI问诊功能',
+        confirmText: '登录',
+        cancelText: '取消',
+        success: (res) => {
+          if (res.confirm) {
+            Taro.navigateTo({ url: '/pages/login/index' })
+          }
+        }
+      })
+      return
+    }
+
+    try {
+      // 创建新对话，传递诊断上下文作为标题的一部分
+      const title = `诊断咨询: ${diagnosisResult.name}`
+      const conversationId = await createConversationToBackend(title, diagnosisContext)
+
+      if (!conversationId) {
+        Taro.showToast({ title: '创建对话失败，请重试', icon: 'none' })
+        return
+      }
+
+      // 跳转到问诊页面
+      Taro.navigateTo({
+        url: `/pages/consultation/index?conversationId=${conversationId}&disease=${encodeURIComponent(diagnosisResult.name)}`
+      })
+    } catch (err: any) {
+      console.error('AI问诊错误:', err)
+      Taro.showToast({ title: err.message || 'AI问诊失败，请重试', icon: 'none' })
+    }
   }
 
   const getTypeLabel = (type: string) => {
@@ -308,7 +363,7 @@ export default function Diagnosis() {
                 <Icon name="camera" size={20} color="#f46" />
                 <Text className='retry-btn-text'>再次诊断</Text>
               </View>
-              <View className='consult-btn' onClick={() => Taro.navigateTo({ url: '/pages/consultation/index' })}>
+              <View className='consult-btn' onClick={handleAIConsult}>
                 <Icon name="message-circle" size={20} color="#fff" />
                 <Text className='consult-btn-text'>咨询医生</Text>
               </View>

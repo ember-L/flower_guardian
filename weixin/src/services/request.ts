@@ -88,9 +88,19 @@ export const uploadFile = async (url: string, filePath: string, fieldName = 'fil
       'Authorization': token ? `Bearer ${token}` : '',
     },
   })
-  const data = JSON.parse(response.data)
+
+  let data
+  try {
+    // 尝试解析 JSON
+    data = typeof response.data === 'string' ? JSON.parse(response.data) : response.data
+  } catch (e) {
+    // 如果不是 JSON，直接返回原始数据
+    console.error('JSON parse error:', response.data)
+    throw new Error('服务器返回数据格式错误')
+  }
+
   if (response.statusCode >= 400) {
-    throw new Error(data?.detail || '上传失败')
+    throw new Error(data?.detail || data?.message || '上传失败')
   }
   return data
 }

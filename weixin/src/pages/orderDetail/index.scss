@@ -164,6 +164,8 @@ $xl: 24px;
   color: $text-secondary;
   margin-bottom: 4px;
   display: block;
+  display: flex;
+  flex-direction: column;
 }
 
 .bottom-spacer {

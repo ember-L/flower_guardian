@@ -486,13 +486,13 @@ export default function Index() {
                         )}
                       </View>
                       <View className='recommend-info'>
-                        <Text className='recommend-name'>{plant.name}</Text>
-                        <Text className='recommend-desc'>{plant.description?.slice(0, 20) || plant.category || '室内植物'}</Text>
-                        <View className='recommend-tags'>
+                        <View className='recommend-name-row'>
+                          <Text className='recommend-name'>{plant.name}</Text>
                           <View className='recommend-tag' style={{ backgroundColor: plantColor + '15' }}>
                             <Text className='recommend-tag-text' style={{ color: plantColor }}>{plant.category || '室内'}</Text>
                           </View>
                         </View>
+                        <Text className='recommend-desc'>{plant.description || plant.category || '室内植物'}</Text>
                       </View>
                     </View>
                   )

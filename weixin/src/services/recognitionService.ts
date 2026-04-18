@@ -79,9 +79,9 @@ export const recognizePlant = async (filePath: string): Promise<RecognitionResul
   }
 }
 
-// 病虫害诊断
+// 病虫害诊断 - 与RN端保持一致，调用 /api/diagnosis/full
 export const diagnosePest = async (filePath: string): Promise<any> => {
-  const data = await uploadFile('/api/diagnosis/pest', filePath)
+  const data = await uploadFile('/api/diagnosis/full', filePath)
   return data
 }
 

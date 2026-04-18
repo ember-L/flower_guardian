@@ -1,4 +1,4 @@
-// 问诊对话页面 - 带打字机效果
+// 问诊对话页面 - 与RN端保持一致
 import { View, Text, ScrollView, Input } from '@tarojs/components'
 import Taro, { useRouter } from '@tarojs/taro'
 import { useState, useEffect, useRef, useCallback } from 'react'
@@ -6,11 +6,15 @@ import './index.scss'
 import Icon from '../../components/Icon'
 import {
   getConversation,
+  getConversationFromBackend,
   sendMessage,
+  sendMessageToBackend,
   createConversation,
   getWelcomeMessage,
+  createConversationToBackend,
   type Conversation,
   type Message,
+  type DiagnosisContext,
 } from '../../services/consultationService'
 
 definePageConfig({
@@ -23,82 +27,227 @@ definePageConfig({
 function TypewriterText({
   text,
   onComplete,
-  onTypingChange
 }: {
   text: string
   onComplete?: () => void
-  onTypingChange?: (displayText: string) => void
 }) {
   const [displayText, setDisplayText] = useState('')
   const [isComplete, setIsComplete] = useState(false)
+  const [isStarted, setIsStarted] = useState(false)
   const intervalRef = useRef<number | null>(null)
 
   useEffect(() => {
     // 重置状态
     setDisplayText('')
     setIsComplete(false)
+    setIsStarted(false)
 
-    // 打字速度 (毫秒)
-    const typeSpeed = 20
-    let currentIndex = 0
+    // 延迟启动动画，确保组件已渲染
+    const startTimer = setTimeout(() => {
+      setIsStarted(true)
+      const typeSpeed = 30 // 稍微慢一点，让效果更明显
+      let currentIndex = 0
 
-    intervalRef.current = setInterval(() => {
-      if (currentIndex < text.length) {
-        currentIndex++
-        setDisplayText(text.substring(0, currentIndex))
-        onTypingChange?.(text.substring(0, currentIndex))
-      } else {
-        if (intervalRef.current) {
-          clearInterval(intervalRef.current)
+      intervalRef.current = setInterval(() => {
+        if (currentIndex < text.length) {
+          currentIndex++
+          setDisplayText(text.substring(0, currentIndex))
+        } else {
+          if (intervalRef.current) {
+            clearInterval(intervalRef.current)
+          }
+          setIsComplete(true)
+          onComplete?.()
         }
-        setIsComplete(true)
-        onComplete?.()
-      }
-    }, typeSpeed)
+      }, typeSpeed)
+    }, 100) // 100ms 延迟启动
 
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current)
       }
+      clearTimeout(startTimer)
     }
-  }, [text, onComplete, onTypingChange])
+  }, [text, onComplete])
 
   return (
     <Text className='message-text'>
       {displayText}
-      {!isComplete && <Text className='cursor'>|</Text>}
+      {isStarted && !isComplete && <Text className='cursor'>|</Text>}
     </Text>
   )
 }
 
 export default function Consultation() {
   const router = useRouter()
-  const conversationId = router.params.id || ''
+  const conversationIdParam = router.params.conversationId || ''
+  const diseaseParam = router.params.disease || ''
+
   const [conversation, setConversation] = useState<Conversation | null>(null)
   const [inputText, setInputText] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [isTyping, setIsTyping] = useState(false)
   const [typingMessageId, setTypingMessageId] = useState<string | null>(null)
-  const [displayingMessageId, setDisplayingMessageId] = useState<string | null>(null)
-  const [displayingContent, setDisplayingContent] = useState('')
   const scrollRef = useRef<any>(null)
+
+  // 加载或创建对话
+  const loadConversation = useCallback(async () => {
+    console.log('[Consultation] loadConversation, conversationId:', conversationIdParam, 'disease:', diseaseParam)
+
+    if (conversationIdParam) {
+      // 优先从后端获取对话
+      const numericId = parseInt(conversationIdParam, 10)
+      console.log('[Consultation] numericId:', numericId)
+
+      try {
+        const backendConv = await getConversationFromBackend(numericId)
+        console.log('[Consultation] backendConv:', JSON.stringify(backendConv))
+
+        if (backendConv) {
+          // 将后端对话转换为本地格式
+          const messages = backendConv.messages?.map((m: any) => ({
+            id: String(m.id),
+            role: m.role,
+            content: m.content,
+            timestamp: new Date(m.created_at).getTime(),
+          })) || []
+
+          // 如果后端没有消息，但有disease参数，需要发送初始消息
+          if (messages.length === 0 && diseaseParam) {
+            console.log('[Consultation] No messages in backend, sending initial message...')
+            const diagnosisText = `用户刚刚完成了病害诊断，结果如下：
+- 病害名称：${decodeURIComponent(diseaseParam)}
+- 病害类型：病害
+- 严重程度：未知
+- 置信度：未知
+
+请基于以上诊断结果，提供专业的治疗建议和后续养护指导。`
+
+            setIsLoading(true)
+            setIsTyping(true)
+
+            const tempConv: Conversation = {
+              id: String(numericId),
+              title: backendConv.title || '诊断咨询',
+              messages: [],
+              updatedAt: Date.now(),
+            }
+
+            try {
+              const updated = await sendMessage(tempConv, diagnosisText)
+
+              // 保存到后端
+              try {
+                await sendMessageToBackend(numericId, 'user', diagnosisText)
+                const aiMessage = updated.messages[updated.messages.length - 1]
+                if (aiMessage) {
+                  await sendMessageToBackend(numericId, 'assistant', aiMessage.content)
+                }
+              } catch (backendError) {
+                console.error('Save to backend error:', backendError)
+              }
+
+              // 设置打字动画
+              const aiMessage = updated.messages[updated.messages.length - 1]
+              if (aiMessage) {
+                setTypingMessageId(aiMessage.id)
+              }
+
+              setConversation(updated)
+              setIsLoading(false)
+              scrollToBottom()
+            } catch (sendError) {
+              console.error('Send initial message error:', sendError)
+              setIsLoading(false)
+              setIsTyping(false)
+            }
+            return
+          }
+
+          // 有关消息，直接加载
+          const converted: Conversation = {
+            id: String(backendConv.id),
+            title: backendConv.title,
+            messages,
+            updatedAt: new Date(backendConv.updated_at).getTime(),
+          }
+          setConversation(converted)
+          scrollToBottom()
+          return
+        }
+      } catch (error: any) {
+        console.error('Load conversation from backend error:', error)
+      }
+
+      // 后端获取失败，从本地存储查找
+      const found = await getConversation(conversationIdParam)
+      if (found) {
+        setConversation(found)
+        scrollToBottom()
+        return
+      }
+    }
+
+    // 创建新对话
+    const diagnosisContext: DiagnosisContext | undefined = diseaseParam ? {
+      currentDiagnosis: {
+        name: decodeURIComponent(diseaseParam),
+        type: 'disease',
+        severity: 'unknown',
+        confidence: 0,
+      },
+    } : undefined
+
+    const newConv = createConversation(diagnosisContext)
+    setConversation(newConv)
+
+    // 如果有disease参数，自动发送诊断摘要
+    if (diseaseParam) {
+      const diagnosisText = `用户刚刚完成了病害诊断，结果如下：
+- 病害名称：${decodeURIComponent(diseaseParam)}
+- 病害类型：病害
+- 严重程度：未知
+- 置信度：未知
+
+请基于以上诊断结果，提供专业的治疗建议和后续养护指导。`
+
+      setIsLoading(true)
+      setIsTyping(true)
+
+      try {
+        const updated = await sendMessage(newConv, diagnosisText)
+
+        // 保存初始诊断消息到后端（如果有conversationId）
+        if (conversationIdParam) {
+          const numericId = parseInt(conversationIdParam, 10)
+          if (numericId && !isNaN(numericId)) {
+            try {
+              await sendMessageToBackend(numericId, 'user', diagnosisText)
+              const aiMessage = updated.messages[updated.messages.length - 1]
+              if (aiMessage) {
+                await sendMessageToBackend(numericId, 'assistant', aiMessage.content)
+              }
+            } catch (backendError: any) {
+              console.error('Save initial message to backend error:', backendError)
+            }
+          }
+        }
+
+        const aiMessageId = updated.messages[updated.messages.length - 1].id
+        setTypingMessageId(aiMessageId)
+        setConversation(updated)
+        scrollToBottom()
+      } catch (error) {
+        console.error('Auto send diagnosis error:', error)
+        setIsLoading(false)
+        setIsTyping(false)
+      }
+    }
+  }, [conversationIdParam, diseaseParam])
 
   useEffect(() => {
     loadConversation()
-  }, [conversationId])
-
-  const loadConversation = async () => {
-    try {
-      let conv = await getConversation(conversationId)
-      if (!conv) {
-        conv = createConversation()
-        conv.messages = [getWelcomeMessage()]
-      }
-      setConversation(conv)
-    } catch (err) {
-      console.error('加载对话失败', err)
-    }
-  }
+  }, [loadConversation])
 
   const scrollToBottom = useCallback(() => {
     setTimeout(() => {
@@ -108,26 +257,9 @@ export default function Consultation() {
     }, 100)
   }, [])
 
-  useEffect(() => {
-    if (conversation) {
-      scrollToBottom()
-    }
-  }, [conversation?.messages?.length, displayingContent])
-
-  const handleTypingComplete = useCallback(() => {
-    setTypingMessageId(null)
-    setDisplayingMessageId(null)
-    setDisplayingContent('')
-    setIsTyping(false)
-    setIsLoading(false)
-  }, [])
-
-  const handleTypingChange = useCallback((text: string) => {
-    setDisplayingContent(text)
-  }, [])
-
+  // 发送消息
   const handleSend = async () => {
-    if (!inputText.trim() || isLoading || !conversation) return
+    if (!inputText.trim() || !conversation || isLoading) return
 
     const text = inputText.trim()
     setInputText('')
@@ -140,7 +272,6 @@ export default function Consultation() {
       content: text,
       timestamp: Date.now(),
     }
-
     const pendingAiMessageId = 'ai-pending-' + Date.now()
 
     setConversation(prev => {
@@ -162,20 +293,33 @@ export default function Consultation() {
       const updated = await sendMessage(conversation, text)
       const aiMessage = updated.messages[updated.messages.length - 1]
 
-      // 移除pending消息，用真实消息替换
+      // 同时保存到后端（如果有有效的对话ID）
+      const numericConversationId = typeof conversation.id === 'string' ? parseInt(conversation.id, 10) : conversation.id
+      if (numericConversationId && !isNaN(numericConversationId)) {
+        try {
+          await sendMessageToBackend(numericConversationId, 'user', text)
+          const aiMsg = updated.messages[updated.messages.length - 1]
+          if (aiMsg) {
+            await sendMessageToBackend(numericConversationId, 'assistant', aiMsg.content)
+          }
+        } catch (backendError: any) {
+          console.error('Save to backend error:', backendError)
+        }
+      }
+
+      // 替换pending消息为真实的AI消息
+      const realAiMessageId = aiMessage.id
       setConversation(prev => {
         if (!prev) return prev
-        const messages = prev.messages.filter(msg => msg.id !== pendingAiMessageId)
-        messages.push(aiMessage)
+        const messages = prev.messages.map(msg =>
+          msg.id === pendingAiMessageId ? aiMessage : msg
+        )
         return { ...prev, messages }
       })
 
-      // 开始打字机效果
-      setTypingMessageId(aiMessage.id)
-      setDisplayingMessageId(aiMessage.id)
-      setIsLoading(false)
+      setTypingMessageId(realAiMessageId)
     } catch (error) {
-      console.error('发送失败', error)
+      console.error('Send message error:', error)
       setConversation(prev => {
         if (!prev) return prev
         const messages = prev.messages.filter(msg => msg.id !== pendingAiMessageId)
@@ -187,6 +331,14 @@ export default function Consultation() {
     }
   }
 
+  // 打字完成回调
+  const handleTypingComplete = useCallback(() => {
+    setTypingMessageId(null)
+    setIsTyping(false)
+    setIsLoading(false)
+  }, [])
+
+  // 选择图片
   const handleChooseImage = () => {
     Taro.chooseImage({
       count: 1,
@@ -231,7 +383,6 @@ export default function Consultation() {
               return { ...prev, messages }
             })
             setTypingMessageId(aiMessage.id)
-            setDisplayingMessageId(aiMessage.id)
             setIsLoading(false)
           }).catch(() => {
             setConversation(prev => {
@@ -248,6 +399,7 @@ export default function Consultation() {
     })
   }
 
+  // 新建对话
   const handleNewChat = () => {
     const newConv = createConversation()
     newConv.messages = [getWelcomeMessage()]
@@ -256,11 +408,9 @@ export default function Consultation() {
     setIsLoading(false)
     setIsTyping(false)
     setTypingMessageId(null)
-    setDisplayingMessageId(null)
-    setDisplayingContent('')
   }
 
-  // 简单Markdown渲染
+  // 渲染Markdown（简化版）
   const renderMarkdown = (content: string) => {
     const lines = content.split('\n')
     return lines.map((line, index) => {
@@ -289,7 +439,6 @@ export default function Consultation() {
       if (line.trim() === '') {
         return <View key={index} className='md-spacer' />
       }
-      // 处理加粗 **text**
       const parts = line.split(/(\*\*[^*]+\*\*)/g)
       return (
         <Text key={index} className='md-body'>
@@ -304,6 +453,7 @@ export default function Consultation() {
     })
   }
 
+  // 欢迎消息
   const renderWelcome = () => {
     const welcomeMsg = getWelcomeMessage()
     return (
@@ -348,7 +498,7 @@ export default function Consultation() {
             {messages.map((msg: Message) => {
               const isUser = msg.role === 'user'
               const isPending = !isUser && !msg.content
-              const isDisplaying = !isUser && msg.id === displayingMessageId
+              const isDisplaying = !isUser && msg.id === typingMessageId
 
               return (
                 <View
@@ -358,8 +508,8 @@ export default function Consultation() {
                   <View className={`message-content ${isUser ? 'user-message-content' : ''}`}>
                     {!isUser && (
                       <View className='ai-name-row'>
-                        <Text className='ai-name-prefix'>护花使者</Text>
-                        <Icon name="flower" size={14} color="#f46" />
+                        <Text className='ai-name-prefix'>护花使者🌸</Text>
+                        {/* <Icon name="flower" size={14} color="#f46" /> */}
                       </View>
                     )}
                     {msg.imageUri && (
@@ -377,7 +527,6 @@ export default function Consultation() {
                       <TypewriterText
                         text={msg.content}
                         onComplete={handleTypingComplete}
-                        onTypingChange={handleTypingChange}
                       />
                     ) : isUser ? (
                       <Text className='message-text user-message-text'>{msg.content}</Text>

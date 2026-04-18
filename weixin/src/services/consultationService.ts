@@ -1,6 +1,11 @@
 import Taro from '@tarojs/taro'
-import request, { getToken } from './request'
+import request from './request'
 import { API_BASE_URL } from './config'
+
+// 获取 Token
+const getToken = (): string => {
+  return Taro.getStorageSync('huaban_token') || ''
+}
 
 export interface Message {
   id: string
@@ -37,6 +42,8 @@ const STORAGE_KEY = '@consultations'
 
 // 调用后端AI聊天接口
 export const callAIChat = async (messages: Message[], context?: DiagnosisContext): Promise<string> => {
+  console.log('[AI Chat] callAIChat called, messages count:', messages.length)
+
   let systemContext = ''
 
   if (context && context.recentDiagnoses && context.recentDiagnoses.length > 0) {
@@ -54,21 +61,37 @@ export const callAIChat = async (messages: Message[], context?: DiagnosisContext
     requestBody.system_context = systemContext
   }
 
-  const response = await Taro.request({
-    url: `${API_BASE_URL}/api/ai/chat`,
-    method: 'POST',
-    header: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${getToken()}`
-    },
-    data: requestBody,
-  })
+  console.log('[AI Chat] Sending request to:', `${API_BASE_URL}/api/ai/chat`)
+  console.log('[AI Chat] Request body:', JSON.stringify(requestBody))
+
+  let response
+  try {
+    response = await Taro.request({
+      url: `${API_BASE_URL}/api/ai/chat`,
+      method: 'POST',
+      header: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getToken()}`
+      },
+      data: requestBody,
+    })
+  } catch (err) {
+    console.error('[AI Chat] Request failed:', err)
+    throw new Error(`AI请求失败: ${err}`)
+  }
+
+  console.log('[AI Chat] Response status:', response.statusCode)
+  console.log('[AI Chat] Response headers:', response.header)
+  console.log('[AI Chat] Response data:', JSON.stringify(response.data))
 
   if (response.statusCode !== 200) {
     throw new Error(`AI服务错误: ${response.statusCode}`)
   }
 
   const data = response.data as any
+  if (!data) {
+    throw new Error('AI服务返回空数据')
+  }
   return data.message?.content || data.content || '抱歉，服务暂时不可用，请稍后重试。'
 }
 
@@ -186,24 +209,33 @@ export const createConversation = (diagnosisContext?: DiagnosisContext): Convers
 export const getWelcomeMessage = (): Message => ({
   id: 'welcome',
   role: 'assistant',
-  content: '您好！我是AI植物医生助手 🌿\n\n我可以帮您：\n• 解答植物养护问题\n• 分析病虫害原因\n• 提供治疗建议\n• 制定养护计划\n\n请描述您遇到的植物问题，我会尽力帮助您！',
+  content: '您好！我是AI植物医生助手 🌿\n\n我可以帮您：\n• 解答植物养护问题 🌱\n• 分析病虫害原因 🐛\n• 提供治疗建议 💊\n• 制定养护计划 📋\n\n请描述您遇到的植物问题，我会尽力帮助您！',
   timestamp: Date.now(),
 })
 
-// 后端 API
-export const createConversationToBackend = async (title: string): Promise<number> => {
-  const data = await request<{ id: number }>({ url: '/api/chat/conversations', method: 'POST', data: { title } })
+// ==================== 后端 API ====================
+
+// 创建对话到后端
+export const createConversationToBackend = async (title: string, diagnosisContext?: DiagnosisContext): Promise<number> => {
+  const data = await request<{ id: number }>({
+    url: '/api/chat/conversations',
+    method: 'POST',
+    data: { title, diagnosis_context: diagnosisContext }
+  })
   return data.id
 }
 
+// 获取对话列表（从后端）
 export const getConversationsFromBackend = async (): Promise<any[]> => {
   return request<any[]>({ url: '/api/chat/conversations' })
 }
 
+// 获取对话详情（从后端）
 export const getConversationFromBackend = async (conversationId: number): Promise<any> => {
   return request({ url: `/api/chat/conversations/${conversationId}` })
 }
 
+// 发送消息到后端
 export const sendMessageToBackend = async (conversationId: number, role: string, content: string): Promise<void> => {
   await request({
     url: `/api/chat/conversations/${conversationId}/messages`,
@@ -212,6 +244,7 @@ export const sendMessageToBackend = async (conversationId: number, role: string,
   })
 }
 
+// 根据诊断ID获取关联对话
 export const getConversationByDiagnosis = async (diagnosisId: number): Promise<number | null> => {
   try {
     const data = await request<any>({ url: `/api/diagnoses/${diagnosisId}` })
@@ -221,6 +254,7 @@ export const getConversationByDiagnosis = async (diagnosisId: number): Promise<n
   }
 }
 
+// 关联诊断和对话
 export const linkDiagnosisToConversation = async (diagnosisId: number, conversationId: number): Promise<void> => {
   await request({
     url: `/api/diagnoses/${diagnosisId}/conversation?conversation_id=${conversationId}`,

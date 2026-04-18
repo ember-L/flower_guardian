@@ -1,7 +1,7 @@
 .page-container {
   min-height: 100vh;
   background: #fafafa;
-  // padding-bottom: 60px;
+  padding-bottom: 50px;
 }
 
 .scroll-view {
@@ -54,7 +54,7 @@
 
 .content {
   padding-top: 16px;
-  padding-bottom: 64px;
+  // padding-bottom: 10px;
 }
 
 /* Search - 浮动卡片 */
@@ -475,6 +475,8 @@
   font-size: 17px;
   font-weight: 600;
   color: #333;
+    display: flex;
+  flex-direction: column;
 }
 
 .pitfall-subtitle {
@@ -523,6 +525,8 @@
   font-size: 15px;
   font-weight: 500;
   color: #333;
+    display: flex;
+  flex-direction: column;
 }
 
 .pitfall-item-desc {

@@ -128,10 +128,12 @@ export default function StoreDetail() {
         {/* 商品信息 */}
         <View className='info'>
           <Text className='name'>{product.name}</Text>
-          <Text className='price'>¥{product.price}</Text>
-          <Text className='stock'>
-            {product.stock > 0 ? `库存: ${product.stock}` : '缺货'}
-          </Text>
+          <View className='price-stock-row'>
+            <Text className='price'>¥{product.price}</Text>
+            <Text className='stock'>
+              {product.stock > 0 ? `库存: ${product.stock}` : '缺货'}
+            </Text>
+          </View>
           {product.description && (
             <Text className='description'>{product.description}</Text>
           )}
