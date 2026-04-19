@@ -405,6 +405,34 @@
   transition: width 0.5s ease;
 }
 
+// 检测类别标签
+.detection-tags {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 16rpx;
+  margin-top: 8rpx;
+}
+
+.detection-tag-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.detection-tag-dot {
+  width: 24rpx;
+  height: 24rpx;
+  border-radius: 12rpx;
+}
+
+.detection-tag-name {
+  font-size: 26rpx;
+  color: #333;
+  font-weight: 500;
+}
+
 // 结果卡片
 .result-card {
   background: #ffffff;

@@ -103,6 +103,47 @@
   background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.3));
 }
 
+.detail-image-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+// 检测结果标签覆盖层
+.detection-tags-overlay {
+  position: absolute;
+  top: 32rpx;
+  left: 32rpx;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  max-width: 80%;
+}
+
+.detection-tag-badge {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8rpx;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 12rpx 20rpx;
+  border-radius: 24rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.1);
+}
+
+.detection-tag-dot {
+  width: 16rpx;
+  height: 16rpx;
+  border-radius: 8rpx;
+}
+
+.detection-tag-text {
+  font-size: 24rpx;
+  color: #333;
+  font-weight: 500;
+}
+
 .confidence-badge {
   position: absolute;
   bottom: 32rpx;

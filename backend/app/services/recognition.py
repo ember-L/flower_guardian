@@ -82,53 +82,113 @@ class PlantRecognitionService:
             self.model = None
 
     def recognize(self, image_path: str) -> dict:
-        """识别植物"""
+        """识别植物 - 返回所有检测结果（兼容旧接口）"""
         logger.info(f"开始识别图片: {image_path}")
         logger.info(f"模型是否加载: {self.model is not None}")
 
         if not self.model:
             # 返回模拟结果
             logger.warning("模型未加载，返回模拟结果")
-            return {"id": "0", "name": "绿萝", "confidence": 0.95, "care_tips": "喜阴，避免直射"}
+            return {
+                "id": "0",
+                "name": "绿萝",
+                "confidence": 0.95,
+                "care_tips": "喜阴，避免直射",
+                "bbox": [0, 0, 0, 0],
+                "detections": [{
+                    "id": "0",
+                    "name": "绿萝",
+                    "confidence": 0.95,
+                    "care_tips": "喜阴，避免直射",
+                    "bbox": [0, 0, 0, 0]
+                }]
+            }
 
         try:
             results = self.model(image_path)
             result = results[0]
             logger.info(f"YOLO识别完成，boxes数量: {len(result.boxes) if result.boxes else 0}")
 
-            if result.boxes:
-                best_idx = result.boxes.conf.argmax()
-                box = result.boxes[best_idx]
-                class_id = str(int(box.cls[0]))
-                confidence = float(box.conf[0])
+            if result.boxes and len(result.boxes) > 0:
+                detections = []
+                for i in range(len(result.boxes)):
+                    box = result.boxes[i]
+                    class_id = str(int(box.cls[0]))
+                    confidence = float(box.conf[0])
+                    bbox = box.xyxy[0].tolist()
 
-                logger.info(f"识别结果 - class_id: {class_id}, confidence: {confidence}")
+                    detections.append({
+                        "id": class_id,
+                        "name": self.classes.get(class_id, {}).get("name", "未知"),
+                        "confidence": confidence,
+                        "care_tips": self.classes.get(class_id, {}).get("care_tips", ""),
+                        "bbox": bbox
+                    })
 
-                return {
-                    "id": class_id,
-                    "name": self.classes.get(class_id, {}).get("name", "未知"),
-                    "confidence": confidence,
-                    "care_tips": self.classes.get(class_id, {}).get("care_tips", "")
-                }
+                if detections:
+                    first = detections[0]
+                    return {
+                        "id": first["id"],
+                        "name": first["name"],
+                        "confidence": first["confidence"],
+                        "care_tips": first["care_tips"],
+                        "bbox": first["bbox"],
+                        "detections": detections
+                    }
         except Exception as e:
             print(f"Plant recognition error: {e}")
 
-        return {"id": "-1", "name": "未识别", "confidence": 0.0}
+        return {"id": "-1", "name": "未识别", "confidence": 0.0, "bbox": [0, 0, 0, 0], "detections": []}
 
     def recognize_batch(self, image_paths: list) -> list:
         """批量识别"""
         if not self.model:
-            return [{"id": "0", "name": "未知", "confidence": 0.0}] * len(image_paths)
+            return [{
+                "id": "0",
+                "name": "未知",
+                "confidence": 0.0,
+                "care_tips": "",
+                "bbox": [0, 0, 0, 0],
+                "detections": []
+            }] * len(image_paths)
 
         results = self.model(image_paths)
-        return [
-            {
-                "id": str(int(r.boxes[0].cls[0])) if r.boxes and len(r.boxes) > 0 else "-1",
-                "name": self.classes.get(str(int(r.boxes[0].cls[0])), {}).get("name", "未知") if r.boxes and len(r.boxes) > 0 else "未识别",
-                "confidence": float(r.boxes[0].conf[0]) if r.boxes and len(r.boxes) > 0 else 0.0
-            }
-            for r in results
-        ]
+        output = []
+        for r in results:
+            if r.boxes and len(r.boxes) > 0:
+                detections = []
+                for i in range(len(r.boxes)):
+                    box = r.boxes[i]
+                    class_id = str(int(box.cls[0]))
+                    confidence = float(box.conf[0])
+                    bbox = box.xyxy[0].tolist()
+
+                    detections.append({
+                        "id": class_id,
+                        "name": self.classes.get(class_id, {}).get("name", "未知"),
+                        "confidence": confidence,
+                        "care_tips": self.classes.get(class_id, {}).get("care_tips", ""),
+                        "bbox": bbox
+                    })
+
+                first = detections[0]
+                output.append({
+                    "id": first["id"],
+                    "name": first["name"],
+                    "confidence": first["confidence"],
+                    "care_tips": first["care_tips"],
+                    "bbox": first["bbox"],
+                    "detections": detections
+                })
+            else:
+                output.append({
+                    "id": "-1",
+                    "name": "未识别",
+                    "confidence": 0.0,
+                    "bbox": [0, 0, 0, 0],
+                    "detections": []
+                })
+        return output
 
 
 plant_recognition_service = PlantRecognitionService()

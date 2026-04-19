@@ -1,14 +1,22 @@
 // 病症诊断页面 - 现代简洁移动端设计
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, Text, Alert, Animated, Easing, Image } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity, Text, Alert, Animated, Easing, Image, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { Icons } from '../components/Icon';
+import { BboxOverlay, BboxItem } from '../components/BboxOverlay';
 import { colors, spacing, borderRadius, shadows, duration, fontSize, fontWeight, touchTarget } from '../constants/theme';
 import { NavigationProps } from '../navigation/AppNavigator';
 import { pestRecognitionService, DiagnosisResult } from '../services/pestRecognitionService';
 import { createDiagnosis } from '../services/diagnosisService';
 import { networkMonitor, isNetworkConnected } from '../utils/networkMonitor';
+
+// 检测标签类型
+interface DetectionTag {
+  name: string;
+  count: number;
+  color: string;
+}
 
 interface DiagnosisScreenProps extends Partial<NavigationProps> {}
 
@@ -16,6 +24,8 @@ export function DiagnosisScreen({ onGoBack, onNavigate, isLoggedIn, onRequireLog
   const [isLoading, setIsLoading] = useState(false);
   const [diagnosisResult, setDiagnosisResult] = useState<DiagnosisResult | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [detectionBboxes, setDetectionBboxes] = useState<BboxItem[]>([]);
+  const [detectionTags, setDetectionTags] = useState<DetectionTag[]>([]);
   const [pulseAnim] = useState(new Animated.Value(1));
   const [recognitionMode, setRecognitionMode] = useState<'online' | 'offline'>('online');
 
@@ -117,9 +127,79 @@ export function DiagnosisScreen({ onGoBack, onNavigate, isLoggedIn, onRequireLog
       const diagnosisResult: DiagnosisResult = await pestRecognitionService.uploadAndRecognize(tempImageUri);
       const serverImageUrl = diagnosisResult.imageUrl;
 
+      // 解析检测框数据
+      const bboxes: BboxItem[] = [];
+      const tagMap: Record<string, { count: number; color: string }> = {};
+
+      const getTypeColor = (type?: string) => {
+        switch (type) {
+          case 'disease': return '#faad14';
+          case 'insect': return '#ff4d4f';
+          case 'plant': return '#52c41a';
+          default: return '#52c41a';
+        }
+      };
+
+      // 植物检测框
+      if (diagnosisResult.plant) {
+        if (diagnosisResult.plant.detections && diagnosisResult.plant.detections.length > 0) {
+          diagnosisResult.plant.detections.forEach((det: any) => {
+            if (det.bbox && det.bbox.length === 4) {
+              console.log('[Diagnosis] Plant detection bbox:', det.bbox, 'name:', det.name);
+              bboxes.push({
+                name: det.name || diagnosisResult.plant?.name || '植物',
+                confidence: det.confidence || 0,
+                bbox: det.bbox,
+                type: 'plant',
+              });
+              const name = det.name || diagnosisResult.plant?.name || '植物';
+              if (!tagMap[name]) {
+                tagMap[name] = { count: 0, color: getTypeColor('plant') };
+              }
+              tagMap[name].count++;
+            }
+          });
+        }
+      }
+
+      // 病虫害检测框
+      if (diagnosisResult.pest) {
+        if (diagnosisResult.pest.detections && diagnosisResult.pest.detections.length > 0) {
+          diagnosisResult.pest.detections.forEach((det: any) => {
+            if (det.bbox && det.bbox.length === 4) {
+              const pestType = det.type || diagnosisResult.pest?.type || 'pest';
+              bboxes.push({
+                name: det.name || diagnosisResult.pest?.name || '病虫害',
+                confidence: det.confidence || 0,
+                bbox: det.bbox,
+                type: pestType,
+              });
+              const name = det.name || diagnosisResult.pest?.name || '病虫害';
+              if (!tagMap[name]) {
+                tagMap[name] = { count: 0, color: getTypeColor(pestType) };
+              }
+              tagMap[name].count++;
+            }
+          });
+        }
+      }
+
+      // 转换为标签数组
+      const tags: DetectionTag[] = Object.entries(tagMap).map(([name, data]) => ({
+        name,
+        count: data.count,
+        color: data.color,
+      }));
+
+      setDetectionBboxes(bboxes);
+      setDetectionTags(tags);
+
+      console.log('[Diagnosis] Final bboxes for overlay:', JSON.stringify(bboxes));
+
       // 保存诊断记录到后端（使用服务器上的图片 URL）
       try {
         if (isLoggedIn) {
+          const detectionsJson = JSON.stringify(bboxes);
           await createDiagnosis({
             image_url: serverImageUrl,
             disease_name: diagnosisResult.name,
@@ -128,14 +208,17 @@ export function DiagnosisScreen({ onGoBack, onNavigate, isLoggedIn, onRequireLog
             treatment: diagnosisResult.treatment,
             prevention: diagnosisResult.prevention,
             recommended_products: '',
+            detections: detectionsJson,
           });
+          console.log('[Diagnosis] 诊断记录已保存, detections:', bboxes.length);
         }
       } catch (saveError) {
+        console.log('[Diagnosis] 保存诊断记录失败:', saveError);
         // 保存失败不影响显示识别结果
       }
 
-      // 用本地 URI 显示图片（显示拍的图片）
-      setCapturedImage(tempImageUri);
+      // 使用压缩后的图片 URI 显示（与 backend 计算 bbox 一致）
+      setCapturedImage(diagnosisResult.imageUrl);
       setDiagnosisResult(diagnosisResult);
 
       const isConnected = await isNetworkConnected();
@@ -167,6 +250,8 @@ export function DiagnosisScreen({ onGoBack, onNavigate, isLoggedIn, onRequireLog
   const handleReDiagnose = () => {
     setDiagnosisResult(null);
     setCapturedImage(null);
+    setDetectionBboxes([]);
+    setDetectionTags([]);
   };
 
   return (
@@ -278,7 +363,15 @@ export function DiagnosisScreen({ onGoBack, onNavigate, isLoggedIn, onRequireLog
             {/* 图片展示 */}
             {capturedImage && typeof capturedImage === 'string' && capturedImage.trim().length > 0 && (
               <View style={styles.imageSection}>
+                {/* 图片 */}
                 <Image source={{ uri: capturedImage }} style={styles.resultImage} />
+                {/* 检测框覆盖层 - 使用实际容器宽度（屏幕宽度减去左右padding） */}
+                <BboxOverlay
+                  imageUri={capturedImage}
+                  bboxes={detectionBboxes}
+                  containerHeight={200}
+                  containerWidth={Dimensions.get('window').width - spacing.lg * 2}
+                />
                 <View style={styles.imageTags}>
                   <View style={styles.imageTag}>
                     <Icons.Image size={12} color={colors.white} />
@@ -289,19 +382,37 @@ export function DiagnosisScreen({ onGoBack, onNavigate, isLoggedIn, onRequireLog
                     <Text style={styles.modeTagText}>{recognitionMode === 'online' ? '在线' : '离线'}</Text>
                   </View>
                 </View>
+                {/* 检测结果标签 */}
+                {detectionTags.length > 0 && (
+                  <View style={styles.detectionTagsOverlay}>
+                    {detectionTags.map((tag, index) => (
+                      <View key={index} style={styles.detectionTagBadge}>
+                        <View style={[styles.detectionTagDot, { backgroundColor: tag.color }]} />
+                        <Text style={styles.detectionTagText}>{tag.name} × {tag.count}</Text>
+                      </View>
+                    ))}
+                  </View>
+                )}
               </View>
             )}
 
-            {/* 置信度 */}
-            <View style={styles.confidenceSection}>
-              <View style={styles.confidenceHeader}>
-                <Text style={styles.confidenceLabel}>置信度</Text>
-                <Text style={[styles.confidenceValue, { color: severityConfig.color }]}>{confidencePercent}%</Text>
+            {/* 检测结果区域 */}
+            {detectionTags.length > 0 && (
+              <View style={styles.confidenceSection}>
+                <View style={styles.confidenceHeader}>
+                  <Text style={styles.confidenceLabel}>检测结果</Text>
+                  <Text style={styles.confidenceValue}>{detectionTags.length} 个目标</Text>
+                </View>
+                <View style={styles.detectionTags}>
+                  {detectionTags.map((tag, index) => (
+                    <View key={index} style={styles.detectionTagItem}>
+                      <View style={[styles.detectionTagDotLarge, { backgroundColor: tag.color }]} />
+                      <Text style={styles.detectionTagName}>{tag.name} : {tag.count}个</Text>
+                    </View>
+                  ))}
+                </View>
               </View>
-              <View style={styles.confidenceBar}>
-                <View style={[styles.confidenceBarFill, { width: `${confidencePercent}%`, backgroundColor: severityConfig.color }]} />
-              </View>
-            </View>
+            )}
 
             {/* 结果卡片 */}
             <View style={styles.resultCard}>
@@ -655,6 +766,8 @@ const styles = StyleSheet.create({
   },
   imageSection: {
     position: 'relative',
+    width: '100%',
+    height: 200,
     borderRadius: borderRadius.xl,
     overflow: 'hidden',
     marginBottom: spacing.md,
@@ -662,7 +775,7 @@ const styles = StyleSheet.create({
   },
   resultImage: {
     width: '100%',
-    height: 180,
+    height: 200,
     backgroundColor: colors.surface,
   },
   imageTags: {
@@ -699,8 +812,36 @@ const styles = StyleSheet.create({
     color: colors.white,
     fontWeight: fontWeight.medium,
   },
+  // 图片上的检测结果标签
+  detectionTagsOverlay: {
+    position: 'absolute',
+    top: spacing.sm,
+    left: spacing.sm,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.xs,
+  },
+  detectionTagBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    backgroundColor: colors.black + '60',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.sm,
+  },
+  detectionTagDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  detectionTagText: {
+    fontSize: fontSize.xs,
+    color: colors.white,
+    fontWeight: fontWeight.medium,
+  },
 
-  // 置信度
+  // 检测结果区域
   confidenceSection: {
     backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
@@ -723,15 +864,25 @@ const styles = StyleSheet.create({
     fontSize: fontSize.sm,
     fontWeight: fontWeight.bold,
   },
-  confidenceBar: {
-    height: 6,
-    backgroundColor: colors.border,
-    borderRadius: 3,
-    overflow: 'hidden',
+  // 检测类别标签（置信度区域）
+  detectionTags: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
   },
-  confidenceBarFill: {
-    height: '100%',
-    borderRadius: 3,
+  detectionTagItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  detectionTagDotLarge: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+  },
+  detectionTagName: {
+    fontSize: fontSize.sm,
+    color: colors.text,
   },
 
   // 结果卡片

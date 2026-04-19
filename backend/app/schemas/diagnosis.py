@@ -11,6 +11,7 @@ class DiagnosisRecordCreate(BaseModel):
     treatment: str = ""
     prevention: str = ""
     recommended_products: str = "[]"
+    detections: str = "[]"  # 检测结果JSON，包含bbox和标签信息
 
 
 class DiagnosisRecordResponse(BaseModel):
@@ -24,6 +25,7 @@ class DiagnosisRecordResponse(BaseModel):
     recommended_products: str
     is_favorite: bool
     conversation_id: Optional[int] = None
+    detections: Optional[str] = None  # 检测结果JSON
     created_at: datetime
 
     class Config:

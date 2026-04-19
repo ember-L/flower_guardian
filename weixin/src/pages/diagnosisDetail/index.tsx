@@ -3,8 +3,16 @@ import Taro, { useDidShow } from '@tarojs/taro'
 import { useState, useEffect, useCallback } from 'react'
 import { diagnosisService } from '../../services/diagnosisService'
 import Icon from '../../components/Icon'
+import BboxOverlay, { BboxItem } from '../../components/BboxOverlay'
 import { getFullImageUrl } from '../../services/request'
 import './index.scss'
+
+// 检测标签类型
+interface DetectionTag {
+  name: string
+  count: number
+  color: string
+}
 
 interface DiagnosisDetail {
   id: number
@@ -45,6 +53,9 @@ export default function DiagnosisDetail() {
   const [detail, setDetail] = useState<DiagnosisDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [diagnosisId, setDiagnosisId] = useState<number | null>(null)
+  const [detectionBboxes, setDetectionBboxes] = useState<BboxItem[]>([])
+  const [detectionTags, setDetectionTags] = useState<DetectionTag[]>([])
+  const [imageSize, setImageSize] = useState<{ width: number; height: number }>({ width: 0, height: 0 })
 
   useDidShow(() => {
     const params = Taro.getCurrentInstance().router?.params
@@ -65,6 +76,54 @@ export default function DiagnosisDetail() {
     try {
       const data = await diagnosisService.getDiagnosis(id)
       setDetail(data)
+
+      // 解析存储的检测框数据
+      try {
+        const tagMap: Record<string, { count: number; color: string }> = {}
+
+        const getTypeColor = (type?: string) => {
+          switch (type) {
+            case 'disease': return '#faad14'
+            case 'insect': return '#ff4d4f'
+            case 'plant': return '#52c41a'
+            default: return '#52c41a'
+          }
+        }
+
+        let bboxes: BboxItem[] = []
+        let tags: DetectionTag[] = []
+
+        // 从存储的detections字段解析检测框
+        if (data.detections && data.detections.trim()) {
+          const storedBboxes = JSON.parse(data.detections) as BboxItem[]
+          console.log('[DiagnosisDetail] 解析存储的检测框:', storedBboxes.length)
+
+          storedBboxes.forEach((item: BboxItem) => {
+            if (item.bbox && item.bbox.length === 4 && item.bbox[2] > item.bbox[0] && item.bbox[3] > item.bbox[1]) {
+              bboxes.push(item)
+              const name = item.name || '未知'
+              if (!tagMap[name]) {
+                tagMap[name] = { count: 0, color: getTypeColor(item.type) }
+              }
+              tagMap[name].count++
+            }
+          })
+
+          tags = Object.entries(tagMap).map(([name, info]) => ({
+            name,
+            count: info.count,
+            color: info.color,
+          }))
+        }
+
+        console.log('[DiagnosisDetail] bboxes:', bboxes.length, 'tags:', tags.length)
+        setDetectionBboxes(bboxes)
+        setDetectionTags(tags)
+      } catch (parseErr) {
+        console.error('[DiagnosisDetail] 解析检测框失败:', parseErr)
+        setDetectionBboxes([])
+        setDetectionTags([])
+      }
     } catch (err: any) {
       console.error('加载诊断详情失败:', err)
       Taro.showToast({ title: err.message || '加载失败', icon: 'none' })
@@ -128,11 +187,49 @@ export default function DiagnosisDetail() {
       <ScrollView scrollY className='scroll-view' enhanced showScrollbar={false}>
         {/* 主图区域 */}
         <View className='image-container'>
-          {detail.image_url && (
-            <Image className='detail-image' src={getFullImageUrl(detail.image_url)} mode='aspectFill' lazyLoad />
+          {detail.image_url && detail.image_url.trim().length > 0 ? (
+            <View className='detail-image-wrapper'>
+              <Image
+                className='detail-image'
+                src={getFullImageUrl(detail.image_url)}
+                mode='aspectFill'
+                lazyLoad
+                onLoad={(e) => {
+                  console.log('[DiagnosisDetail] Image loaded, naturalWidth:', e.detail.width, 'naturalHeight:', e.detail.height)
+                  // 存储图片尺寸用于BboxOverlay
+                  setImageSize({ width: e.detail.width, height: e.detail.height })
+                }}
+              />
+              <BboxOverlay
+                imageSrc={getFullImageUrl(detail.image_url)}
+                bboxes={detectionBboxes}
+                imageHeightRpx={560}
+                imageWidth={imageSize.width}
+                imageHeight={imageSize.height}
+              />
+            </View>
+          ) : (
+            capturedImage && <Image className='detail-image' src={capturedImage} mode='aspectFill' lazyLoad />
+          )}
+          {!detail.image_url && !capturedImage && (
+            <View className='detail-image-placeholder'>
+              <Icon name="image" size={48} color="#ccc" />
+            </View>
           )}
           {/* 渐变遮罩 */}
           <View className='image-gradient' />
+
+          {/* 检测结果标签 */}
+          {detectionTags.length > 0 && (
+            <View className='detection-tags-overlay'>
+              {detectionTags.map((tag, index) => (
+                <View key={index} className='detection-tag-badge'>
+                  <View className='detection-tag-dot' style={{ backgroundColor: tag.color }} />
+                  <Text className='detection-tag-text'>{tag.name} × {tag.count}</Text>
+                </View>
+              ))}
+            </View>
+          )}
 
           {/* 置信度徽章 */}
           <View className='confidence-badge' style={{ backgroundColor: confidenceConfig.bgColor }}>

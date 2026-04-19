@@ -1,6 +1,6 @@
 // 诊断详情页面 - Neumorphism 风格美化
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Image, Animated, Easing } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Image, Animated, Easing, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getDiagnosis, toggleFavorite, rediagnose, DiagnosisRecord } from '../services/diagnosisService';
 import { createConversationToBackend, linkDiagnosisToConversation } from '../services/consultationService';
@@ -8,6 +8,14 @@ import { API_BASE_URL } from '../services/config';
 import { colors, spacing, borderRadius, shadows, duration, fontSize, fontWeight, touchTarget } from '../constants/theme';
 import { NavigationProps } from '../navigation/AppNavigator';
 import { Icon } from '../components/Icon';
+import { BboxOverlay, BboxItem } from '../components/BboxOverlay';
+
+// 检测标签类型
+interface DetectionTag {
+  name: string;
+  count: number;
+  color: string;
+}
 
 interface DiagnosisDetailScreenProps extends NavigationProps {}
 
@@ -56,6 +64,8 @@ export function DiagnosisDetailScreen({ route, onNavigate, onGoBack, isLoggedIn 
   const [record, setRecord] = useState<DiagnosisRecord | null>(null);
   const [loading, setLoading] = useState(true);
   const [fadeAnim] = useState(new Animated.Value(0));
+  const [detectionBboxes, setDetectionBboxes] = useState<BboxItem[]>([]);
+  const [detectionTags, setDetectionTags] = useState<DetectionTag[]>([]);
 
   useEffect(() => {
     console.log('[DiagnosisDetail] useEffect triggered, diagnosisId:', diagnosisId);
@@ -84,6 +94,54 @@ export function DiagnosisDetailScreen({ route, onNavigate, onGoBack, isLoggedIn 
       const data = await getDiagnosis(id);
       console.log('[DiagnosisDetail] Loaded data:', JSON.stringify(data));
       setRecord(data);
+
+      // 解析存储的检测框数据
+      try {
+        const tagMap: Record<string, { count: number; color: string }> = {};
+
+        const getTypeColor = (type?: string) => {
+          switch (type) {
+            case 'disease': return '#faad14';
+            case 'insect': return '#ff4d4f';
+            case 'plant': return '#52c41a';
+            default: return '#52c41a';
+          }
+        };
+
+        let bboxes: BboxItem[] = [];
+        let tags: DetectionTag[] = [];
+
+        // 从存储的detections字段解析检测框
+        if (data.detections && data.detections.trim()) {
+          const storedBboxes = JSON.parse(data.detections) as BboxItem[];
+          console.log('[DiagnosisDetail] 解析存储的检测框:', storedBboxes.length);
+
+          storedBboxes.forEach((item: BboxItem) => {
+            if (item.bbox && item.bbox.length === 4 && item.bbox[2] > item.bbox[0] && item.bbox[3] > item.bbox[1]) {
+              bboxes.push(item);
+              const name = item.name || '未知';
+              if (!tagMap[name]) {
+                tagMap[name] = { count: 0, color: getTypeColor(item.type) };
+              }
+              tagMap[name].count++;
+            }
+          });
+
+          tags = Object.entries(tagMap).map(([name, info]) => ({
+            name,
+            count: info.count,
+            color: info.color,
+          }));
+        }
+
+        console.log('[DiagnosisDetail] bboxes:', bboxes.length, 'tags:', tags.length);
+        setDetectionBboxes(bboxes);
+        setDetectionTags(tags);
+      } catch (parseErr) {
+        console.error('[DiagnosisDetail] 解析检测框失败:', parseErr);
+        setDetectionBboxes([]);
+        setDetectionTags([]);
+      }
     } catch (error: any) {
       console.error('[DiagnosisDetail] Failed to load diagnosis:', error?.response?.data || error);
       console.error('Failed to load diagnosis:', error);
@@ -233,22 +291,44 @@ export function DiagnosisDetailScreen({ route, onNavigate, onGoBack, isLoggedIn 
         {/* 主图区域 */}
         <View style={styles.imageContainer}>
           {record.image_url && typeof record.image_url === 'string' && record.image_url.trim().length > 0 && (
-            <Image
-              source={{ uri: getFullImageUrl(record.image_url) }}
-              style={styles.image}
-              resizeMode="cover"
-            />
+            <>
+              {/* 图片 */}
+              <Image
+                source={{ uri: getFullImageUrl(record.image_url) }}
+                style={styles.detailImage}
+                resizeMode="cover"
+              />
+              {/* 检测框覆盖层 */}
+              <BboxOverlay
+                imageUri={getFullImageUrl(record.image_url) || ''}
+                bboxes={detectionBboxes}
+                containerHeight={280}
+                containerWidth={Dimensions.get('window').width}
+              />
+            </>
           )}
           {/* 渐变遮罩 */}
           <View style={styles.imageGradient} />
 
+          {/* 检测结果标签 */}
+          {detectionTags.length > 0 && (
+            <View style={styles.detectionTagsOverlay}>
+              {detectionTags.map((tag, index) => (
+                <View key={index} style={styles.detectionTagBadge}>
+                  <View style={[styles.detectionTagDot, { backgroundColor: tag.color }]} />
+                  <Text style={styles.detectionTagText}>{tag.name} × {tag.count}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+
           {/* 置信度徽章 */}
-          <View style={[styles.confidenceBadge, { backgroundColor: confidenceConfig.bgColor }]}>
+          {/* <View style={[styles.confidenceBadge, { backgroundColor: confidenceConfig.bgColor }]}>
             <Icon name={confidenceConfig.icon} size={18} color={confidenceConfig.color} />
             <Text style={[styles.confidenceText, { color: confidenceConfig.color }]}>
               {confidenceConfig.label} · {(record.confidence * 100).toFixed(0)}%
             </Text>
-          </View>
+          </View> */}
         </View>
 
         {/* 诊断结果 */}
@@ -466,6 +546,10 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
+  detailImage: {
+    width: '100%',
+    height: '100%',
+  },
   imageGradient: {
     position: 'absolute',
     bottom: 0,
@@ -474,6 +558,33 @@ const styles = StyleSheet.create({
     height: 80,
     backgroundColor: 'transparent',
     backgroundImage: 'linear-gradient(to bottom, transparent, rgba(0,0,0,0.3))',
+  },
+  detectionTagsOverlay: {
+    position: 'absolute',
+    top: spacing.md,
+    left: spacing.md,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.xs,
+  },
+  detectionTagBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    backgroundColor: colors.black + '60',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.sm,
+  },
+  detectionTagDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  detectionTagText: {
+    fontSize: fontSize.xs,
+    color: colors.white,
+    fontWeight: fontWeight.medium,
   },
   confidenceBadge: {
     position: 'absolute',

@@ -18,6 +18,7 @@ class DiagnosisRecord(Base):
     recommended_products = Column(Text)  # 推荐产品 (JSON)
     is_favorite = Column(Boolean, default=False)
     conversation_id = Column(Integer, ForeignKey("conversations.id"), nullable=True)  # 关联AI对话
+    detections = Column(Text)  # 检测结果JSON，包含bbox和标签信息
     created_at = Column(DateTime, default=datetime.utcnow)
 
     user = relationship("User", backref="diagnosis_records")

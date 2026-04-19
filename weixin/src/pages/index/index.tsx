@@ -3,6 +3,8 @@ import Taro, { useDidShow } from '@tarojs/taro'
 import { useState, useEffect } from 'react'
 import Icon from '../../components/Icon'
 import CustomTabBar from '../../components/CustomTabBar'
+import BboxOverlay, { BboxItem } from '../../components/BboxOverlay'
+import { recognitionService } from '../../services/recognitionService'
 import { API_BASE_URL } from '../../services/config'
 import './index.scss'
 
@@ -13,6 +15,13 @@ const getFullImageUrl = (url: string): string => {
   if (trimmed.length === 0) return ''
   if (trimmed.startsWith('http')) return trimmed
   return `${API_BASE_URL}${trimmed}`
+}
+
+// 检测标签类型
+interface DetectionTag {
+  name: string
+  count: number
+  color: string
 }
 
 interface WeatherData {
@@ -48,6 +57,8 @@ export default function Index() {
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null)
   const [weatherTip, setWeatherTip] = useState('')
   const [weatherLoading, setWeatherLoading] = useState(false)
+  const [detectionBboxes, setDetectionBboxes] = useState<BboxItem[]>([])
+  const [detectionTags, setDetectionTags] = useState<DetectionTag[]>([])
 
   useEffect(() => {
     loadRecommendPlants()
@@ -160,36 +171,129 @@ export default function Index() {
       count: 1,
       sizeType: ['compressed'],
       sourceType: [source],
-      success: (res) => {
+      success: async (res) => {
         const filePath = res.tempFilePaths[0]
         setCapturedImageUri(filePath)
-        Taro.uploadFile({
-          url: `${API_BASE_URL}/api/recognition/identify`,
-          filePath,
-          name: 'image',
-          success: (uploadRes) => {
-            try {
-              const data = JSON.parse(uploadRes.data) as any
-              if (data?.result) {
-                setRecognitionResult({ name: data.result.name, confidence: data.result.confidence || 0.95 })
-                setShowPlantCard(true)
-              } else {
-                setRecognitionResult({ name: '绿萝', confidence: 0.95 })
-                setShowPlantCard(true)
-              }
-            } catch (e) {
-              setRecognitionResult({ name: '绿萝', confidence: 0.95 })
-              setShowPlantCard(true)
+        setShowPlantCard(true)
+
+        try {
+          // 使用 /api/diagnosis/full 接口，同时获取植物和病虫害检测结果
+          const result = await recognitionService.diagnosePest(filePath)
+          console.log('[Index] 识别结果:', JSON.stringify(result).substring(0, 500))
+
+          // 提取检测框和标签
+          const bboxes: BboxItem[] = []
+          const tagMap: Record<string, { count: number; color: string }> = {}
+
+          // 获取类型对应的颜色
+          const getTypeColor = (type: string) => {
+            switch (type) {
+              case 'disease': return '#faad14'
+              case 'insect': return '#ff4d4f'
+              case 'plant': return '#52c41a'
+              default: return '#52c41a'
             }
-          },
-          fail: () => {
-            setRecognitionResult({ name: '绿萝', confidence: 0.95 })
-            setShowPlantCard(true)
-          },
-          complete: () => {
-            setIsLoading(false)
           }
-        })
+
+          // 植物检测框
+          if (result.plant) {
+            if (result.plant.detections && result.plant.detections.length > 0) {
+              result.plant.detections.forEach((det: any) => {
+                if (det.bbox && det.bbox.length === 4) {
+                  bboxes.push({
+                    name: det.name || result.plant.name || '植物',
+                    confidence: det.confidence || 0,
+                    bbox: det.bbox,
+                    type: 'plant',
+                  })
+                  const name = det.name || result.plant.name || '植物'
+                  if (!tagMap[name]) {
+                    tagMap[name] = { count: 0, color: getTypeColor('plant') }
+                  }
+                  tagMap[name].count++
+                }
+              })
+            } else if (result.plant.bbox && result.plant.bbox.length === 4) {
+              bboxes.push({
+                name: result.plant.name || '植物',
+                confidence: result.plant.confidence || 0,
+                bbox: result.plant.bbox,
+                type: 'plant',
+              })
+              const name = result.plant.name || '植物'
+              if (!tagMap[name]) {
+                tagMap[name] = { count: 0, color: getTypeColor('plant') }
+              }
+              tagMap[name].count++
+            }
+          }
+
+          // 病虫害检测框
+          if (result.pest) {
+            if (result.pest.detections && result.pest.detections.length > 0) {
+              result.pest.detections.forEach((det: any) => {
+                if (det.bbox && det.bbox.length === 4) {
+                  const pestType = det.type || result.pest.type || 'pest'
+                  bboxes.push({
+                    name: det.name || result.pest.name || '病虫害',
+                    confidence: det.confidence || 0,
+                    bbox: det.bbox,
+                    type: pestType,
+                  })
+                  const name = det.name || result.pest.name || '病虫害'
+                  if (!tagMap[name]) {
+                    tagMap[name] = { count: 0, color: getTypeColor(pestType) }
+                  }
+                  tagMap[name].count++
+                }
+              })
+            } else if (result.pest.bbox && result.pest.bbox.length === 4) {
+              const pestType = result.pest.type || 'pest'
+              bboxes.push({
+                name: result.pest.name || '病虫害',
+                confidence: result.pest.confidence || 0,
+                bbox: result.pest.bbox,
+                type: pestType,
+              })
+              const name = result.pest.name || '病虫害'
+              if (!tagMap[name]) {
+                tagMap[name] = { count: 0, color: getTypeColor(pestType) }
+              }
+              tagMap[name].count++
+            }
+          }
+
+          // 转换为标签数组
+          const tags: DetectionTag[] = Object.entries(tagMap).map(([name, data]) => ({
+            name,
+            count: data.count,
+            color: data.color,
+          }))
+
+          console.log('[Index] bboxes:', bboxes.length, 'tags:', tags.length)
+
+          // 如果没有检测到任何目标，不显示结果
+          if (bboxes.length === 0) {
+            console.log('[Index] 未检测到目标')
+            setDetectionBboxes([])
+            setDetectionTags([])
+            setRecognitionResult(null)
+            setShowPlantCard(false)
+            Taro.showToast({ title: '未检测到植物或病虫害', icon: 'none' })
+            return
+          }
+
+          setDetectionBboxes(bboxes)
+          setDetectionTags(tags)
+          setRecognitionResult({ name: result.diagnosis?.name || result.plant?.name || '未知', confidence: result.diagnosis?.confidence || result.plant?.confidence || 0 })
+        } catch (e) {
+          console.error('识别失败:', e)
+          setDetectionBboxes([])
+          setDetectionTags([])
+          setRecognitionResult({ name: '识别失败', confidence: 0 })
+        } finally {
+          setIsLoading(false)
+        }
       },
       fail: () => {
         setIsLoading(false)
@@ -202,12 +306,16 @@ export default function Index() {
     setShowPlantCard(false)
     setRecognitionResult(null)
     setCapturedImageUri('')
+    setDetectionBboxes([])
+    setDetectionTags([])
   }
 
   const closePlantCard = () => {
     setShowPlantCard(false)
     setRecognitionResult(null)
     setCapturedImageUri('')
+    setDetectionBboxes([])
+    setDetectionTags([])
   }
 
   const quickActions = [
@@ -332,25 +440,45 @@ export default function Index() {
                     <Text className='result-badge-text'>识别成功</Text>
                   </View>
                 </View>
-                <Text className='result-title'>识别结果</Text>
+
+                {/* 检测结果标签（颜色圆点+名称+数量） */}
+                {detectionTags.length > 0 && (
+                  <View className='result-tags-card'>
+                    <View className='result-tags-header'>
+                      <Text className='result-tags-title'>检测结果</Text>
+                      <Text className='result-tags-count'>{detectionTags.length} 个目标</Text>
+                    </View>
+                    <View className='result-tags-list'>
+                      {detectionTags.map((tag, index) => (
+                        <View key={index} className='result-tag-item'>
+                          <View
+                            className='result-tag-dot'
+                            style={{ backgroundColor: tag.color }}
+                          />
+                          <Text className='result-tag-name'>{tag.name}</Text>
+                          <Text className='result-tag-separator'>×</Text>
+                          <Text className='result-tag-count' style={{ color: tag.color }}>{tag.count}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+                )}
+
                 <View className='result-card'>
                   {capturedImageUri ? (
-                    <Image className='result-image' src={capturedImageUri} mode='aspectFill' lazyLoad />
+                    <View className='result-image-wrapper'>
+                      <Image className='result-image' src={capturedImageUri} mode='aspectFill' lazyLoad />
+                      <BboxOverlay
+                        imageSrc={capturedImageUri}
+                        bboxes={detectionBboxes}
+                        imageHeightRpx={320}
+                      />
+                    </View>
                   ) : (
                     <View className='result-plant-icon'>
                       <Icon name="flower2" size={32} color="#f59e0b" />
                     </View>
                   )}
-                  <View className='result-info'>
-                    <Text className='plant-name'>
-                      {recognitionResult?.name || '识别中...'}
-                    </Text>
-                    <View className='confidence-badge'>
-                      <Text className='confidence-text'>
-                        {Math.round((recognitionResult?.confidence || 0) * 100)}% 匹配
-                      </Text>
-                    </View>
-                  </View>
                 </View>
 
                 <View className='result-buttons'>

@@ -1,193 +1,45 @@
 {
-  "total_classes": 47,
+  "total_classes": 40,
   "classes": {
-    "0": {
-      "zh_name": "非洲紫罗兰",
-      "en_name": "African Violet (Saintpaulia ionantha)"
-    },
-    "1": {
-      "zh_name": "芦荟",
-      "en_name": "Aloe Vera"
-    },
-    "2": {
-      "zh_name": "红掌",
-      "en_name": "Anthurium (Anthurium andraeanum)"
-    },
-    "3": {
-      "zh_name": "散尾葵",
-      "en_name": "Areca Palm (Dypsis lutescens)"
-    },
-    "4": {
-      "zh_name": "文竹",
-      "en_name": "Asparagus Fern (Asparagus setaceus)"
-    },
-    "5": {
-      "zh_name": "秋海棠",
-      "en_name": "Begonia (Begonia spp.)"
-    },
-    "6": {
-      "zh_name": "天堂鸟",
-      "en_name": "Bird of Paradise (Strelitzia reginae)"
-    },
-    "7": {
-      "zh_name": "鸟巢蕨",
-      "en_name": "Birds Nest Fern (Asplenium nidus)"
-    },
-    "8": {
-      "zh_name": "波士顿蕨",
-      "en_name": "Boston Fern (Nephrolepis exaltata)"
-    },
-    "9": {
-      "zh_name": "竹芋",
-      "en_name": "Calathea"
-    },
-    "10": {
-      "zh_name": "一叶兰",
-      "en_name": "Cast Iron Plant (Aspidistra elatior)"
-    },
-    "11": {
-      "zh_name": "金钱草",
-      "en_name": "Chinese Money Plant (Pilea peperomioides)"
-    },
-    "12": {
-      "zh_name": "万年青",
-      "en_name": "Chinese evergreen (Aglaonema)"
-    },
-    "13": {
-      "zh_name": "蟹爪兰",
-      "en_name": "Christmas Cactus (Schlumbergera bridgesii)"
-    },
-    "14": {
-      "zh_name": "菊花",
-      "en_name": "Chrysanthemum"
-    },
-    "15": {
-      "zh_name": "浪星竹芋",
-      "en_name": "Ctenanthe"
-    },
-    "16": {
-      "zh_name": "水仙",
-      "en_name": "Daffodils (Narcissus spp.)"
-    },
-    "17": {
-      "zh_name": "龙血树",
-      "en_name": "Dracaena"
-    },
-    "18": {
-      "zh_name": "黛粉叶",
-      "en_name": "Dumb Cane (Dieffenbachia spp.)"
-    },
-    "19": {
-      "zh_name": "象耳草",
-      "en_name": "Elephant Ear (Alocasia spp.)"
-    },
-    "20": {
-      "zh_name": "常春藤",
-      "en_name": "English Ivy (Hedera helix)"
-    },
-    "21": {
-      "zh_name": "风信子",
-      "en_name": "Hyacinth (Hyacinthus orientalis)"
-    },
-    "22": {
-      "zh_name": "铁十字秋海棠",
-      "en_name": "Iron Cross begonia (Begonia masoniana)"
-    },
-    "23": {
-      "zh_name": "玉树",
-      "en_name": "Jade plant (Crassula ovata)"
-    },
-    "24": {
-      "zh_name": "长寿花",
-      "en_name": "Kalanchoe"
-    },
-    "25": {
-      "zh_name": "萱草",
-      "en_name": "Lilium (Hemerocallis)"
-    },
-    "26": {
-      "zh_name": "铃兰",
-      "en_name": "Lily of the valley (Convallaria majalis)"
-    },
-    "27": {
-      "zh_name": "发财树",
-      "en_name": "Money Tree (Pachira aquatica)"
-    },
-    "28": {
-      "zh_name": "龟背竹",
-      "en_name": "Monstera Deliciosa (Monstera deliciosa)"
-    },
-    "29": {
-      "zh_name": "兰花",
-      "en_name": "Orchid"
-    },
-    "30": {
-      "zh_name": "棕竹",
-      "en_name": "Parlor Palm (Chamaedorea elegans)"
-    },
-    "31": {
-      "zh_name": "白掌",
-      "en_name": "Peace lily"
-    },
-    "32": {
-      "zh_name": "一品红",
-      "en_name": "Poinsettia (Euphorbia pulcherrima)"
-    },
-    "33": {
-      "zh_name": "雀斑草",
-      "en_name": "Polka Dot Plant (Hypoestes phyllostachya)"
-    },
-    "34": {
-      "zh_name": "酒瓶兰",
-      "en_name": "Ponytail Palm (Beaucarnea recurvata)"
-    },
-    "35": {
-      "zh_name": "绿萝",
-      "en_name": "Pothos (Ivy arum)"
-    },
-    "36": {
-      "zh_name": "豹纹竹芋",
-      "en_name": "Prayer Plant (Maranta leuconeura)"
-    },
-    "37": {
-      "zh_name": "蛇皮草",
-      "en_name": "Rattlesnake Plant (Calathea lancifolia)"
-    },
-    "38": {
-      "zh_name": "橡皮树",
-      "en_name": "Rubber Plant (Ficus elastica)"
-    },
-    "39": {
-      "zh_name": "苏铁",
-      "en_name": "Sago Palm (Cycas revoluta)"
-    },
-    "40": {
-      "zh_name": "发财树",
-      "en_name": "Schefflera"
-    },
-    "41": {
-      "zh_name": "蛇皮草",
-      "en_name": "Snake plant (Sanseviera)"
-    },
-    "42": {
-      "zh_name": "吊兰",
-      "en_name": "Tradescantia"
-    },
-    "43": {
-      "zh_name": "郁金香",
-      "en_name": "Tulip"
-    },
-    "44": {
-      "zh_name": "捕蝇草",
-      "en_name": "Venus Flytrap"
-    },
-    "45": {
-      "zh_name": "丝兰",
-      "en_name": "Yucca"
-    },
-    "46": {
-      "zh_name": "金钱树",
-      "en_name": "ZZ Plant (Zamioculcas zamiifolia)"
-    }
+    "0": {"zh_name": "三叶草", "en_name": "Clover", "care_tips": "喜阳光，适应性强，注意定期浇水"},
+    "1": {"zh_name": "仙人掌", "en_name": "Cactus", "care_tips": "耐干旱，浇水不宜过多，需要充足光照"},
+    "2": {"zh_name": "吊兰", "en_name": "Spider Plant", "care_tips": "喜半阴环境，保持土壤湿润即可"},
+    "3": {"zh_name": "向日葵", "en_name": "Sunflower", "care_tips": "需要充足阳光，定期浇水施肥"},
+    "4": {"zh_name": "多肉", "en_name": "Succulent", "care_tips": "耐旱怕涝，浇水见干见湿，需要充足光照"},
+    "5": {"zh_name": "山茶花", "en_name": "Camellia", "care_tips": "喜酸性土壤，保持湿润但忌积水"},
+    "6": {"zh_name": "文竹", "en_name": "Asparagus Fern", "care_tips": "喜半阴湿润环境，不耐强光直射"},
+    "7": {"zh_name": "月季花", "en_name": "Rose", "care_tips": "需要充足阳光，定期修剪和施肥"},
+    "8": {"zh_name": "杜鹃花", "en_name": "Azalea", "care_tips": "喜酸性土壤，喜半阴，保持湿润"},
+    "9": {"zh_name": "栀子花", "en_name": "Gardenia", "care_tips": "喜酸性土壤，需要充足光照和水分"},
+    "10": {"zh_name": "桂花", "en_name": "Osmanthus", "care_tips": "喜阳光充足环境，较耐寒"},
+    "11": {"zh_name": "橡皮树", "en_name": "Rubber Plant", "care_tips": "喜温暖湿润，耐阴，浇水适度"},
+    "12": {"zh_name": "洋桔梗", "en_name": "Lisianthus", "care_tips": "需要充足光照，保持土壤湿润"},
+    "13": {"zh_name": "玫瑰", "en_name": "Rose", "care_tips": "喜阳光，定期浇水施肥，注意病虫害防治"},
+    "14": {"zh_name": "球兰", "en_name": "Wax Plant", "care_tips": "喜半阴环境，浇水不宜过多"},
+    "15": {"zh_name": "琴叶榕", "en_name": "Fiddle Leaf Fig", "care_tips": "喜温暖湿润，需要充足散射光"},
+    "16": {"zh_name": "白掌", "en_name": "Peace Lily", "care_tips": "喜阴湿环境，保持土壤湿润，避免强光"},
+    "17": {"zh_name": "百合", "en_name": "Lily", "care_tips": "需要充足光照，浇水见干见湿"},
+    "18": {"zh_name": "百里香", "en_name": "Thyme", "care_tips": "喜阳光充足环境，耐旱不耐涝"},
+    "19": {"zh_name": "空气凤梨", "en_name": "Air Plant", "care_tips": "无需土壤，定期喷雾即可"},
+    "20": {"zh_name": "红掌", "en_name": "Anthurium", "care_tips": "喜温暖湿润，需要充足散射光"},
+    "21": {"zh_name": "绣球", "en_name": "Hydrangea", "care_tips": "喜半阴环境，保持土壤湿润"},
+    "22": {"zh_name": "绿萝", "en_name": "Pothos", "care_tips": "喜阴环境，浇水保持湿润即可"},
+    "23": {"zh_name": "芍药", "en_name": "Peony", "care_tips": "需要充足阳光，喜肥沃土壤"},
+    "24": {"zh_name": "芦荟", "en_name": "Aloe Vera", "care_tips": "耐旱，浇水不宜过多，需要充足光照"},
+    "25": {"zh_name": "茉莉花", "en_name": "Jasmine", "care_tips": "喜阳光充足，保持土壤湿润"},
+    "26": {"zh_name": "草莓花", "en_name": "Strawberry Flower", "care_tips": "需要充足阳光，保持土壤湿润"},
+    "27": {"zh_name": "薄荷", "en_name": "Mint", "care_tips": "喜阳光湿润环境，生长迅速"},
+    "28": {"zh_name": "虎皮兰", "en_name": "Snake Plant", "care_tips": "耐阴耐旱，浇水不宜过多"},
+    "29": {"zh_name": "蝴蝶兰", "en_name": "Moth Orchid", "care_tips": "喜温暖湿润，需要充足散射光"},
+    "30": {"zh_name": "蟹爪兰", "en_name": "Christmas Cactus", "care_tips": "喜半阴，浇水见干见湿"},
+    "31": {"zh_name": "观音莲", "en_name": "Dove Tree", "care_tips": "喜阴湿环境，保持土壤湿润"},
+    "32": {"zh_name": "迎春花", "en_name": "Winter Jasmine", "care_tips": "喜阳光，较耐寒，浇水适度"},
+    "33": {"zh_name": "迷迭香", "en_name": "Rosemary", "care_tips": "喜阳光充足，耐旱不耐涝"},
+    "34": {"zh_name": "郁金香", "en_name": "Tulip", "care_tips": "需要充足阳光和凉爽环境"},
+    "35": {"zh_name": "金钱树", "en_name": "Money Tree", "care_tips": "喜温暖湿润，较耐阴，浇水适度"},
+    "36": {"zh_name": "雏菊", "en_name": "Daisy", "care_tips": "需要充足阳光，保持土壤湿润"},
+    "37": {"zh_name": "非洲紫罗兰", "en_name": "African Violet", "care_tips": "喜温暖湿润，需要充足散射光"},
+    "38": {"zh_name": "飘香藤", "en_name": "Mandevilla", "care_tips": "喜阳光充足，保持土壤湿润"},
+    "39": {"zh_name": "龟背竹", "en_name": "Monstera", "care_tips": "喜温暖湿润，需要充足散射光"}
   }
 }

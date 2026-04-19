@@ -62,7 +62,7 @@ export const selectFromGallery = async (): Promise<string | null> => {
 }
 
 // 调用后端API进行植物识别
-export const recognizePlant = async (filePath: string): Promise<RecognitionResult> => {
+export const recognizePlant = async (filePath: string): Promise<any> => {
   const data = await uploadFile('/api/recognition/public/plant', filePath)
 
   return {
@@ -76,12 +76,16 @@ export const recognizePlant = async (filePath: string): Promise<RecognitionResul
     waterRequirement: data.water_requirement || '见干见湿',
     imageUrl: data.image_url ? getFullImageUrl(data.image_url) : '',
     similarSpecies: data.similar_species || [],
+    // 新增字段
+    bbox: data.bbox || [],
+    detections: data.detections || [],
   }
 }
 
-// 病虫害诊断 - 与RN端保持一致，调用 /api/diagnosis/full
+// 病虫害诊断 - 调用 /api/diagnosis/full，一次上传完成识别和图片保存
 export const diagnosePest = async (filePath: string): Promise<any> => {
   const data = await uploadFile('/api/diagnosis/full', filePath)
+  // data 已经包含 image_url, plant, pest, diagnosis, recommendations
   return data
 }
 

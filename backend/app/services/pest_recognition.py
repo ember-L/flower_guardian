@@ -8,7 +8,7 @@ class PestRecognitionService:
     """病虫害识别服务"""
 
     # 置信度阈值，低于此值返回"未识别"
-    CONFIDENCE_THRESHOLD = 0.6
+    CONFIDENCE_THRESHOLD = 0.3
 
     def __init__(self, model_path: str = "backend/models/pest.pt"):
         self.model = None
@@ -19,15 +19,27 @@ class PestRecognitionService:
     def _load_classes(self) -> dict:
         """加载病虫害类别"""
         classes = {}
-        try:
-            with open("backend/models/dataset/pest_classes.json", "r", encoding="utf-8") as f:
-                data = json.load(f)
-        except FileNotFoundError:
+        # 尝试多个可能的路径
+        paths_to_try = [
+            "backend/models/dataset/pest_classes.json",
+            "models/dataset/pest_classes.json",
+            "dataset/pest_classes.json",
+            "../backend/models/dataset/pest_classes.json",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "models/dataset/pest_classes.json"),
+        ]
+
+        for path in paths_to_try:
             try:
-                with open("dataset/pest_classes.json", "r", encoding="utf-8") as f:
-                    data = json.load(f)
-            except FileNotFoundError:
-                return classes
+                if os.path.exists(path):
+                    with open(path, "r", encoding="utf-8") as f:
+                        data = json.load(f)
+                    print(f"[PestRecognition] 成功加载病虫害类别文件: {path}")
+                    break
+            except Exception as e:
+                print(f"[PestRecognition] 尝试加载 {path} 失败: {e}")
+        else:
+            print("[PestRecognition] 无法找到病虫害类别文件")
+            return classes
 
         # 支持新的扁平格式 {"0": {...}, "1": {...}}
         if "classes" in data:
@@ -50,6 +62,7 @@ class PestRecognitionService:
                                 "treatment": item.get("treatment", ""),
                                 "severity": item.get("severity", "low")
                             }
+        print(f"[PestRecognition] 加载了 {len(classes)} 个病虫害类别")
         return classes
 
     def _load_model(self):
@@ -127,7 +140,8 @@ class PestRecognitionService:
                 "confidence": confidence,
                 "type": "unknown",
                 "treatment": "置信度较低，请拍摄更清晰的照片",
-                "severity": "low"
+                "severity": "low",
+                "bbox": [0, 0, 0, 0]
             }
 
         class_info = self.classes.get(class_id, {})
@@ -142,7 +156,8 @@ class PestRecognitionService:
             "confidence": confidence,
             "type": pest_type,
             "treatment": class_info.get("treatment", ""),
-            "severity": class_info.get("severity", "low")
+            "severity": class_info.get("severity", "low"),
+            "bbox": [0, 0, 0, 0]
         }
 
     def recognize_from_bytes(self, content: bytes) -> tuple:
@@ -163,7 +178,17 @@ class PestRecognitionService:
                 "confidence": 0.88,
                 "type": "insect",
                 "treatment": "使用吡虫啉喷洒",
-                "severity": "medium"
+                "severity": "medium",
+                "bbox": [0, 0, 0, 0],
+                "detections": [{
+                    "id": "0",
+                    "name": "蚜虫",
+                    "confidence": 0.88,
+                    "type": "insect",
+                    "treatment": "使用吡虫啉喷洒",
+                    "severity": "medium",
+                    "bbox": [0, 0, 0, 0]
+                }]
             }, content  # 返回原始内容
 
         tmp_path = None
@@ -210,61 +235,67 @@ class PestRecognitionService:
                 results = self.model(tmp_path)
                 result_data = results[0]
 
-                if result_data.boxes:
-                    best_idx = result_data.boxes.conf.argmax()
-                    box = result_data.boxes[best_idx]
-                    confidence = float(box.conf[0])
-                    class_id = str(int(box.cls[0]))
+                if result_data.boxes and len(result_data.boxes) > 0:
+                    detections = []
+                    for i in range(len(result_data.boxes)):
+                        box = result_data.boxes[i]
+                        confidence = float(box.conf[0])
+                        class_id = str(int(box.cls[0]))
+                        bbox = box.xyxy[0].tolist()
 
-                    print(f"[PestRecognition] 检测到目标 - Class ID: {class_id}, 置信度: {confidence:.2%}")
+                        if confidence < self.CONFIDENCE_THRESHOLD:
+                            continue
 
-                    if confidence < self.CONFIDENCE_THRESHOLD:
-                        print(f"[PestRecognition] 置信度 {confidence:.2%} 低于阈值 {self.CONFIDENCE_THRESHOLD}, 返回未识别")
-                        result = {
-                            "id": "-1",
-                            "name": "未识别",
-                            "confidence": confidence,
-                            "type": "unknown",
-                            "treatment": "置信度较低，请拍摄更清晰的照片",
-                            "severity": "low"
-                        }
-                    else:
                         class_info = self.classes.get(class_id, {})
                         pest_type = class_info.get("type", "unknown")
                         pest_name = class_info.get("name", "未知")
 
-                        print(f"[PestRecognition] 识别成功 - 病虫害: {pest_name}, 类型: {pest_type}")
-                        result = {
+                        detections.append({
                             "id": class_id,
                             "name": pest_name,
                             "confidence": confidence,
                             "type": pest_type,
                             "treatment": class_info.get("treatment", ""),
-                            "severity": class_info.get("severity", "low")
+                            "severity": class_info.get("severity", "low"),
+                            "bbox": bbox
+                        })
+
+                    if detections:
+                        first = detections[0]
+                        result = {
+                            "id": first["id"],
+                            "name": first["name"],
+                            "confidence": first["confidence"],
+                            "type": first["type"],
+                            "treatment": first["treatment"],
+                            "severity": first["severity"],
+                            "bbox": first["bbox"],
+                            "detections": detections
                         }
+                    else:
+                        result = {"id": "-1", "name": "未识别", "confidence": 0.0, "type": "unknown", "bbox": [0, 0, 0, 0], "detections": []}
                 else:
                     print(f"[PestRecognition] 未检测到目标框")
-                    result = {"id": "-1", "name": "未识别", "confidence": 0.0, "type": "unknown"}
+                    result = {"id": "-1", "name": "未识别", "confidence": 0.0, "type": "unknown", "bbox": [0, 0, 0, 0], "detections": []}
             except Exception as e:
                 print(f"[PestRecognition] 识别出错: {e}")
-                result = {"id": "-1", "name": "未识别", "confidence": 0.0, "type": "unknown"}
+                result = {"id": "-1", "name": "未识别", "confidence": 0.0, "type": "unknown", "bbox": [0, 0, 0, 0], "detections": []}
 
             return result, jpeg_bytes
 
         except Exception as e:
             print(f"[PestRecognition] 字节识别出错: {e}")
-            return {"id": "-1", "name": "未识别", "confidence": 0.0, "type": "unknown"}, content
+            return {"id": "-1", "name": "未识别", "confidence": 0.0, "type": "unknown", "bbox": [0, 0, 0, 0], "detections": []}, content
         finally:
             # 清理临时文件
             if tmp_path and os.path.exists(tmp_path):
                 os.unlink(tmp_path)
 
     def recognize(self, image_path: str) -> dict:
-        """识别病虫害"""
+        """识别病虫害 - 返回所有检测结果（兼容旧接口）"""
         print(f"[PestRecognition] 开始识别图片: {image_path}")
 
         if not self.model:
-            # 返回模拟结果
             print(f"[PestRecognition] 模型未加载，返回模拟结果")
             return {
                 "id": "0",
@@ -272,7 +303,17 @@ class PestRecognitionService:
                 "confidence": 0.88,
                 "type": "insect",
                 "treatment": "使用吡虫啉喷洒",
-                "severity": "medium"
+                "severity": "medium",
+                "bbox": [0, 0, 0, 0],
+                "detections": [{
+                    "id": "0",
+                    "name": "蚜虫",
+                    "confidence": 0.88,
+                    "type": "insect",
+                    "treatment": "使用吡虫啉喷洒",
+                    "severity": "medium",
+                    "bbox": [0, 0, 0, 0]
+                }]
             }
 
         # 验证图片是否可读，必要时转换格式
@@ -282,49 +323,65 @@ class PestRecognitionService:
             results = self.model(image_path)
             result = results[0]
 
-            if result.boxes:
-                best_idx = result.boxes.conf.argmax()
-                box = result.boxes[best_idx]
-                confidence = float(box.conf[0])
-                class_id = str(int(box.cls[0]))
+            if result.boxes and len(result.boxes) > 0:
+                detections = []
+                for i in range(len(result.boxes)):
+                    box = result.boxes[i]
+                    confidence = float(box.conf[0])
+                    class_id = str(int(box.cls[0]))
+                    bbox = box.xyxy[0].tolist()
 
-                print(f"[PestRecognition] 检测到目标 - Class ID: {class_id}, 置信度: {confidence:.2%}")
+                    # 低于阈值的跳过
+                    if confidence < self.CONFIDENCE_THRESHOLD:
+                        print(f"[PestRecognition] 检测到目标置信度 {confidence:.2%} 低于阈值，跳过")
+                        continue
 
-                # 检查置信度是否低于阈值
-                if confidence < self.CONFIDENCE_THRESHOLD:
-                    print(f"[PestRecognition] 置信度 {confidence:.2%} 低于阈值 {self.CONFIDENCE_THRESHOLD}, 返回未识别")
+                    class_info = self.classes.get(class_id, {})
+                    pest_type = class_info.get("type", "unknown")
+                    pest_name = class_info.get("name", "未知")
+
+                    print(f"[PestRecognition] 检测到目标 - Class ID: {class_id}, 名称: {pest_name}, 置信度: {confidence:.2%}")
+
+                    detections.append({
+                        "id": class_id,
+                        "name": pest_name,
+                        "confidence": confidence,
+                        "type": pest_type,
+                        "treatment": class_info.get("treatment", ""),
+                        "severity": class_info.get("severity", "low"),
+                        "bbox": bbox
+                    })
+
+                if detections:
+                    # 返回第一个作为主结果（兼容旧接口），同时返回所有检测
+                    first = detections[0]
+                    return {
+                        "id": first["id"],
+                        "name": first["name"],
+                        "confidence": first["confidence"],
+                        "type": first["type"],
+                        "treatment": first["treatment"],
+                        "severity": first["severity"],
+                        "bbox": first["bbox"],
+                        "detections": detections
+                    }
+                else:
+                    print(f"[PestRecognition] 所有检测置信度均低于阈值")
                     return {
                         "id": "-1",
                         "name": "未识别",
-                        "confidence": confidence,
+                        "confidence": 0.0,
                         "type": "unknown",
-                        "treatment": "置信度较低，请拍摄更清晰的照片",
-                        "severity": "low"
+                        "bbox": [0, 0, 0, 0],
+                        "detections": []
                     }
-
-                class_info = self.classes.get(class_id, {})
-
-                # 使用类别文件中定义的类型
-                pest_type = class_info.get("type", "unknown")
-                pest_name = class_info.get("name", "未知")
-
-                print(f"[PestRecognition] 识别成功 - 病虫害: {pest_name}, 类型: {pest_type}, 严重程度: {class_info.get('severity', 'low')}")
-
-                return {
-                    "id": class_id,
-                    "name": pest_name,
-                    "confidence": confidence,
-                    "type": pest_type,
-                    "treatment": class_info.get("treatment", ""),
-                    "severity": class_info.get("severity", "low")
-                }
             else:
                 print(f"[PestRecognition] 未检测到目标框")
         except Exception as e:
             print(f"[PestRecognition] 识别出错: {e}")
 
         print(f"[PestRecognition] 识别失败，返回未识别")
-        return {"id": "-1", "name": "未识别", "confidence": 0.0, "type": "unknown"}
+        return {"id": "-1", "name": "未识别", "confidence": 0.0, "type": "unknown", "bbox": [0, 0, 0, 0], "detections": []}
 
     def recognize_batch(self, image_paths: list) -> list:
         """批量识别"""
@@ -336,16 +393,19 @@ class PestRecognitionService:
                 "id": "0",
                 "name": "未知",
                 "confidence": 0.0,
-                "type": "unknown"
+                "type": "unknown",
+                "bbox": [0, 0, 0, 0]
             }] * len(image_paths)
 
         results = self.model(image_paths)
         output = []
         for i, r in enumerate(results):
             if r.boxes and len(r.boxes) > 0:
-                box = r.boxes[0]
+                best_idx = r.boxes.conf.argmax()
+                box = r.boxes[best_idx]
                 confidence = float(box.conf[0])
                 class_id = str(int(box.cls[0]))
+                bbox = box.xyxy[0].tolist()
 
                 print(f"[PestRecognition] 图片{i+1} - Class ID: {class_id}, 置信度: {confidence:.2%}")
 
@@ -358,7 +418,8 @@ class PestRecognitionService:
                         "confidence": confidence,
                         "type": "unknown",
                         "treatment": "置信度较低，请拍摄更清晰的照片",
-                        "severity": "low"
+                        "severity": "low",
+                        "bbox": bbox
                     })
                     continue
 
@@ -376,7 +437,8 @@ class PestRecognitionService:
                     "confidence": confidence,
                     "type": pest_type,
                     "treatment": class_info.get("treatment", ""),
-                    "severity": class_info.get("severity", "low")
+                    "severity": class_info.get("severity", "low"),
+                    "bbox": bbox
                 })
             else:
                 print(f"[PestRecognition] 图片{i+1} 未检测到目标")
@@ -384,7 +446,8 @@ class PestRecognitionService:
                     "id": "-1",
                     "name": "未识别",
                     "confidence": 0.0,
-                    "type": "unknown"
+                    "type": "unknown",
+                    "bbox": [0, 0, 0, 0]
                 })
 
         print(f"[PestRecognition] 批量识别完成，共 {len(output)} 个结果")

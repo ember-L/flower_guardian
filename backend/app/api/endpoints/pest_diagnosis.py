@@ -4,6 +4,7 @@ from app.core.database import get_db
 from app.core.security import get_current_user_optional
 from app.models.user import User
 from app.services.pest_recognition import pest_recognition_service
+from app.services.recognition import plant_recognition_service
 import tempfile
 import os
 import io
@@ -44,38 +45,92 @@ async def diagnose_full(
     db: Session = Depends(get_db),
     current_user: Optional[User] = Depends(get_current_user_optional)
 ):
-    """完整诊断API（识别病虫害并返回处理建议）"""
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp:
-        content = await file.read()
-        tmp.write(content)
-        tmp_path = tmp.name
+    """完整诊断API（同时识别植物和病虫害，返回检测框）
 
+    - 接收图片并识别
+    - 已登录用户自动保存图片到存储
+    - 返回完整结果（含 bbox 和 image_url）
+    """
+    import logging
+    logger = logging.getLogger(__name__)
+
+    # 验证文件
+    if not file.filename:
+        raise HTTPException(status_code=400, detail="文件名不能为空")
+
+    content = await file.read()
+    if len(content) == 0:
+        raise HTTPException(status_code=400, detail="图片内容不能为空")
+
+    MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
+    if len(content) > MAX_FILE_SIZE:
+        raise HTTPException(status_code=400, detail=f"图片大小不能超过 {MAX_FILE_SIZE // 1024 // 1024}MB")
+
+    # 保存到临时文件进行识别
+    tmp_path = None
     try:
-        result = pest_recognition_service.recognize(tmp_path)
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp:
+            tmp.write(content)
+            tmp_path = tmp.name
 
-        # 如果识别成功，返回更详细的诊断信息
-        if result.get("id", "-1") != "-1":
-            return {
-                "diagnosis": result,
-                "recommendations": {
-                    "immediate": result.get("treatment", ""),
-                    "prevention": _get_prevention_tips(result.get("type", "")),
-                    "severity_level": result.get("severity", "low")
-                }
+        # 同时识别植物和病虫害
+        plant_result = plant_recognition_service.recognize(tmp_path)
+        pest_result = pest_recognition_service.recognize(tmp_path)
+        logger.info(f"[Full] plant_result: {plant_result}")
+        logger.info(f"[Full] pest_result: {pest_result}")
+
+        # 保存图片（已登录用户）
+        image_url = None
+        if current_user:
+            image_url = await _save_uploaded_image(content, current_user.id)
+            logger.info(f"[Full] 图片已保存: {image_url}")
+
+        # 返回完整结果（含 bbox 和 image_url）
+        return {
+            "image_url": image_url,
+            "plant": plant_result,
+            "pest": pest_result,  # 始终返回，包含 detections 数组
+            "diagnosis": pest_result,
+            "recommendations": {
+                "immediate": pest_result.get("treatment", "") if pest_result.get("id", "-1") != "-1" else "",
+                "prevention": _get_prevention_tips(pest_result.get("type", "")) if pest_result.get("id", "-1") != "-1" else "",
+                "severity_level": pest_result.get("severity", "low") if pest_result.get("id", "-1") != "-1" else "unknown"
             }
-        else:
-            return {
-                "diagnosis": result,
-                "recommendations": {
-                    "immediate": "建议咨询专业人士或上传更清晰的照片",
-                    "prevention": "保持良好的养护习惯",
-                    "severity_level": "unknown"
-                }
-            }
+        }
+    except HTTPException:
+        raise
     except Exception as e:
+        logger.error(f"[Full] 诊断失败: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Diagnosis failed: {str(e)}")
     finally:
-        os.unlink(tmp_path)
+        if tmp_path and os.path.exists(tmp_path):
+            os.unlink(tmp_path)
+
+
+async def _save_uploaded_image(content: bytes, user_id: int) -> str:
+    """保存上传的图片到存储路径，返回访问 URL"""
+    import uuid
+    from datetime import datetime
+
+    IMAGE_STORAGE_PATH = os.getenv("IMAGE_STORAGE_PATH", "/var/www/uploads")
+    if not os.path.exists(IMAGE_STORAGE_PATH):
+        IMAGE_STORAGE_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), "uploads")
+
+    user_dir = os.path.join(IMAGE_STORAGE_PATH, str(user_id))
+    os.makedirs(user_dir, exist_ok=True)
+
+    # 生成唯一文件名
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    unique_id = uuid.uuid4().hex[:8]
+    filename = f"img_{timestamp}_{unique_id}.jpg"
+    file_path = os.path.join(user_dir, filename)
+
+    # 写入文件
+    with open(file_path, 'wb') as f:
+        f.write(content)
+
+    # 返回相对 URL
+    return f"/api/diagnosis/images/{user_id}/{filename}"
 
 
 def _get_prevention_tips(pest_type: str) -> str:

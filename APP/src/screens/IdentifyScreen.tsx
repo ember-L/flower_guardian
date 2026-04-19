@@ -16,7 +16,8 @@ import {
 import { Image as RNImage } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Icons } from '../components/Icon';
-import { colors, spacing, borderRadius } from '../constants/theme';
+import { BboxOverlay, BboxItem } from '../components/BboxOverlay';
+import { colors, spacing, borderRadius, fontSize, fontWeight } from '../constants/theme';
 import { takePhoto, selectFromGallery, recognizePlant, RecognitionResult } from '../services/recognitionService';
 import { getPopularPlants, Plant } from '../services/plantService';
 import { getWeatherTips, WeatherData } from '../services/weatherService';
@@ -29,6 +30,13 @@ import { NavigationProps } from '../navigation/AppNavigator';
 const WEATHER_CACHE_KEY = 'weather_cache';
 const LOCATION_CACHE_KEY = 'location_cache';
 const CACHE_EXPIRY_HOURS = 6; // 缓存6小时
+
+// 检测标签类型
+interface DetectionTag {
+  name: string;
+  count: number;
+  color: string;
+}
 
 // 获取完整的图片URL
 const getFullImageUrl = (url: string | undefined): string | undefined => {
@@ -54,6 +62,8 @@ export function IdentifyScreen({ onNavigate, currentTab, onTabChange }: Identify
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
   const [weatherTip, setWeatherTip] = useState<string>('');
   const [weatherLoading, setWeatherLoading] = useState(false);
+  const [detectionBboxes, setDetectionBboxes] = useState<BboxItem[]>([]);
+  const [detectionTags, setDetectionTags] = useState<DetectionTag[]>([]);
 
   // 加载缓存的天气数据
   const loadCachedWeather = async () => {
@@ -277,11 +287,82 @@ export function IdentifyScreen({ onNavigate, currentTab, onTabChange }: Identify
 
       try {
         const result = await recognizePlant(imageUri);
+        console.log('[Identify] 识别结果:', result);
+
+        // 解析检测框数据
+        const bboxes: BboxItem[] = [];
+        const tagMap: Record<string, { count: number; color: string }> = {};
+
+        const getTypeColor = (type?: string) => {
+          switch (type) {
+            case 'disease': return '#faad14';
+            case 'insect': return '#ff4d4f';
+            case 'plant': return '#52c41a';
+            default: return '#52c41a';
+          }
+        };
+
+        // 植物检测框
+        if (result.plant) {
+          if (result.plant.detections && result.plant.detections.length > 0) {
+            result.plant.detections.forEach((det: any) => {
+              if (det.bbox && det.bbox.length === 4) {
+                bboxes.push({
+                  name: det.name || result.plant?.name || '植物',
+                  confidence: det.confidence || 0,
+                  bbox: det.bbox,
+                  type: 'plant',
+                });
+                const name = det.name || result.plant?.name || '植物';
+                if (!tagMap[name]) {
+                  tagMap[name] = { count: 0, color: getTypeColor('plant') };
+                }
+                tagMap[name].count++;
+              }
+            });
+          }
+        }
+
+        // 病虫害检测框
+        if (result.pest) {
+          if (result.pest.detections && result.pest.detections.length > 0) {
+            result.pest.detections.forEach((det: any) => {
+              if (det.bbox && det.bbox.length === 4) {
+                const pestType = det.type || result.pest?.type || 'pest';
+                bboxes.push({
+                  name: det.name || result.pest?.name || '病虫害',
+                  confidence: det.confidence || 0,
+                  bbox: det.bbox,
+                  type: pestType,
+                });
+                const name = det.name || result.pest?.name || '病虫害';
+                if (!tagMap[name]) {
+                  tagMap[name] = { count: 0, color: getTypeColor(pestType) };
+                }
+                tagMap[name].count++;
+              }
+            });
+          }
+        }
+
+        // 转换为标签数组
+        const tags: DetectionTag[] = Object.entries(tagMap).map(([name, data]) => ({
+          name,
+          count: data.count,
+          color: data.color,
+        }));
+
+        console.log('[Identify] bboxes:', bboxes.length, 'tags:', tags.length);
+        setDetectionBboxes(bboxes);
+        setDetectionTags(tags);
+
         setRecognitionResult(result);
         setShowPlantCard(true);
       } catch (apiError) {
         // API调用失败，使用模拟数据作为降级
         console.warn('API调用失败，使用模拟数据', apiError);
+        setDetectionBboxes([]);
+        setDetectionTags([]);
         const fallbackResult = getMockRecognitionResult();
         setRecognitionResult(fallbackResult);
         setShowPlantCard(true);
@@ -298,6 +379,8 @@ export function IdentifyScreen({ onNavigate, currentTab, onTabChange }: Identify
     setShowPlantCard(false);
     setRecognitionResult(null);
     setPlantNickname('');
+    setDetectionBboxes([]);
+    setDetectionTags([]);
   };
 
   const closePlantCard = () => {
@@ -305,6 +388,8 @@ export function IdentifyScreen({ onNavigate, currentTab, onTabChange }: Identify
     setRecognitionResult(null);
     setPlantNickname('');
     setCapturedImageUri('');
+    setDetectionBboxes([]);
+    setDetectionTags([]);
   };
 
   const quickActions = [
@@ -491,10 +576,37 @@ export function IdentifyScreen({ onNavigate, currentTab, onTabChange }: Identify
                     <Text style={styles.resultBadgeText}>识别成功</Text>
                   </View>
                 </View>
-                <Text style={styles.resultTitle}>识别结果</Text>
+
+                {/* 检测结果标签 */}
+                {detectionTags.length > 0 && (
+                  <View style={styles.detectionTagsCard}>
+                    <Text style={styles.detectionTagsTitle}>检测结果</Text>
+                    <View style={styles.detectionTagsList}>
+                      {detectionTags.map((tag, index) => (
+                        <View key={index} style={styles.detectionTag}>
+                          <View style={[styles.detectionTagDot, { backgroundColor: tag.color }]} />
+                          <Text style={styles.detectionTagName}>{tag.name}</Text>
+                          <Text style={styles.detectionTagSeparator}>×</Text>
+                          <Text style={[styles.detectionTagCount, { color: tag.color }]}>{tag.count}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+                )}
+
                 <View style={styles.resultCard}>
                   {capturedImageUri && typeof capturedImageUri === 'string' && capturedImageUri.trim().length > 0 ? (
-                    <Image source={{ uri: capturedImageUri }} style={styles.resultImage} />
+                    <View style={styles.resultImageContainer}>
+                      {/* 图片 */}
+                      <Image source={{ uri: capturedImageUri }} style={styles.resultImage} />
+                      {/* 检测框覆盖层 */}
+                      <BboxOverlay
+                        imageUri={capturedImageUri}
+                        bboxes={detectionBboxes}
+                        containerHeight={200}
+                        containerWidth={Dimensions.get('window').width - spacing.md * 2}
+                      />
+                    </View>
                   ) : (
                     <View style={styles.resultPlantIcon}>
                       <Icons.Flower2 size={32} color={colors.primary} />
@@ -1004,10 +1116,63 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   resultImage: {
-    width: 64,
-    height: 64,
-    borderRadius: 12,
+    width: '100%',
+    height: 200,
     backgroundColor: colors.background,
+  },
+  resultImageContainer: {
+    position: 'relative',
+    width: '100%',
+    height: 200,
+    borderRadius: borderRadius.lg,
+    overflow: 'hidden',
+    backgroundColor: colors.surface,
+  },
+  // 检测结果标签
+  detectionTagsCard: {
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  detectionTagsTitle: {
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.semibold,
+    color: colors['text-secondary'],
+    marginBottom: spacing.sm,
+  },
+  detectionTagsList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  detectionTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    backgroundColor: colors.background,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.sm,
+  },
+  detectionTagDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  detectionTagName: {
+    fontSize: fontSize.sm,
+    color: colors.text,
+  },
+  detectionTagSeparator: {
+    fontSize: fontSize.sm,
+    color: colors['text-tertiary'],
+  },
+  detectionTagCount: {
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.bold,
   },
   resultInfo: {
     flex: 1,

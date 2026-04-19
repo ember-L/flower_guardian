@@ -3,8 +3,10 @@ import Taro from '@tarojs/taro'
 import { useState } from 'react'
 import { recognitionService } from '../../services/recognitionService'
 import { createConversationToBackend, DiagnosisContext } from '../../services/consultationService'
+import { diagnosisService } from '../../services/diagnosisService'
 import { getToken } from '../../services/auth'
 import Icon from '../../components/Icon'
+import BboxOverlay, { BboxItem } from '../../components/BboxOverlay'
 import logoPng from '../../assets/logo.png'
 import './index.scss'
 
@@ -18,12 +20,22 @@ interface DiagnosisResult {
   recommendations?: {
     immediate?: string
   }
+  bbox?: number[]
+}
+
+// 检测标签类型
+interface DetectionTag {
+  name: string
+  count: number
+  color: string
 }
 
 export default function Diagnosis() {
   const [isLoading, setIsLoading] = useState(false)
   const [diagnosisResult, setDiagnosisResult] = useState<DiagnosisResult | null>(null)
   const [capturedImage, setCapturedImage] = useState<string | null>(null)
+  const [detectionBboxes, setDetectionBboxes] = useState<BboxItem[]>([])
+  const [detectionTags, setDetectionTags] = useState<DetectionTag[]>([])
 
   const handleDiagnose = async (source: 'camera' | 'album') => {
     try {
@@ -57,7 +69,7 @@ export default function Diagnosis() {
       const result = await recognitionService.diagnosePest(tempFilePath)
       // 兼容RN端返回格式 { diagnosis: {...}, recommendations: {...} }
       const diagnosisData = result.diagnosis || result
-      setDiagnosisResult({
+      const diagnosisResultData = {
         name: diagnosisData.disease_name || diagnosisData.name || '未知',
         confidence: diagnosisData.confidence || 0,
         type: diagnosisData.type || 'disease',
@@ -65,7 +77,125 @@ export default function Diagnosis() {
         treatment: diagnosisData.treatment || '',
         prevention: diagnosisData.prevention || '',
         recommendations: result.recommendations || { immediate: diagnosisData.treatment || '' },
-      })
+        bbox: diagnosisData.bbox || [0, 0, 0, 0],
+      }
+      setDiagnosisResult(diagnosisResultData)
+
+      // 设置检测框数据（来自完整识别接口的 plant 和 pest 结果）
+      const bboxes: BboxItem[] = []
+      // 临时收集标签（未分组）
+      const tagMap: Record<string, { count: number; color: string }> = {}
+
+      // 获取类型对应的颜色
+      const getTypeColor = (type: string) => {
+        switch (type) {
+          case 'disease': return '#faad14'
+          case 'insect': return '#ff4d4f'
+          case 'plant': return '#52c41a'
+          default: return '#52c41a'
+        }
+      }
+
+      // 植物检测框
+      if (result.plant) {
+        if (result.plant.detections && result.plant.detections.length > 0) {
+          result.plant.detections.forEach((det: any) => {
+            if (det.bbox && det.bbox.length === 4) {
+              bboxes.push({
+                name: det.name || result.plant.name || '植物',
+                confidence: det.confidence || 0,
+                bbox: det.bbox,
+                type: 'plant',
+              })
+              const name = det.name || result.plant.name || '植物'
+              if (!tagMap[name]) {
+                tagMap[name] = { count: 0, color: getTypeColor('plant') }
+              }
+              tagMap[name].count++
+            }
+          })
+        } else if (result.plant.bbox && result.plant.bbox.length === 4) {
+          bboxes.push({
+            name: result.plant.name || '植物',
+            confidence: result.plant.confidence || 0,
+            bbox: result.plant.bbox,
+            type: 'plant',
+          })
+          const name = result.plant.name || '植物'
+          if (!tagMap[name]) {
+            tagMap[name] = { count: 0, color: getTypeColor('plant') }
+          }
+          tagMap[name].count++
+        }
+      }
+      // 病虫害检测框
+      if (result.pest) {
+        if (result.pest.detections && result.pest.detections.length > 0) {
+          result.pest.detections.forEach((det: any) => {
+            if (det.bbox && det.bbox.length === 4) {
+              const pestType = det.type || result.pest.type || 'pest'
+              bboxes.push({
+                name: det.name || result.pest.name || '病虫害',
+                confidence: det.confidence || 0,
+                bbox: det.bbox,
+                type: pestType,
+              })
+              const name = det.name || result.pest.name || '病虫害'
+              if (!tagMap[name]) {
+                tagMap[name] = { count: 0, color: getTypeColor(pestType) }
+              }
+              tagMap[name].count++
+            }
+          })
+        } else if (result.pest.bbox && result.pest.bbox.length === 4) {
+          const pestType = result.pest.type || 'pest'
+          bboxes.push({
+            name: result.pest.name || '病虫害',
+            confidence: result.pest.confidence || 0,
+            bbox: result.pest.bbox,
+            type: pestType,
+          })
+          const name = result.pest.name || '病虫害'
+          if (!tagMap[name]) {
+            tagMap[name] = { count: 0, color: getTypeColor(pestType) }
+          }
+          tagMap[name].count++
+        }
+      }
+      // 转换为标签数组
+      const tags: DetectionTag[] = Object.entries(tagMap).map(([name, data]) => ({
+        name,
+        count: data.count,
+        color: data.color,
+      }))
+      setDetectionBboxes(bboxes)
+      setDetectionTags(tags)
+
+      // 保存诊断记录到后端（RN端逻辑）
+      const token = getToken()
+      const diseaseName = diagnosisData.disease_name || diagnosisData.name || '未知'
+      if (token && diseaseName && diseaseName !== '未知') {
+        try {
+          const imageUrl = result.image_url || ''
+          // 将检测框数据转为JSON字符串存储
+          const detectionsJson = JSON.stringify(bboxes)
+          await diagnosisService.createDiagnosis({
+            image_url: imageUrl,
+            disease_name: diseaseName,
+            confidence: diagnosisData.confidence || 0,
+            description: diagnosisData.description || '',
+            treatment: diagnosisData.treatment || '',
+            prevention: diagnosisData.prevention || '',
+            recommended_products: result.recommendations?.immediate || '',
+            detections: detectionsJson,
+          })
+          console.log('[Diagnosis] 诊断记录已保存, disease_name:', diseaseName, 'detections:', bboxes.length)
+        } catch (saveErr) {
+          console.error('[Diagnosis] 保存诊断记录失败:', saveErr)
+        }
+      } else {
+        console.log('[Diagnosis] 未保存诊断记录: token=', !!token, 'diseaseName=', diseaseName)
+      }
     } catch (err: any) {
       Taro.showToast({ title: err.message || '识别失败，请重试', icon: 'none' })
     } finally {
@@ -85,11 +215,12 @@ export default function Diagnosis() {
   }
 
   const severityConfig = diagnosisResult ? getSeverityConfig(diagnosisResult.severity) : null
-  const confidencePercent = Math.round((diagnosisResult?.confidence || 0) * 100)
 
   const handleReDiagnose = () => {
     setDiagnosisResult(null)
     setCapturedImage(null)
+    setDetectionBboxes([])
+    setDetectionTags([])
   }
 
   const handleAIConsult = async () => {
@@ -259,6 +390,11 @@ export default function Diagnosis() {
             {capturedImage && (
               <View className='image-section'>
                 <Image className='result-image' src={capturedImage} mode='aspectFill' />
+                <BboxOverlay
+                  imageSrc={capturedImage}
+                  bboxes={detectionBboxes}
+                  imageHeightRpx={360}
+                />
                 <View className='image-tags'>
                   <View className='image-tag'>
                     <Text className='image-tag-text'>识别图片</Text>
@@ -267,19 +403,26 @@ export default function Diagnosis() {
               </View>
             )}
 
-            {/* 置信度 */}
-            <View className='confidence-section'>
-              <View className='confidence-header'>
-                <Text className='confidence-label'>置信度</Text>
-                <Text className='confidence-value' style={{ color: severityConfig.color }}>{confidencePercent}%</Text>
+            {/* 检测类别标签（颜色圆点+名称+数量） */}
+            {detectionTags.length > 0 && (
+              <View className='confidence-section'>
+                <View className='confidence-header'>
+                  <Text className='confidence-label'>检测结果</Text>
+                  <Text className='confidence-value'>{detectionTags.length} 个目标</Text>
+                </View>
+                <View className='detection-tags'>
+                  {detectionTags.map((tag, index) => (
+                    <View key={index} className='detection-tag-item'>
+                      <View
+                        className='detection-tag-dot'
+                        style={{ backgroundColor: tag.color }}
+                      />
+                      <Text className='detection-tag-name'>{tag.name} : {tag.count}个</Text>
+                    </View>
+                  ))}
+                </View>
               </View>
-              <View className='confidence-bar'>
-                <View
-                  className='confidence-bar-fill'
-                  style={{ width: `${confidencePercent}%`, background: severityConfig.color }}
-                />
-              </View>
-            </View>
+            )}
 
             {/* 结果卡片 */}
             <View className='result-card'>

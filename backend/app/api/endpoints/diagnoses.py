@@ -3,6 +3,8 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 import json
 import os
+import urllib.request
+import tempfile
 from app.core.database import get_db
 from app.core.security import get_current_user
 from app.models.user import User
@@ -12,6 +14,8 @@ from app.schemas.diagnosis import (
     DiagnosisRecordCreate, DiagnosisRecordResponse, DiagnosisRecordListResponse
 )
 from app.services.diagnosis import diagnosis_service
+from app.services.pest_recognition import pest_recognition_service
+from app.services.recognition import plant_recognition_service
 
 router = APIRouter(prefix="/api/diagnoses", tags=["diagnoses"])
 
@@ -199,3 +203,91 @@ def delete_diagnosis(
     db.commit()
 
     return {"message": "Diagnosis record deleted successfully"}
+
+
+@router.get("/{diagnosis_id}/recognition")
+def get_diagnosis_recognition(
+    diagnosis_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    获取诊断记录的识别结果（包含检测框）
+    通过重新识别存储的图片来获取 bboxes
+    """
+    # 基础 URL 配置
+    API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
+
+    record = db.query(DiagnosisRecord).filter(
+        DiagnosisRecord.id == diagnosis_id,
+        DiagnosisRecord.user_id == current_user.id
+    ).first()
+
+    if not record:
+        raise HTTPException(status_code=404, detail="Diagnosis record not found")
+
+    if not record.image_url:
+        raise HTTPException(status_code=400, detail="No image available for this diagnosis")
+
+    # 获取图片文件路径（直接访问本地存储）
+    try:
+        # image_url 格式: /api/diagnosis/images/{user_id}/{filename}
+        # 转换为本地文件路径: {IMAGE_STORAGE_PATH}/{user_id}/{filename}
+        if record.image_url.startswith("/api/diagnosis/images/"):
+            relative_path = record.image_url.replace("/api/diagnosis/images/", "")
+            image_path = os.path.join(IMAGE_STORAGE_PATH, relative_path)
+            print(f"[DiagnosisRecognition] Local image path: {image_path}")
+
+            if not os.path.exists(image_path):
+                print(f"[DiagnosisRecognition] Image file not found: {image_path}")
+                raise HTTPException(status_code=400, detail="Image file not found on server")
+
+            # 读取图片文件
+            with open(image_path, "rb") as f:
+                image_bytes = f.read()
+
+            print(f"[DiagnosisRecognition] Image loaded from local, size: {len(image_bytes)} bytes")
+        else:
+            # 备用：如果不是本地路径，尝试作为 URL 下载
+            image_url = record.image_url
+            if image_url.startswith("/"):
+                image_url = f"{API_BASE_URL}{image_url}"
+
+            print(f"[DiagnosisRecognition] Downloading image from: {image_url}")
+
+            with urllib.request.urlopen(image_url, timeout=10) as response:
+                image_bytes = response.read()
+
+            print(f"[DiagnosisRecognition] Image downloaded, size: {len(image_bytes)} bytes")
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"[DiagnosisRecognition] Failed to get image: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get image: {str(e)}")
+
+    # 保存为临时文件进行识别
+    tmp_path = None
+    try:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp:
+            tmp.write(image_bytes)
+            tmp_path = tmp.name
+
+        # 同时识别植物和病虫害
+        plant_result = plant_recognition_service.recognize(tmp_path)
+        pest_result = pest_recognition_service.recognize(tmp_path)
+
+        print(f"[DiagnosisRecognition] plant_result: {plant_result}")
+        print(f"[DiagnosisRecognition] pest_result: {pest_result}")
+
+        return {
+            "plant": plant_result,
+            "pest": pest_result,
+            "diagnosis": pest_result,
+        }
+    except Exception as e:
+        print(f"[DiagnosisRecognition] Recognition failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Recognition failed: {str(e)}")
+    finally:
+        if tmp_path and os.path.exists(tmp_path):
+            os.unlink(tmp_path)

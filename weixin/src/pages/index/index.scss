@@ -406,13 +406,98 @@
   margin-bottom: 16px;
 }
 
-.result-card {
-  background: #fafafa;
-  border-radius: 16px;
-  padding: 16px;
+// 检测结果标签卡片
+.result-tags-card {
+  background: linear-gradient(135deg, #f8f9fa 0%, #f0f2f5 100%);
+  border-radius: 20rpx;
+  padding: 24rpx;
+  margin-bottom: 20rpx;
+  border: 1rpx solid rgba(0, 0, 0, 0.05);
+}
+
+.result-tags-header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.result-tags-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #333;
+}
+
+.result-tags-count {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.result-tags-list {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 16rpx;
+}
+
+.result-tag-item {
   display: flex;
   flex-direction: row;
   align-items: center;
+  gap: 8rpx;
+  background: #fff;
+  padding: 12rpx 20rpx;
+  border-radius: 24rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
+}
+
+.result-tag-dot {
+  width: 20rpx;
+  height: 20rpx;
+  border-radius: 10rpx;
+}
+
+.result-tag-name {
+  font-size: 26rpx;
+  color: #333;
+  font-weight: 500;
+}
+
+.result-tag-separator {
+  font-size: 24rpx;
+  color: #ccc;
+}
+
+.result-tag-count {
+  font-size: 26rpx;
+  font-weight: 600;
+}
+
+.result-card {
+  background: #fafafa;
+  border-radius: 16px;
+  padding: 0 !important;
+  overflow: hidden;
+  width: 100% !important;
+  height: 300px !important;
+  display: block !important;
+  box-sizing: border-box !important;
+}
+
+.result-image-wrapper {
+  position: relative !important;
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: 16px !important;
+  overflow: hidden !important;
+}
+
+.result-image {
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: 16px !important;
+  background: #fafafa !important;
 }
 
 .result-plant-icon {

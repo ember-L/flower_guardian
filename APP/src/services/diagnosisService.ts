@@ -28,6 +28,7 @@ export interface DiagnosisRecord {
   recommended_products: string;
   is_favorite: boolean;
   conversation_id?: number;
+  detections?: string;  // 检测结果JSON，包含bbox和标签信息
   created_at: string;
 }
 
@@ -70,6 +71,7 @@ export interface CreateDiagnosisParams {
   treatment?: string;
   prevention?: string;
   recommended_products?: string;
+  detections?: string;  // 检测结果JSON，包含bbox和标签信息
 }
 
 export const createDiagnosis = async (data: CreateDiagnosisParams): Promise<DiagnosisRecord> => {

@@ -30,6 +30,33 @@ export interface DiagnosisResult extends PestResult {
     severity_level: string;
   };
   imageUrl?: string;
+  // 完整的检测结果（包含 bboxes）
+  plant?: {
+    id: string;
+    name: string;
+    confidence: number;
+    detections?: Array<{
+      id: string;
+      name: string;
+      confidence: number;
+      bbox: number[];
+      care_tips?: string;
+    }>;
+  };
+  pest?: {
+    id: string;
+    name: string;
+    confidence: number;
+    type: string;
+    detections?: Array<{
+      id: string;
+      name: string;
+      confidence: number;
+      type: string;
+      bbox: number[];
+      treatment?: string;
+    }>;
+  };
 }
 
 // 将图片转换为Base64
@@ -73,8 +100,9 @@ const recognizeOnline = async (imageUri: string): Promise<DiagnosisResult> => {
   }
 
   const data = await response.json();
+  console.log('[PestRecognition] full response:', data);
 
-  // 兼容不同返回格式
+  // /api/diagnosis/full 返回格式: { image_url, plant, pest, diagnosis, recommendations }
   if (data.diagnosis) {
     return {
       id: data.diagnosis.id || '0',
@@ -85,7 +113,10 @@ const recognizeOnline = async (imageUri: string): Promise<DiagnosisResult> => {
       prevention: data.diagnosis.prevention || '',
       severity: data.diagnosis.severity || 'low',
       recommendations: data.recommendations,
-      imageUrl: imageUri,
+      imageUrl: data.image_url || imageUri,
+      // 完整的检测结果（包含 bboxes）
+      plant: data.plant,
+      pest: data.pest,
     };
   }
 
@@ -127,7 +158,7 @@ const recognizeOffline = async (imageUri: string): Promise<DiagnosisResult> => {
   };
 };
 
-// 合并上传和识别 - 单次请求完成
+// 合并上传和识别 - 使用 /api/diagnosis/full 获取完整结果
 const uploadAndRecognizeOnline = async (imageUri: string): Promise<DiagnosisResult> => {
   // 压缩图片以减少上传时间（调整为 800px 宽度，质量 70%）
   let manipulatedUri = imageUri;
@@ -152,7 +183,7 @@ const uploadAndRecognizeOnline = async (imageUri: string): Promise<DiagnosisResu
 
   const authHeaders = await getAuthHeaders();
 
-  const response = await fetch(`${API_BASE_URL}/api/diagnosis/upload-and-recognize`, {
+  const response = await fetch(`${API_BASE_URL}/api/diagnosis/full`, {
     method: 'POST',
     body: formData,
     headers: {
@@ -168,6 +199,7 @@ const uploadAndRecognizeOnline = async (imageUri: string): Promise<DiagnosisResu
   const data = await response.json();
   console.log('[PestRecognition] uploadAndRecognize response:', data);
 
+  // /api/diagnosis/full 返回格式: { image_url, plant, pest, diagnosis, recommendations }
   if (data.diagnosis) {
     return {
       id: data.diagnosis.id || '0',
@@ -178,7 +210,9 @@ const uploadAndRecognizeOnline = async (imageUri: string): Promise<DiagnosisResu
       prevention: data.diagnosis.prevention || '',
       severity: data.diagnosis.severity || 'low',
       recommendations: data.recommendations,
-      imageUrl: data.image_url || imageUri,
+      imageUrl: manipulatedUri, // 使用压缩后的图片 URI，与 bbox 计算一致
+      plant: data.plant,
+      pest: data.pest,
     };
   }
 
@@ -195,7 +229,7 @@ const uploadAndRecognizeOnline = async (imageUri: string): Promise<DiagnosisResu
       prevention: data.prevention || '',
       severity_level: data.severity || 'low',
     },
-    imageUrl: imageUri,
+    imageUrl: manipulatedUri, // 使用压缩后的图片 URI
   };
 };
 

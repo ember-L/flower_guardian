@@ -1,0 +1,31 @@
+.bbox-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+
+.bbox-box {
+  position: absolute;
+  border-width: 3rpx;
+  border-style: solid;
+  border-radius: 8rpx;
+  box-sizing: border-box;
+}
+
+.bbox-label {
+  position: absolute;
+  top: -44rpx;
+  left: 0;
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
+  white-space: nowrap;
+}
+
+.bbox-label-text {
+  font-size: 20rpx;
+  color: #ffffff;
+  font-weight: 500;
+}
