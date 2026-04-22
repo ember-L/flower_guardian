@@ -101,11 +101,11 @@ export default function Register() {
   return (
     <View className='container'>
       {/* 头部 */}
-      <View className='header'>
+      {/* <View className='header'>
         <View className='back-button' onClick={() => Taro.navigateBack()}>
           <Text className='back-icon'>&lt;</Text>
         </View>
-      </View>
+      </View> */}
 
       {/* 内容 */}
       <View className='content'>

@@ -2,6 +2,7 @@ import { View, Text, ScrollView } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { useState } from 'react'
 import { recommendationService } from '../../services/recommendService'
+import { addToMyGarden } from '../../services/plantService'
 import Icon from '../../components/Icon'
 import './index.scss'
 
@@ -104,7 +105,7 @@ export default function Recommendation() {
 
   const handleAddToGarden = async (plant: PlantRecommendation) => {
     try {
-      await recommendationService.addToGarden({ plant_id: plant.plant_id, nickname: plant.name })
+      await addToMyGarden({ plant_id: plant.plant_id, nickname: plant.name })
       Taro.showToast({ title: '已添加到我的花园', icon: 'success' })
     } catch (err: any) {
       Taro.showToast({ title: err.message || '添加失败', icon: 'none' })
@@ -124,9 +125,9 @@ export default function Recommendation() {
       {/* 头部包装器 */}
       <View className='header-wrapper'>
         <View className='header'>
-          <View className='back-button' onClick={() => Taro.navigateBack()}>
-            <Text className='back-icon'>&lt;</Text>
-          </View>
+          {/* <View className='back-button' onClick={() => Taro.navigateBack()}>
+            <Icon name="arrow-left" size={24} color="#333" />
+          </View> */}
           <View className='header-content'>
             <View className='header-icon'>
               <Icon name="sparkles" size={28} color="#faad14" />

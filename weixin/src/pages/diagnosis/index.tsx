@@ -289,9 +289,9 @@ export default function Diagnosis() {
         {/* 头部 */}
         <View className='header'>
           <View className='header-bg' />
-          <View className='back-button' onClick={() => Taro.navigateBack()}>
+          {/* <View className='back-button' onClick={() => Taro.navigateBack()}>
             <Text className='back-icon'>&lt;</Text>
-          </View>
+          </View> */}
           <View className='header-content'>
             <View className='header-icon'>
               <Image className='header-logo' src={logoPng} mode='aspectFit' />

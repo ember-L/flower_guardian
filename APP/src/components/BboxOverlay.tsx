@@ -105,16 +105,72 @@ export function BboxOverlay({ imageUri, bboxes, containerHeight, containerWidth:
 
     console.log('[BboxOverlay] scale=', scale.toFixed(3), 'display=', displayWidth.toFixed(1), 'x', displayHeight.toFixed(1), 'offset=', offsetX.toFixed(1), offsetY.toFixed(1));
 
+    // 转换 bbox 坐标到显示坐标系，并裁切到可见区域内
     const converted: DisplayBbox[] = bboxes.map((bbox) => {
       const [x1, y1, x2, y2] = bbox.bbox;
+
+      // 计算检测框在显示图片上的位置
+      let left = x1 * scale + offsetX;
+      let top = y1 * scale + offsetY;
+      let width = (x2 - x1) * scale;
+      let height = (y2 - y1) * scale;
+
+      // 在 aspectFill 模式下，图片可能被裁切
+      // 需要将检测框裁切到可见区域内
+      // 可见区域是容器区域 [0, containerW] x [0, containerH]
+
+      // 水平方向裁切
+      let clampedLeft = left;
+      let clampedWidth = width;
+      if (left < 0) {
+        clampedWidth = width + left;
+        clampedLeft = 0;
+      }
+      if (left + width > containerW) {
+        clampedWidth = containerW - clampedLeft;
+      }
+
+      // 垂直方向裁切
+      let clampedTop = top;
+      let clampedHeight = height;
+      if (top < 0) {
+        clampedHeight = height + top;
+        clampedTop = 0;
+      }
+      if (top + height > containerH) {
+        clampedHeight = containerH - clampedTop;
+      }
+
+      // 确保裁切后宽度和高度不为负
+      clampedWidth = Math.max(0, clampedWidth);
+      clampedHeight = Math.max(0, clampedHeight);
+
+      const isVisible = clampedWidth > 0 && clampedHeight > 0;
+
+      if (!isVisible || clampedWidth < width || clampedHeight < height) {
+        console.log('[BboxOverlay] Bbox clipped:', { left, top, width, height }, '->', { left: clampedLeft, top: clampedTop, width: clampedWidth, height: clampedHeight });
+      }
+
+      if (!isVisible) {
+        return {
+          name: bbox.name,
+          confidence: bbox.confidence,
+          type: bbox.type,
+          left: 0,
+          top: 0,
+          width: 0,
+          height: 0,
+        };
+      }
+
       return {
         name: bbox.name,
         confidence: bbox.confidence,
         type: bbox.type,
-        left: x1 * scale + offsetX,
-        top: y1 * scale + offsetY,
-        width: (x2 - x1) * scale,
-        height: (y2 - y1) * scale,
+        left: clampedLeft,
+        top: clampedTop,
+        width: clampedWidth,
+        height: clampedHeight,
       };
     });
 

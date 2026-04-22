@@ -1,6 +1,39 @@
+/* EncyclopediaDetail - 完全匹配RN EncyclopediaDetailScreen样式 */
+$primary: #f46;
+$primary-light: #ff6b88;
+$secondary: #52c41a;
+$accent: #faad14;
+$info: #007aff;
+$background: #fafafa;
+$surface: #ffffff;
+$text: #333333;
+$text-secondary: #666666;
+$text-tertiary: #999999;
+$border: #eeeeee;
+$success: #52c41a;
+$error: #ff4d4f;
+$warning: #faad14;
+
+// RN spacing: xs=4, sm=8, md=16, lg=20, xl=24, xxl=32
+$xs: 4px;
+$sm: 8px;
+$md: 16px;
+$lg: 20px;
+$xl: 24px;
+$xxl: 32px;
+
+// RN borderRadius: sm=8, md=12, lg=16, xl=20, xxl=24, xxxl=32, full=9999
+$radius-sm: 8px;
+$radius-md: 12px;
+$radius-lg: 16px;
+$radius-xl: 20px;
+$radius-xxl: 24px;
+$radius-xxxl: 32px;
+$radius-full: 9999px;
+
 .encyclopedia-detail {
   min-height: 100vh;
-  background: #fafafa;
+  background: $background;
 }
 
 .page-loading, .page-empty {
@@ -9,248 +42,432 @@
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background: #fafafa;
+  background: $background;
 }
 
 .loading-text {
-  font-size: 28px;
-  color: #999;
+  font-size: 16px;
+  color: $text-tertiary;
 }
 
 .empty-icon {
-  font-size: 80px;
-  margin-bottom: 20px;
+  margin-bottom: $md;
 }
 
 .empty-text {
-  font-size: 28px;
-  color: #666;
+  font-size: 16px;
+  color: $text-secondary;
 }
 
 .detail-scroll {
-  height: calc(100vh - 120px);
+  height: calc(100vh - 80px);
 }
 
-/* 顶部图片 */
-.hero-image-wrap {
+/* Hero 区域 - RN: primary背景, padding xl/xl/xxl*2, borderRadius xxl */
+.hero-section {
+  background: $primary;
+  padding-top: $xl;
+  padding-bottom: $xxl * 1;
+  border-bottom-left-radius: $radius-xxl;
+  border-bottom-right-radius: $radius-xxl;
+  overflow: hidden;
   position: relative;
-  width: 100%;
-  height: 500px;
+}
+
+/* RN: 40x40, borderRadius full, 背景半透明黑 */
+.back-button, .share-button {
+  position: absolute;
+  top: $xl;
+  width: 40px;
+  height: 40px;
+  border-radius: $radius-full;
+  background: rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.back-button {
+  left: $md;
+}
+
+.share-button {
+  right: $md;
+}
+
+.plant-info-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: $lg;
+}
+
+/* RN: 120x120, borderRadius xxl=24px */
+.plant-image-wrapper {
+  width: 120px;
+  height: 120px;
+  border-radius: $radius-xxl;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: $md;
   overflow: hidden;
 }
 
-.hero-image {
+.plant-image {
   width: 100%;
   height: 100%;
 }
 
-.hero-overlay {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 200px;
-  background: linear-gradient(transparent, rgba(0, 0, 0, 0.3));
-}
-
-/* 基本信息 */
-.info-card {
-  margin: -40px 24px 0;
-  padding: 32px;
-  background: #fff;
-  border-radius: 20px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  position: relative;
-  z-index: 2;
-}
-
-.name-row {
+.plant-image-placeholder {
+  width: 100%;
+  height: 100%;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 8px;
+  justify-content: center;
 }
 
+/* RN: fontSize 28px, bold, white */
 .plant-name {
-  font-size: 40px;
+  font-size: 28px;
   font-weight: 700;
-  color: #333;
+  color: #fff;
+  text-align: center;
 }
 
-.category-badge {
-  padding: 6px 16px;
-  background: rgba(255, 68, 102, 0.1);
-  border-radius: 20px;
+/* RN: fontSize 14px, italic, 白色半透明 */
+.plant-scientific {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+  font-style: italic;
+  margin-top: $xs;
+  text-align: center;
 }
 
-.category-text {
-  font-size: 22px;
-  color: #f46;
+/* RN: tagRow gap sm=8px, marginTop md=16px */
+.tag-row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: $sm;
+  margin-top: $md;
+  justify-content: center;
+  padding: 0 $md;
+}
+
+/* RN: paddingHorizontal md=16px, paddingVertical xs=4px, borderRadius full */
+.tag-primary {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.25);
+  padding: $xs $md;
+  border-radius: $radius-full;
+  gap: $xs;
+}
+
+.tag-secondary {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  background: #fff;
+  padding: $xs $md;
+  border-radius: $radius-full;
+  gap: $xs;
+}
+
+/* RN: fontSize 12px */
+.tag-text-primary {
+  color: #fff;
+  font-size: 12px;
   font-weight: 500;
 }
 
-.scientific-name {
-  font-size: 24px;
-  color: #999;
-  font-style: italic;
-  margin-bottom: 16px;
-  display: block;
+.tag-text-secondary {
+  color: $secondary;
+  font-size: 12px;
+  font-weight: 500;
 }
 
-.care-level-row {
+/* Content - RN: paddingHorizontal lg=20px, marginTop -lg=-20px */
+.content {
+  padding: 0 $lg;
+  margin-top: -$lg;
+  padding-bottom: $xxl * 3;
+}
+
+/* Section - RN: borderRadius lg=16px, padding lg=20px, marginBottom md=16px */
+.section {
+  background: $surface;
+  border-radius: $radius-lg;
+  padding: $lg;
+  margin-bottom: $md;
+}
+
+/* RN: marginBottom md=16px */
+.section-header {
   display: flex;
+  flex-direction: row;
   align-items: center;
-  gap: 8px;
+  margin-bottom: $md;
+  gap: $sm;
 }
 
-.care-label {
-  font-size: 24px;
-  color: #666;
-  margin-right: 4px;
-}
-
-.stars {
-  display: flex;
-  gap: 4px;
-}
-
-.star {
-  font-size: 28px;
-  color: #ddd;
-
-  &.active {
-    color: #faad14;
-  }
-}
-
-.care-text {
-  font-size: 24px;
-  color: #f46;
-  font-weight: 600;
-  margin-left: 8px;
-}
-
-/* 养护参数 */
-.params-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  margin: 20px 24px 0;
-  padding: 24px;
-  background: #fff;
-  border-radius: 20px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
-}
-
-.param-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 20px 0;
-  background: #fafafa;
-  border-radius: 16px;
-}
-
-.param-icon {
-  font-size: 36px;
-  margin-bottom: 8px;
-}
-
-.param-label {
-  font-size: 22px;
-  color: #999;
-  margin-bottom: 4px;
-}
-
-.param-value {
-  font-size: 24px;
-  color: #333;
-  font-weight: 600;
-}
-
-/* 内容卡片 */
-.section-card {
-  margin: 20px 24px 0;
-  padding: 28px;
-  background: #fff;
-  border-radius: 20px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
-}
-
+/* RN: fontSize 18px */
 .section-title {
-  font-size: 30px;
-  font-weight: 700;
-  color: #333;
-  margin-bottom: 16px;
-  display: block;
+  font-size: 18px;
+  font-weight: 600;
+  color: $text;
 }
 
-.section-content {
-  font-size: 26px;
-  color: #666;
-  line-height: 1.8;
+/* RN: fontSize 15px */
+.description {
+  font-size: 15px;
+  color: $text-secondary;
+  line-height: 24px;
 }
 
-/* 特点列表 */
-.features-list {
+/* Care Grid - RN: flexWrap wrap, gap md=16px */
+.care-grid {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: $md;
+}
+
+/* RN: width 47%, background, borderRadius lg=16px, padding md=16px */
+.care-card {
+  width: 47%;
+  background: $background;
+  border-radius: $radius-lg;
+  padding: $md;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  align-items: center;
 }
 
-.feature-item {
+/* RN: 52x52, borderRadius full */
+.care-icon-wrapper {
+  width: 52px;
+  height: 52px;
+  border-radius: $radius-full;
   display: flex;
   align-items: center;
-  gap: 12px;
+  justify-content: center;
+  margin-bottom: $sm;
 }
 
-.feature-dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #f46, #ff6b9d);
-  flex-shrink: 0;
+/* RN: fontSize 12px */
+.care-label {
+  font-size: 12px;
+  color: $text-tertiary;
+  margin-bottom: $xs;
 }
 
+/* RN: fontSize 14px */
+.care-value {
+  font-size: 14px;
+  font-weight: 500;
+  color: $text;
+  text-align: center;
+}
+
+/* Tip Card - RN: background accent+15, borderRadius lg=16px */
+.tip-card {
+  display: flex;
+  flex-direction: row;
+  background: rgba(250, 173, 20, 0.15);
+  border-radius: $radius-lg;
+  padding: $md;
+  margin-top: $md;
+  align-items: flex-start;
+}
+
+.tip-icon-wrapper {
+  width: 36px;
+  height: 36px;
+  border-radius: $radius-full;
+  background: rgba(250, 173, 20, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: $sm;
+}
+
+.tip-content {
+  flex: 1;
+}
+
+.tip-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: $text;
+  margin-bottom: 2px;
+}
+
+.tip-text {
+  font-size: 13px;
+  color: $text-secondary;
+  line-height: 20px;
+}
+
+/* Feature Grid - RN: flexWrap wrap, gap sm=8px */
+.feature-grid {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: $sm;
+}
+
+/* RN: paddingHorizontal md=16px, paddingVertical sm=8px, borderRadius full */
+.feature-tag {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: $xs;
+  background: rgba(82, 196, 26, 0.12);
+  padding: $sm $md;
+  border-radius: $radius-full;
+}
+
+/* RN: fontSize 14px */
 .feature-text {
-  font-size: 26px;
-  color: #666;
-  line-height: 1.6;
+  color: $success;
+  font-size: 14px;
+  font-weight: 500;
 }
 
-/* 底部 */
+/* Tips Card - RN: background primary+08, borderRadius lg=16px, borderLeft 3px */
+.tips-card {
+  background: rgba(244, 68, 102, 0.08);
+  border-radius: $radius-lg;
+  padding: $md;
+  border-left: 3px solid $primary;
+}
+
+.tips-text {
+  font-size: 14px;
+  color: $text-secondary;
+  line-height: 22px;
+}
+
+/* Warning Card - RN: background warning+10, borderRadius lg=16px */
+.warning-card {
+  background: rgba(250, 173, 20, 0.1);
+  border-radius: $radius-lg;
+  padding: $md;
+  border-left: 3px solid $warning;
+}
+
+.warning-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: $xs;
+  margin-bottom: $sm;
+}
+
+.warning-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: $text;
+}
+
+.warning-text {
+  font-size: 14px;
+  color: $text-secondary;
+  line-height: 22px;
+}
+
+/* Survival Card - RN: background success+12, padding lg=20px */
+.survival-card {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  background: rgba(82, 196, 26, 0.12);
+  padding: $lg;
+  border-radius: $radius-lg;
+  gap: $md;
+}
+
+/* RN: 56x56, borderRadius lg=16px */
+.survival-icon-wrapper {
+  width: 56px;
+  height: 56px;
+  border-radius: $radius-lg;
+  background: $success;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.survival-info {
+  flex: 1;
+}
+
+/* RN: fontSize 13px */
+.survival-label {
+  font-size: 13px;
+  color: $text-tertiary;
+}
+
+/* RN: fontSize 28px */
+.survival-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: $success;
+}
+
+/* RN: width 80px, height 6px, borderRadius 3px */
+.survival-progress {
+  width: 80px;
+  height: 6px;
+  background: rgba(82, 196, 26, 0.2);
+  border-radius: 3px;
+  overflow: hidden;
+  align-self: center;
+}
+
+.survival-progress-bar {
+  height: 100%;
+  background: $success;
+  border-radius: 3px;
+}
+
+/* Bottom */
 .bottom-spacer {
-  height: 140px;
+  height: $xxl;
 }
 
-.bottom-bar {
+/* RN: position absolute, bottom, padding md=16px, paddingBottom xl=24px */
+.bottom-button {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 16px 24px;
-  padding-bottom: calc(16px + env(safe-area-inset-bottom));
-  background: #fff;
-  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.06);
+  background: $surface;
+  padding: $md;
+  padding-bottom: $xl;
+  border-top: 1px solid $border;
   z-index: 100;
 }
 
-.add-btn {
-  height: 88px;
+/* RN: borderRadius lg=16px, paddingVertical md=16px */
+.submit-button {
+  background: $primary;
+  padding: $md;
+  border-radius: $radius-lg;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #f46 0%, #ff6b9d 100%);
-  border-radius: 44px;
-  box-shadow: 0 4px 16px rgba(255, 68, 102, 0.4);
-
-  &.disabled {
-    opacity: 0.6;
-  }
+  flex-direction: row;
+  gap: $sm;
 }
 
-.add-btn-text {
-  font-size: 32px;
-  font-weight: 600;
+.submit-button-text {
   color: #fff;
+  font-size: 16px;
+  font-weight: 600;
 }

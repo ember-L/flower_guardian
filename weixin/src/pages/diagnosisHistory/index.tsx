@@ -149,20 +149,7 @@ export default function DiagnosisHistory() {
   return (
     <View className='container'>
       {/* Header */}
-      <View className='header'>
-        <View className='back-button' onClick={() => Taro.navigateBack()}>
-          <Text className='back-icon'>&lt;</Text>
-        </View>
-        <View className='header-content'>
-          <Text className='header-title'>诊断历史</Text>
-          <Text className='header-subtitle'>
-            {filter === 'all' ? '全部记录' : '我的收藏'}
-          </Text>
-        </View>
-        <View className='add-button' onClick={navigateToDiagnosis}>
-          <Text className='add-icon'>+</Text>
-        </View>
-      </View>
+
 
       {/* Filter tabs */}
       <View className='tabs-container'>

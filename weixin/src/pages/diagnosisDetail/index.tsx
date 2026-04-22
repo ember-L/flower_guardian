@@ -174,15 +174,7 @@ export default function DiagnosisDetail() {
   return (
     <View className='detail-page'>
       {/* 头部 */}
-      <View className='header'>
-        <View className='back-button' onClick={() => Taro.navigateBack()}>
-          <Text className='back-icon'>&lt;</Text>
-        </View>
-        <Text className='header-title'>诊断详情</Text>
-        <View className='favorite-button' onClick={toggleFavorite}>
-          <Icon name="star" size={20} color={detail.is_favorite ? '#faad14' : '#666'} />
-        </View>
-      </View>
+
 
       <ScrollView scrollY className='scroll-view' enhanced showScrollbar={false}>
         {/* 主图区域 */}

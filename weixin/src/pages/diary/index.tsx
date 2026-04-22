@@ -171,32 +171,32 @@ export default function Diary() {
 
   const currentPlantName = getCurrentPlantName()
 
-  const renderHeader = () => (
-    <View className='header'>
-      <View className='header-back' onClick={() => Taro.navigateBack()}>
-        <Icon name="arrow-left" size={24} color="#333" />
-      </View>
-      <View className='header-center'>
-        <Text className='header-title'>
-          {selectedTab === 0
-            ? currentPlantName || '养花日记'
-            : '生长记录'}
-        </Text>
-        <Text className='header-subtitle'>
-          {selectedTab === 0
-            ? currentPlantName ? `记录${currentPlantName}的成长` : '记录植物的成长点滴'
-            : '查看植物生长趋势'}
-        </Text>
-      </View>
-      <View className='header-right'>
-        {selectedTab === 0 && (
-          <View className='write-btn' onClick={handleWriteDiary}>
-            <Icon name="plus" size={18} color="#fff" />
-          </View>
-        )}
-      </View>
-    </View>
-  )
+  // const renderHeader = () => (
+  //   <View className='header'>
+  //     {/* <View className='header-back' onClick={() => Taro.navigateBack()}>
+  //       <Icon name="arrow-left" size={24} color="#333" />
+  //     </View> */}
+  //     <View className='header-center'>
+  //       <Text className='header-title'>
+  //         {selectedTab === 0
+  //           ? currentPlantName || '养花日记'
+  //           : '生长记录'}
+  //       </Text>
+  //       <Text className='header-subtitle'>
+  //         {selectedTab === 0
+  //           ? currentPlantName ? `记录${currentPlantName}的成长` : '记录植物的成长点滴'
+  //           : '查看植物生长趋势'}
+  //       </Text>
+  //     </View>
+  //     <View className='header-right'>
+  //       {selectedTab === 0 && (
+  //         <View className='write-btn' onClick={handleWriteDiary}>
+  //           <Icon name="plus" size={18} color="#fff" />
+  //         </View>
+  //       )}
+  //     </View>
+  //   </View>
+  // )
 
   const renderTabs = () => (
     <View className='tabs-container'>
@@ -360,7 +360,7 @@ export default function Diary() {
   if (loading) {
     return (
       <View className='diary-page'>
-        {renderHeader()}
+        {/* {renderHeader()} */}
         {renderTabs()}
         <View className='loading-container'>
           <Text className='loading-text'>加载中...</Text>
@@ -373,7 +373,7 @@ export default function Diary() {
   if (selectedTab === 0) {
     return (
       <View className='diary-page'>
-        {renderHeader()}
+        {/* {renderHeader()} */}
         {renderTabs()}
         {renderPlantFilter()}
         <ScrollView scrollY className='diary-scroll'>
@@ -398,7 +398,7 @@ export default function Diary() {
   // Tab 1: 生长记录
   return (
     <View className='diary-page'>
-      {renderHeader()}
+      {/* {renderHeader()} */}
       {renderTabs()}
       <ScrollView scrollY className='diary-scroll'>
         {plants.length === 0 ? (

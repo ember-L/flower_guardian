@@ -1,6 +1,39 @@
+/* Encyclopedia - 完全匹配RN EncyclopediaScreen样式 */
+$primary: #f46;
+$primary-light: #ff6b88;
+$secondary: #52c41a;
+$accent: #faad14;
+$info: #007aff;
+$background: #fafafa;
+$surface: #ffffff;
+$text: #333333;
+$text-secondary: #666666;
+$text-tertiary: #999999;
+$border: #eeeeee;
+$success: #52c41a;
+$error: #ff4d4f;
+$warning: #faad14;
+
+// RN spacing: xs=4, sm=8, md=16, lg=20, xl=24, xxl=32
+$xs: 4px;
+$sm: 8px;
+$md: 16px;
+$lg: 20px;
+$xl: 24px;
+$xxl: 32px;
+
+// RN borderRadius: sm=8, md=12, lg=16, xl=20, xxl=24, xxxl=32, full=9999
+$radius-sm: 8px;
+$radius-md: 12px;
+$radius-lg: 16px;
+$radius-xl: 20px;
+$radius-xxl: 24px;
+$radius-xxxl: 32px;
+$radius-full: 9999px;
+
 .page-container {
   min-height: 100vh;
-  background: #fafafa;
+  background: $background;
   padding-bottom: 50px;
 }
 
@@ -9,16 +42,17 @@
   height: calc(100vh - 200px);
 }
 
-/* Header - 圆角设计 */
+/* Header - RN: borderBottomLeftRadius xxl=24px */
 .header-gradient {
-  background: #f46;
-  border-bottom-left-radius: 24px;
-  border-bottom-right-radius: 24px;
+  background: $primary;
+  border-bottom-left-radius: $radius-xxl;
+  border-bottom-right-radius: $radius-xxl;
   overflow: hidden;
 }
 
+/* RN: paddingHorizontal lg=20px, paddingTop md=16px, paddingBottom xl=24px */
 .header {
-  padding: 16px 40px 40px;
+  padding: $md $lg $xl;
 }
 
 .header-content {
@@ -27,55 +61,56 @@
   align-items: center;
 }
 
+/* RN: 48x48, borderRadius lg=16px */
 .header-icon {
   width: 48px;
   height: 48px;
-  border-radius: 16px;
+  border-radius: $radius-lg;
   background: rgba(255, 255, 255, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-right: 16px;
+  margin-right: $md;
 }
 
 .header-title {
   font-size: 24px;
   font-weight: bold;
   color: #fff;
-  display: flex;
-  flex-direction: column;
 }
 
 .header-subtitle {
-  font-size: 14px;
+  font-size: 13px;
   color: rgba(255, 255, 255, 0.8);
-  margin-top: 4px;
+  margin-top: $xs;
 }
 
+/* RN: paddingTop md=16px, paddingBottom xxl*2=64px */
 .content {
-  padding-top: 16px;
-  // padding-bottom: 10px;
+  padding-top: $md;
+  padding-bottom: 64px;
 }
 
-/* Search - 浮动卡片 */
+/* Search - RN: marginHorizontal lg=20px, marginTop -lg=-20px, borderRadius full */
 .search-container {
   display: flex;
   flex-direction: row;
   align-items: center;
-  background: #fff;
-  border-radius: 9999px;
-  padding: 8px 16px;
-  margin: 0 40px;
-  margin-top: -20px;
-  box-shadow: 0 4px 16px rgba(244, 68, 102, 0.15);
+  background: $surface;
+  border-radius: $radius-full;
+  padding: $sm $md;
+  margin: 0 $lg;
+  margin-top: -$lg;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
   position: relative;
   z-index: 1;
 }
 
+/* RN: 40x40, borderRadius full */
 .search-icon-wrapper {
   width: 40px;
   height: 40px;
-  border-radius: 20px;
+  border-radius: $radius-full;
   background: rgba(244, 68, 102, 0.1);
   display: flex;
   align-items: center;
@@ -84,34 +119,36 @@
 
 .search-input {
   flex: 1;
-  margin-left: 8px;
+  margin-left: $sm;
   font-size: 15px;
-  color: #333;
+  color: $text;
   height: 40px;
 }
 
 .search-placeholder {
-  color: #999;
+  color: $text-tertiary;
 }
 
-/* Section */
+/* Section - RN: marginTop xl=24px, paddingHorizontal lg=20px */
 .section {
-  margin-top: 24px;
-  padding: 0 20px;
+  margin-top: $xl;
+  padding: 0 $lg;
 }
 
+/* RN: marginBottom md=16px */
 .section-header-row {
   display: flex;
   flex-direction: row;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: $md;
 }
 
+/* RN: fontSize lg=17px, semibold, marginLeft sm=8px */
 .section-title {
   font-size: 17px;
   font-weight: 600;
-  color: #333;
-  margin-left: 8px;
+  color: $text;
+  margin-left: $sm;
 }
 
 /* Difficulty Filter */
@@ -119,29 +156,29 @@
   white-space: nowrap;
 }
 
+/* RN: gap sm=8px, paddingRight lg=20px */
 .difficulty-container {
   display: inline-flex;
   flex-direction: row;
-  gap: 8px;
-  padding-right: 40px;
+  gap: $sm;
+  padding-right: $lg;
 }
 
+/* RN: paddingHorizontal md=16px, paddingVertical sm=8px, borderRadius full */
 .difficulty-chip {
   display: inline-flex;
   flex-direction: row;
   align-items: center;
-  padding: 8px 16px;
-  border-radius: 9999px;
-  background: #fff;
-  border-width: 1px;
-  border-style: solid;
-  border-color: #eee;
-  gap: 4px;
+  padding: $sm $md;
+  border-radius: $radius-full;
+  background: $surface;
+  border: 1px solid $border;
+  gap: $xs;
 }
 
 .difficulty-chip.active {
-  background: #f46;
-  border-color: #f46;
+  background: $primary;
+  border-color: $primary;
 }
 
 .difficulty-dot {
@@ -150,80 +187,83 @@
   border-radius: 3px;
 }
 
+/* RN: fontSize sm=13px, medium */
 .difficulty-chip-text {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
-  color: #666;
+  color: $text-secondary;
 }
 
 .difficulty-chip-text.active {
   color: #fff;
 }
 
-/* Category Grid - 一行三列 */
+/* Category Grid - RN: borderRadius lg=16px */
 .category-grid {
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: $sm;
 }
 
+/* RN: padding md=16px sm=8px, borderRadius lg=16px */
 .category-card {
   width: 31%;
   min-width: 90px;
-  background: #fff;
-  border-radius: 16px;
-  padding: 16px 8px;
+  background: $surface;
+  border-radius: $radius-lg;
+  padding: $md $sm;
   display: flex;
   flex-direction: column;
   align-items: center;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
-  border-width: 2px;
-  border-style: solid;
-  border-color: transparent;
+  border: 2px solid transparent;
 }
 
 .category-card.selected {
-  border-color: #f46;
+  border-color: $primary;
   background: rgba(244, 68, 102, 0.05);
 }
 
+/* RN: 52x52, borderRadius full */
 .category-icon-wrapper {
   width: 52px;
   height: 52px;
-  border-radius: 26px;
+  border-radius: $radius-full;
   background: rgba(82, 196, 26, 0.15);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 8px;
+  margin-bottom: $sm;
 }
 
 .category-icon-wrapper.active {
-  background: #f46;
+  background: $primary;
 }
 
+/* RN: fontSize sm=13px */
 .category-name {
   font-size: 13px;
   font-weight: 500;
-  color: #333;
+  color: $text;
   text-align: center;
 }
 
 .category-name.active {
-  color: #f46;
+  color: $primary;
   font-weight: 600;
 }
 
+/* RN: fontSize xs=11px */
 .category-count {
   font-size: 11px;
-  color: #999;
+  color: $text-tertiary;
   margin-top: 2px;
 }
 
 .category-count-text {
   font-size: 13px;
-  color: #999;
+  color: $text-tertiary;
   margin-left: 4px;
 }
 
@@ -232,14 +272,14 @@
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: $sm;
 }
 
 .category-plant-card {
   width: 31%;
-  background: #fff;
-  border-radius: 16px;
-  padding: 8px;
+  background: $surface;
+  border-radius: $radius-lg;
+  padding: $sm;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
   display: flex;
   flex-direction: column;
@@ -249,7 +289,7 @@
 .category-plant-image-container {
   width: 100%;
   aspect-ratio: 1;
-  border-radius: 12px;
+  border-radius: $radius-md;
   overflow: hidden;
   background: rgba(82, 196, 26, 0.08);
   display: flex;
@@ -262,12 +302,13 @@
   height: 100%;
 }
 
+/* RN: fontSize xs=11px */
 .category-plant-name {
   font-size: 11px;
   font-weight: 500;
-  color: #333;
+  color: $text;
   text-align: center;
-  margin-top: 4px;
+  margin-top: $xs;
 }
 
 /* Popular Plants */
@@ -275,16 +316,18 @@
   white-space: nowrap;
 }
 
+/* RN: gap md=16px, paddingRight lg=20px */
 .popular-list {
   display: inline-flex;
-  gap: 16px;
-  padding-right: 40px;
+  gap: $md;
+  padding-right: $lg;
 }
 
+/* RN: borderRadius lg=16px, width 130px, padding sm=8px */
 .plant-card {
-  background: #fff;
-  border-radius: 16px;
-  padding: 8px;
+  background: $surface;
+  border-radius: $radius-lg;
+  padding: $sm;
   width: 130px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
   display: inline-flex;
@@ -294,13 +337,14 @@
   flex-shrink: 0;
 }
 
+/* RN: top/left xs=4px, padding sm=8px, borderRadius sm=8px */
 .plant-card-rank {
   position: absolute;
-  top: 4px;
-  left: 4px;
-  background: #f46;
-  padding: 2px 8px;
-  border-radius: 8px;
+  top: $xs;
+  left: $xs;
+  background: $primary;
+  padding: 2px $sm;
+  border-radius: $radius-sm;
   z-index: 1;
 }
 
@@ -310,12 +354,13 @@
   color: #fff;
 }
 
+/* RN: 80x80, borderRadius lg=16px */
 .plant-image-container {
   width: 80px;
   height: 80px;
-  border-radius: 16px;
+  border-radius: $radius-lg;
   overflow: hidden;
-  margin-top: 16px;
+  margin-top: $md;
 }
 
 .plant-image {
@@ -332,12 +377,13 @@
   justify-content: center;
 }
 
+/* RN: fontSize sm=13px, semibold */
 .plant-name {
   font-size: 13px;
   font-weight: 600;
-  color: #333;
+  color: $text;
   text-align: center;
-  margin-top: 8px;
+  margin-top: $sm;
 }
 
 .plant-meta-row {
@@ -346,34 +392,37 @@
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  margin-top: 4px;
-  padding: 0 4px;
+  margin-top: $xs;
+  padding: 0 $xs;
 }
 
+/* RN: fontSize xs=11px */
 .plant-category {
   font-size: 11px;
-  color: #999;
+  color: $text-tertiary;
   flex: 1;
 }
 
+/* RN: borderRadius sm=8px */
 .difficulty-badge {
   padding: 2px 6px;
-  border-radius: 8px;
+  border-radius: $radius-sm;
 }
 
+/* RN: fontSize 9px, semibold */
 .difficulty-text {
   font-size: 9px;
   font-weight: 600;
 }
 
-/* Hot Badge */
+/* Hot Badge - RN: padding xs=4px sm=8px, borderRadius full */
 .hot-badge {
   display: flex;
   flex-direction: row;
   align-items: center;
-  background: #ff4d4f;
-  padding: 4px 8px;
-  border-radius: 9999px;
+  background: $accent;
+  padding: $xs $sm;
+  border-radius: $radius-full;
   margin-left: auto;
   gap: 2px;
 }
@@ -384,9 +433,9 @@
   color: #fff;
 }
 
-/* Loading & Empty */
+/* Loading & Empty - RN: padding xxl=32px */
 .loading-container {
-  padding: 64px 0;
+  padding: $xxl 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -394,11 +443,11 @@
 
 .loading-text {
   font-size: 15px;
-  color: #999;
+  color: $text-tertiary;
 }
 
 .empty-container {
-  padding: 64px 0;
+  padding: $xxl 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -406,15 +455,15 @@
 
 .empty-text {
   font-size: 15px;
-  color: #999;
-  margin-top: 16px;
+  color: $text-tertiary;
+  margin-top: $md;
 }
 
-/* Legend */
+/* Legend - RN: borderRadius lg=16px, padding lg=20px */
 .legend-card {
-  background: #fff;
-  border-radius: 16px;
-  padding: 16px;
+  background: $surface;
+  border-radius: $radius-lg;
+  padding: $lg;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
 }
 
@@ -430,89 +479,93 @@
   align-items: center;
 }
 
+/* RN: 52x52, borderRadius full */
 .legend-icon {
   width: 52px;
   height: 52px;
-  border-radius: 26px;
+  border-radius: $radius-full;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 8px;
+  margin-bottom: $sm;
 }
 
 .legend-label {
   font-size: 13px;
   font-weight: 600;
-  color: #333;
+  color: $text;
 }
 
 .legend-desc {
   font-size: 11px;
-  color: #999;
+  color: $text-tertiary;
   margin-top: 2px;
 }
 
-/* Pitfalls - 避坑指南 */
+/* Pitfalls */
+/* RN: width/height 44px, borderRadius lg=16px */
 .pitfall-header {
   display: flex;
   flex-direction: row;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: $md;
 }
 
 .pitfall-header-icon {
   width: 44px;
   height: 44px;
-  border-radius: 16px;
-  background: #ff4d4f;
+  border-radius: $radius-lg;
+  background: $error;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-right: 16px;
+  margin-right: $md;
 }
 
+/* RN: fontSize lg=17px */
 .pitfall-title {
   font-size: 17px;
   font-weight: 600;
-  color: #333;
-    display: flex;
-  flex-direction: column;
+  color: $text;
 }
 
+/* RN: fontSize sm=13px */
 .pitfall-subtitle {
   font-size: 13px;
-  color: #999;
+  color: $text-tertiary;
 }
 
 .pitfalls-list {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: $md;
 }
 
+/* RN: borderRadius lg=16px, padding md=16px */
 .pitfall-card {
   display: flex;
   flex-direction: row;
   align-items: center;
-  background: #fff;
-  border-radius: 16px;
-  padding: 16px;
+  background: $surface;
+  border-radius: $radius-lg;
+  padding: $md;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
 }
 
+/* RN: width/height 32px, borderRadius full */
 .pitfall-number-badge {
   width: 32px;
   height: 32px;
-  border-radius: 16px;
+  border-radius: $radius-full;
   background: rgba(255, 77, 79, 0.15);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-right: 16px;
+  margin-right: $md;
 }
 
 .pitfall-number {
-  color: #ff4d4f;
+  color: $error;
   font-weight: bold;
   font-size: 13px;
 }
@@ -521,17 +574,17 @@
   flex: 1;
 }
 
+/* RN: fontSize md=15px */
 .pitfall-item-title {
   font-size: 15px;
   font-weight: 500;
-  color: #333;
-    display: flex;
-  flex-direction: column;
+  color: $text;
 }
 
+/* RN: fontSize sm=13px */
 .pitfall-item-desc {
   font-size: 13px;
-  color: #999;
+  color: $text-tertiary;
   margin-top: 2px;
 }
 

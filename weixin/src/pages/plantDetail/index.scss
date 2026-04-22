@@ -1,4 +1,4 @@
-/* PlantDetail - 匹配RN PlantDetailScreen样式 */
+/* PlantDetail - 严格匹配RN PlantDetailScreen样式 */
 $primary: #f46;
 $primary-light: #ff6b88;
 $background: #fafafa;
@@ -11,12 +11,13 @@ $success: #52c41a;
 $error: #ff4d4f;
 $warning: #faad14;
 
-// 间距
-$xs: 8px;
-$sm: 12px;
+// RN spacing: xs=4, sm=8, md=16, lg=20, xl=24, xxl=32
+$xs: 4px;
+$sm: 8px;
 $md: 16px;
 $lg: 20px;
 $xl: 24px;
+$xxl: 32px;
 
 .plant-detail {
   min-height: 100vh;
@@ -36,7 +37,7 @@ $xl: 24px;
   color: $text-secondary;
 }
 
-/* 头部 */
+/* 头部 - RN: paddingHorizontal/lg paddingVertical/md */
 .header {
   display: flex;
   align-items: center;
@@ -47,26 +48,26 @@ $xl: 24px;
 }
 
 .header-back {
-  padding: 4px;
+  padding: $xs;
 }
 
 .header-title {
-  font-size: 18px;
-  font-weight: bold;
+  font-size: 17px;
+  font-weight: 600;
   color: $text;
   flex: 1;
   text-align: center;
 }
 
 .header-delete {
-  padding: 4px;
+  padding: $xs;
 }
 
 .content {
-  height: calc(100vh - 68px);
+  height: calc(100vh - 61px);
 }
 
-/* 信息卡片 */
+/* 信息卡片 - RN: margin/lg borderRadius/lg */
 .info-card {
   margin: $lg;
   background: $surface;
@@ -87,7 +88,7 @@ $xl: 24px;
 }
 
 .plant-name {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: bold;
   color: $text;
 }
@@ -95,10 +96,10 @@ $xl: 24px;
 .plant-type {
   font-size: 14px;
   color: $text-secondary;
-  margin-top: 2px;
+  margin-top: $xs;
 }
 
-/* 位置选择 */
+/* 位置选择 - RN: padding/md title 14px marginBottom/sm */
 .location-section {
   padding: $md;
   padding-top: 0;
@@ -107,13 +108,13 @@ $xl: 24px;
 .location-title {
   font-size: 14px;
   color: $text-secondary;
-  margin-bottom: 4px;
+  margin-bottom: $sm;
 }
 
 .location-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: $xs;
+  gap: $sm;
 }
 
 .location-chip {
@@ -135,7 +136,7 @@ $xl: 24px;
   }
 }
 
-/* Tab 切换 */
+/* Tab 切换 - RN: marginHorizontal/lg marginBottom/md */
 .tabs {
   display: flex;
   margin: 0 $lg $md;
@@ -143,7 +144,7 @@ $xl: 24px;
 
 .tab {
   flex: 1;
-  padding: $md 0;
+  padding: $sm 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -164,11 +165,12 @@ $xl: 24px;
   }
 }
 
-/* Tab 内容 */
+/* Tab 内容 - RN: paddingHorizontal/lg paddingBottom/xxl*2 */
 .tab-content {
   padding: 0 $lg 64px;
 }
 
+/* 添加记录按钮 - RN: padding/md borderRadius/md */
 .add-record-btn {
   display: flex;
   align-items: center;
@@ -183,29 +185,27 @@ $xl: 24px;
 .add-record-text {
   color: $primary;
   font-weight: 500;
-  font-size: 14px;
 }
 
 .empty-text {
   text-align: center;
   color: $text-tertiary;
-  padding: 24px 0;
-  font-size: 14px;
+  padding: $xl 0;
 }
 
-/* 记录卡片 */
+/* 记录卡片 - RN: borderRadius/md padding/md marginBottom/sm */
 .record-card {
   background: $surface;
   border-radius: 12px;
   padding: $md;
-  margin-bottom: $xs;
+  margin-bottom: $sm;
 }
 
 .record-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2px;
+  margin-bottom: $xs;
 }
 
 .record-type {
@@ -222,7 +222,7 @@ $xl: 24px;
 .record-notes {
   font-size: 14px;
   color: $text-secondary;
-  margin-top: 2px;
+  margin-top: $xs;
 }
 
 /* 生长统计 */
@@ -236,9 +236,9 @@ $xl: 24px;
   color: $text-secondary;
 }
 
-/* 健康状态徽章 */
+/* 健康状态徽章 - RN: paddingHorizontal/sm paddingVertical/2 borderRadius/sm */
 .status-badge {
-  padding: 2px 8px;
+  padding: 2px $sm;
   border-radius: 8px;
 }
 
@@ -247,7 +247,7 @@ $xl: 24px;
   color: $surface;
 }
 
-/* 底部弹窗 */
+/* 底部弹窗 - RN: borderTopLeftRadius/xxl borderTopRightRadius/xxl padding/lg */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -263,8 +263,8 @@ $xl: 24px;
 
 .modal-content {
   background: $surface;
-  border-top-left-radius: 24px;
-  border-top-right-radius: 24px;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
   padding: $lg;
   width: 100%;
   max-height: 80vh;
@@ -285,14 +285,14 @@ $xl: 24px;
 }
 
 .modal-close {
-  padding: 4px;
+  padding: $xs;
 }
 
 .input-label {
   font-size: 14px;
   color: $text-secondary;
-  margin-bottom: 4px;
-  margin-top: $md;
+  margin-bottom: $xs;
+  margin-top: $sm;
 }
 
 .form-input {
@@ -302,14 +302,15 @@ $xl: 24px;
   padding: $md;
   font-size: 14px;
   color: $text;
-  margin-bottom: 4px;
+  margin-bottom: $sm;
   min-height: 44px;
 }
 
+/* 类型选择 chips - RN: paddingHorizontal/md paddingVertical/sm borderRadius/xl */
 .type-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: $xs;
+  gap: $sm;
 }
 
 .type-chip {
@@ -331,6 +332,7 @@ $xl: 24px;
   }
 }
 
+/* 提交按钮 - RN: paddingVertical/md borderRadius/md */
 .submit-btn {
   background: $primary;
   padding: $md;
