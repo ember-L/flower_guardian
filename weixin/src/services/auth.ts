@@ -164,6 +164,23 @@ export const forgotPassword = async (params: { email: string }): Promise<{ succe
   }
 }
 
+// 发送邮箱验证码
+export const sendVerifyCode = async (params: { email: string; purpose: string }): Promise<{ success: boolean; error?: string }> => {
+  try {
+    const response = await Taro.request({
+      url: `${API_BASE_URL}/api/users/send-verification-code`,
+      method: 'POST',
+      header: { 'Content-Type': 'application/json' },
+      data: { email: params.email, purpose: params.purpose },
+    })
+    if (response.statusCode === 200) return { success: true }
+    const errorData = response.data as any
+    return { success: false, error: errorData?.detail || '发送失败' }
+  } catch (error: any) {
+    return { success: false, error: error.message || '网络错误' }
+  }
+}
+
 // 验证邮箱
 export const verifyEmail = async (params: { email: string; code: string }): Promise<{ success: boolean; error?: string }> => {
   try {
@@ -206,6 +223,7 @@ const auth = {
   forgotPassword,
   verifyEmail,
   resendVerifyCode,
+  sendVerifyCode,
   getCurrentUser,
   isAuthenticated,
   getToken,
