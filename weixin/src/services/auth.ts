@@ -95,8 +95,24 @@ export const login = async (email: string, password: string): Promise<AuthRespon
 }
 
 // 注册
-export const register = async (email: string, password: string, username?: string): Promise<AuthResponse> => {
+export const register = async (email: string, password: string, username?: string, code?: string): Promise<AuthResponse> => {
   try {
+    // 先验证邮箱验证码（RN端注册流程）
+    if (code) {
+      const verifyResponse = await Taro.request({
+        url: `${API_BASE_URL}/api/users/verify-email`,
+        method: 'POST',
+        header: { 'Content-Type': 'application/json' },
+        data: { email, code },
+      })
+      // Taro.request 对非 2xx 不会抛异常，需要手动处理
+      if (verifyResponse.statusCode !== 200) {
+        const errorData = verifyResponse.data as any
+        return { success: false, error: errorData?.detail || '验证码验证失败' }
+      }
+    }
+
+    // 再调用注册API
     const response = await Taro.request({
       url: `${API_BASE_URL}/api/users/register`,
       method: 'POST',

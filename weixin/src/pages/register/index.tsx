@@ -82,12 +82,7 @@ export default function Register() {
 
     setIsLoading(true)
     try {
-      await auth.register({
-        email: email.trim(),
-        username: username.trim(),
-        password,
-        code: code.trim(),
-      })
+      await auth.register(email.trim(), password, username.trim(), code.trim())
       Taro.showToast({ title: '注册成功', icon: 'success' })
       setTimeout(() => {
         Taro.navigateBack()

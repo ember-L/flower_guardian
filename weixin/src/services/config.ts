@@ -1,5 +1,5 @@
 // 统一API配置
-export const API_BASE_URL = 'http://172.20.10.3:8000'
+export const API_BASE_URL = 'http://192.168.3.53:8000'
 
 // API端点配置
 export const API_ENDPOINTS = {

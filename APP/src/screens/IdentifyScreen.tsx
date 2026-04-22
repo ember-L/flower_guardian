@@ -31,6 +31,10 @@ const WEATHER_CACHE_KEY = 'weather_cache';
 const LOCATION_CACHE_KEY = 'location_cache';
 const CACHE_EXPIRY_HOURS = 6; // 缓存6小时
 
+// 默认位置坐标（贵州省都匀市旗山大道北段8号）
+const DEFAULT_LATITUDE = 26.26;
+const DEFAULT_LONGITUDE = 107.52;
+
 // 检测标签类型
 interface DetectionTag {
   name: string;
@@ -132,6 +136,28 @@ export function IdentifyScreen({ onNavigate, currentTab, onTabChange }: Identify
     fetchWeatherTip();
   };
 
+  // 使用指定坐标获取天气（抽取公共逻辑）
+  const fetchWeatherWithCoords = async (latitude: number, longitude: number) => {
+    try {
+      console.log('GPS坐标:', latitude, longitude);
+
+      const data = await getWeatherTips(latitude, longitude);
+      setWeatherData(data.weather);
+      setWeatherTip(data.tip);
+      // 保存天气数据到缓存
+      await AsyncStorage.setItem(WEATHER_CACHE_KEY, JSON.stringify({
+        weather: data.weather,
+        tip: data.tip,
+        timestamp: Date.now()
+      }));
+      console.log('[Weather] 天气数据已缓存');
+    } catch (err) {
+      console.error('获取天气失败', err);
+    } finally {
+      setWeatherLoading(false);
+    }
+  };
+
   // 获取天气和AI小贴士
   const fetchWeatherTip = async () => {
     setWeatherLoading(true);
@@ -139,8 +165,8 @@ export function IdentifyScreen({ onNavigate, currentTab, onTabChange }: Identify
       // 使用 expo-location 获取GPS定位
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
-        console.log('[Weather] 定位权限被拒绝');
-        setWeatherLoading(false);
+        console.log('[Weather] 定位权限被拒绝，使用默认位置');
+        fetchWeatherWithCoords(DEFAULT_LATITUDE, DEFAULT_LONGITUDE);
         return;
       }
 
@@ -187,29 +213,11 @@ export function IdentifyScreen({ onNavigate, currentTab, onTabChange }: Identify
         }
 
         console.log('GPS坐标:', latitude, longitude);
-
-        getWeatherTips(latitude, longitude)
-          .then(async (data) => {
-            setWeatherData(data.weather);
-            setWeatherTip(data.tip);
-            // 保存天气数据到缓存
-            await AsyncStorage.setItem(WEATHER_CACHE_KEY, JSON.stringify({
-              weather: data.weather,
-              tip: data.tip,
-              timestamp: Date.now()
-            }));
-            console.log('[Weather] 天气数据已缓存');
-          })
-          .catch((err) => {
-            console.error('获取天气失败', err);
-          })
-          .finally(() => {
-            setWeatherLoading(false);
-          });
+        fetchWeatherWithCoords(latitude, longitude);
       } catch (locationError: any) {
-        // 定位失败（可能是设备定位服务关闭）
-        console.warn('[Weather] 定位失败:', locationError?.message);
-        setWeatherLoading(false);
+        // 定位失败，使用默认位置
+        console.warn('[Weather] 定位失败，使用默认位置:', locationError?.message);
+        fetchWeatherWithCoords(DEFAULT_LATITUDE, DEFAULT_LONGITUDE);
       }
     } catch (error) {
       console.error('获取天气失败', error);
