@@ -135,6 +135,41 @@ docker-compose up -d postgres
 - 前端 Web: http://localhost:3000
 - PostgreSQL: localhost:5432
 
+### 单独启动数据库（PostgreSQL）
+
+只调试后端、不想拉起整个服务栈时，可以单独启动数据库：
+
+```bash
+# 只启动 PostgreSQL
+docker-compose up -d postgres
+
+# 查看状态（STATUS 为 healthy 表示已就绪）
+docker-compose ps postgres
+
+# 实时查看数据库日志
+docker-compose logs -f postgres
+
+# 进入 psql 验证连接
+docker-compose exec postgres psql -U flower_user -d flower_guardian
+```
+
+数据库连接信息（与 `docker-compose.yml` 保持一致）：
+
+| 项目 | 值 |
+| --- | --- |
+| 主机 | `localhost` |
+| 端口 | `5432` |
+| 数据库 | `flower_guardian` |
+| 用户 / 密码 | `flower_user` / `flower_password` |
+| 连接串 | `postgresql://flower_user:flower_password@localhost:5432/flower_guardian` |
+
+数据库首次启动时，后端容器会自动执行 `python -m app.db.seed` 写入种子数据。如需清空数据并重建数据库：
+
+```bash
+docker-compose down -v          # 注意：会删除 postgres_data 卷中的全部数据
+docker-compose up -d postgres
+```
+
 ### 本地开发
 
 #### 后端
