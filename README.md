@@ -154,6 +154,33 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload --port 8000
 ```
 
+**本地连数据库**（后端跑在宿主机、数据库用容器）：
+
+```bash
+# 先只启动 PostgreSQL
+docker-compose up -d postgres
+
+# 复制环境变量模板
+cd backend
+cp .env.example .env
+```
+
+把 `backend/.env` 的 `DATABASE_URL` 改成与 `docker-compose.yml` 一致：
+
+```dotenv
+DATABASE_URL=postgresql://flower_user:flower_password@localhost:5432/flower_guardian
+```
+
+```bash
+# 建表 + 写入种子数据
+python -m app.db.seed
+
+# 再启动后端
+uvicorn app.main:app --reload --port 8000
+```
+
+> 不建 `.env` 时，`app/core/config.py` 的默认连接串是 `localhost:5555`，与 compose 映射的 `5432` 不一致，接口会报数据库连接失败。
+
 #### 移动端 APP（详见 [APP/README.md](APP/README.md)）
 
 ```bash
